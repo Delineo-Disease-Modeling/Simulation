@@ -1,0 +1,22 @@
+
+
+"female_percent": 50.5
+"male_percent": 49.5
+
+
+"family_types": ['married', 'opposite_sex', 'same_sex', 'female_single', 'male_single', 'other']
+"family_percents": [0.565, 0.07, 0.008, 0.157, 0.132, 0.068]
+"age_groups_married": [0, 15, 25, 35, 45, 55, 65]
+"age_percent_married": [0, 0.158, 0.166, 0.161, 0.149, 0.157, 0.209]
+"age_groups": [15, 25, 35, 45, 55, 65]
+"age_percent": [0.130, 0.137, 0.131, 0.123, 0.129, 0.168]
+
+"children_true_percent": 0.3757
+"children_groups": [1, 2, 3, 4]
+"children_percent": [0.427, 0.369, 0.142, 0.062]
+
+"size_percent": [0.347, 0.151, 0.123, 0.09]
+"size_groups": [2, 3, 4, 5]
+
+"count": 0
+
