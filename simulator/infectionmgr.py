@@ -1,4 +1,5 @@
 from pap import InfectionState, InfectionTimeline
+from infection_model import probability_model
 import random
 
 class InfectionManager:
@@ -11,14 +12,6 @@ class InfectionManager:
             for v in p.states.values():
                 if InfectionState.INFECTED in v:
                     self.infected.append(p)
-    
-    # Calculate the probability of infection between two people
-    # over a given time interval (in this case, a timestep in minutes)
-    # TODO: This will be replaced with an accurate model of infection in the future
-    def probability_model(self, p1, p2):
-        if p1.location.id != p2.location.id:
-            raise Exception(f'{p1.id}/{p1.location.id} : {p2.id}/{p2.location.id}')
-        return 0.00005 # one in a million chance per timestep interval
     
     def run_model(self, num_timesteps=1, file=None, curtime=0):
         if file == None:
@@ -49,7 +42,7 @@ class InfectionManager:
                     
                     # Repeat the probability the number of timesteps we passed over the interval
                     for _ in range(num_timesteps):
-                        if random.random() < self.probability_model(i, p):
+                        if random.random() < probability_model(i, p):
                             new_infections.append(disease)
                             break # We can't re-infect someone
                 

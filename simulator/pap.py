@@ -4,7 +4,7 @@ import random
 import yaml
 import json
 
-from enum import Flag
+from enum import Flag, Enum
 
 '''
     GLOBAL VARIABLES
@@ -22,6 +22,11 @@ class InfectionState(Flag):
     SYMPTOMATIC = 4
     HOSPITALIZED = 8
     RECOVERED = 16
+    
+class VaccinationState(Enum):
+    NONE = 0 
+    PARTIAL = 1
+    IMMUNIZED = 2
 
 class InfectionTimeline:
     def __init__(self, start, end):
@@ -40,6 +45,14 @@ class Person:
         self.location = household
         self.states = {}
         self.timeline = {}
+        self.masked = False
+        self.vaccinated = VaccinationState.NONE
+    
+    def set_masked(self, masked):
+        self.masked = masked
+    
+    def set_vaccinated(self, state):
+        self.vaccinated = state
     
     def update_state(self, curtime):
         '''
