@@ -12,6 +12,54 @@ class InfectionManager:
             for v in p.states.values():
                 if InfectionState.INFECTED in v:
                     self.infected.append(p)
+
+    def calculate_host_variables(self, p, Rh = 250, fvh=0.37, fah=0.35):
+        
+        def set_droplets_num(p, Rh = Rh):
+            #droplets per minute if speaking
+            if p.age < 3:
+                Rh = 0
+            # Adjust for children below 10
+            elif p.age < 10 or p.age > 60:
+                Rh = 100
+            return Rh
+        
+        def set_viral_load(p, fvh):
+            # fvh = fraction of viral load in droplets
+            Rh = set_droplets_num(p)
+            viral_load = Rh * fvh
+            return viral_load
+        
+        def set_droplets_passed_mask(p, droplets=1):
+            # droplets passed through mask
+            if p.masked == True:
+                droplets = droplets * 0.2
+            return droplets
+        
+        def set_frac_aerosol(p, fah=0.35):
+            # fraction of droplets that become aerosol (smaller than 10 microns)
+            return fah
+
+        return set_viral_load(p, fvh) * set_droplets_passed_mask(p) * set_frac_aerosol(p, fah)
+
+
+    def calculate_accumulated_droplets(self, p, curtime, fat=0.01):
+        acccumulated_droplets = self.calculate_host_variables(self, p)
+        for i in self.infected:
+            if i != p and i.location == p.location:
+                fat = 0.01 # rate of droplets transport near the susceptible
+
+                exposure_duration = 0
+
+                if InfectionState.INFECTIOUS in i.states:
+                    exposure_duration += i.states[InfectionState.INFECTIOUS].end - curtime
+
+                acccumulated_droplets = fat * exposure_duration
+        
+        return acccumulated_droplets
+
+
+    
     
     def run_model(self, num_timesteps=1, file=None, curtime=0):
         if file == None:
@@ -30,6 +78,7 @@ class InfectionManager:
                     continue
                 
                 new_infections = []
+
 
                 for disease, state in i.states.items():   
                     # Ignore those who cannot infect others
