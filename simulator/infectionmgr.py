@@ -16,7 +16,7 @@ class InfectionManager:
 
     def calculate_host_variables(self, p, Rh = 250, fvh=0.37, fah=0.35):
         
-        def set_droplets_num(p, Rh = Rh):
+        def set_droplets_num(p, Rh):
             #droplets per minute if speaking
             if p.age < 3:
                 Rh = 0
@@ -34,10 +34,11 @@ class InfectionManager:
         def set_droplets_passed_mask(p, droplets=1):
             # droplets passed through mask
             if p.masked == True:
-                droplets = droplets * 0.2
+                filter_efficiency = random.uniform(0.3, 0.6)
+                droplets = droplets * filter_efficiency
             return droplets
         
-        def set_frac_aerosol(p, fah=0.35):
+        def set_frac_aerosol(p, fah):
             # fraction of droplets that become aerosol (smaller than 10 microns)
             return fah
 
@@ -59,7 +60,12 @@ class InfectionManager:
                     # Check if the person has an infectious state at time t
                     if "infectious" in person.states and person.states["infectious"].start <= t <= person.states["infectious"].end:
                         # Calculate the total number of infectious people at time t
-                        total_infectious_people += 1
+                        # if the infected person is wearing a mask
+                        if person.masked == True:
+                            filtered_droplets = random.uniform(0.3, 0.9)
+                            total_infectious_people += filtered_droplets
+                        else:
+                            total_infectious_people += 1
 
                 # Calculate the average fraction at time step t and add it to the list
                 average_fraction = total_infectious_people / p.location.capacity
@@ -80,7 +86,32 @@ class InfectionManager:
         
         return calculate_droplets_transport(p) * calculate_aerosol_transport()
 
+    
+    def calculate_susceptible_variables(self, p, indoor):
+
+        def calculate_inhalation_rate(p, indoor):
+            #fis: fraction of bioaerosols from the host in the vicinity of the susceptible 
+            # that would be inhaled and deposited in the respiratory tract of a susceptible 
+            # not wearing a face covering.
+            fis = random.uniform(0.05, 0.7)
+            if p.sex == 1:
+                fis = fis * 0.8
+            if p.age < 18 or p.age > 60:
+                fis = fis * 0.8
+            if indoor == False:
+                fis = fis * 1.2
+            return fis
         
+        def calculate_frac_filtered(p):
+            #fms
+            ff = random.uniform(0.3, 0.6)
+            if p.masked == False:
+                ff = 0
+            return ff
+        
+        return calculate_inhalation_rate(p, indoor)
+
+    
 
     def calculate_accumulated_droplets(self, p, curtime, fat=0.01):
         acccumulated_droplets = self.calculate_host_variables(self, p)
