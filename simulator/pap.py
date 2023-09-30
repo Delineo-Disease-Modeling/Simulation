@@ -115,11 +115,12 @@ class Household(Population):
             self.id = id
 
 class Facility(Population):
-    def __init__(self, id, cbg, label):
+    def __init__(self, id, cbg, label, capacity):
         super().__init__()
         self.cbg = cbg
         self.id = id
         self.label = label
+        self.capacity = capacity
 
 
     

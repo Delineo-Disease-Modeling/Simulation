@@ -1,6 +1,7 @@
 from pap import InfectionState, InfectionTimeline
 from infection_model import probability_model
 import random
+import math
 
 class InfectionManager:
     def __init__(self, timestep=15, people=[]):
@@ -41,7 +42,45 @@ class InfectionManager:
             return fah
 
         return set_viral_load(p, fvh) * set_droplets_passed_mask(p) * set_frac_aerosol(p, fah)
+    
+    def calculate_environment_variables(self, p):
+    
+        def calculate_droplets_transport(p): 
+            #fat: fraction of droplets with viable virons
+            average_fractions = []
+            num_time_steps = p.timeline_end - p.timeline_start #TODO replace
 
+            # TODO: Iterate over each time step within p's timeline
+            for t in range(p.timeline_start, p.timeline_end):
+                total_infectious_people = 0
+
+                # Iterate over each person in the location at time step t
+                for person in p.location.population:
+                    # Check if the person has an infectious state at time t
+                    if "infectious" in person.states and person.states["infectious"].start <= t <= person.states["infectious"].end:
+                        # Calculate the total number of infectious people at time t
+                        total_infectious_people += 1
+
+                # Calculate the average fraction at time step t and add it to the list
+                average_fraction = total_infectious_people / p.location.capacity
+                average_fraction = math.exp(-average_fraction)
+                average_fractions.append(average_fraction)
+
+            # Calculate the average fraction over the entire timeline
+            average_frac = sum(average_fractions) / num_time_steps
+
+            return average_frac
+        
+        def calculate_aerosol_transport():
+            #fvv: fraction of droplets with viable virons
+            # e^(time of flight/half-life) where T is the time in hours, half-life of virus = 1.1 hours
+            time_of_flight = random.randint(3, 9)
+            half_life = 1.1
+            return math.exp(time_of_flight/half_life)
+        
+        return calculate_droplets_transport(p) * calculate_aerosol_transport()
+
+        
 
     def calculate_accumulated_droplets(self, p, curtime, fat=0.01):
         acccumulated_droplets = self.calculate_host_variables(self, p)
