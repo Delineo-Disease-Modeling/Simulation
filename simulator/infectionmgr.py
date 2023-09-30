@@ -27,9 +27,7 @@ class InfectionManager:
         
         def set_viral_load(p, fvh):
             # fvh = fraction of viral load in droplets
-            Rh = set_droplets_num(p)
-            viral_load = Rh * fvh
-            return viral_load
+            return fvh
         
         def set_droplets_passed_mask(p, droplets=1):
             # droplets passed through mask
@@ -42,7 +40,7 @@ class InfectionManager:
             # fraction of droplets that become aerosol (smaller than 10 microns)
             return fah
 
-        return set_viral_load(p, fvh) * set_droplets_passed_mask(p) * set_frac_aerosol(p, fah)
+        return set_droplets_num(p, Rh) * set_viral_load(p, fvh) * set_droplets_passed_mask(p) * set_frac_aerosol(p, fah)
     
     def calculate_environment_variables(self, p):
     
@@ -87,7 +85,7 @@ class InfectionManager:
         return calculate_droplets_transport(p) * calculate_aerosol_transport()
 
     
-    def calculate_susceptible_variables(self, p, indoor):
+    def calculate_susceptible_variables(self, p, indoor, time):
 
         def calculate_inhalation_rate(p, indoor):
             #fis: fraction of bioaerosols from the host in the vicinity of the susceptible 
@@ -103,30 +101,23 @@ class InfectionManager:
             return fis
         
         def calculate_frac_filtered(p):
-            #fms
-            ff = random.uniform(0.3, 0.6)
+            #fms % filtered by facemask
+            fms = random.uniform(0.3, 0.6)
             if p.masked == False:
-                ff = 0
-            return ff
+                fms = 0
+            return fms
         
-        return calculate_inhalation_rate(p, indoor)
-
+        return calculate_inhalation_rate(p, indoor) * calculate_frac_filtered(p) * time
     
-
-    def calculate_accumulated_droplets(self, p, curtime, fat=0.01):
-        acccumulated_droplets = self.calculate_host_variables(self, p)
-        for i in self.infected:
-            if i != p and i.location == p.location:
-                fat = 0.01 # rate of droplets transport near the susceptible
-
-                exposure_duration = 0
-
-                if InfectionState.INFECTIOUS in i.states:
-                    exposure_duration += i.states[InfectionState.INFECTIOUS].end - curtime
-
-                acccumulated_droplets = fat * exposure_duration
-        
-        return acccumulated_droplets
+    # times all the left side of the equation
+    def CAT (self, p, indoor, time):
+        left = self.calculate_host_variables(p) * self.calculate_environment_variables(p) * self.calculate_susceptible_variables(p, indoor, time)
+        #TODO: Nid
+        Nid = 30
+        if left <= Nid:
+            return False
+        else:
+            return True
 
 
     
