@@ -25,7 +25,7 @@ class InfectionState(Flag):
     
 class VaccinationState(Enum):
     NONE = 0 
-    PARTIAL = 1
+    PARTIAL = 1 # Not yet up-to-date on boosters?
     IMMUNIZED = 2
 
 class InfectionTimeline:
@@ -45,8 +45,10 @@ class Person:
         self.location = household
         self.states = {}
         self.timeline = {}
-        self.masked = False
-        self.vaccinated = VaccinationState.NONE
+        self.interventions = {
+            'mask': False,
+            'vaccine': VaccinationState.NONE
+        }
     
     def set_masked(self, masked):
         self.masked = masked
@@ -61,7 +63,7 @@ class Person:
             the times at which this person will become that state
         '''
         for disease, value in self.timeline.items():
-            if not self.states.get(disease) == None:
+            if self.states.get(disease) == None:
                 self.states[disease] = InfectionState.SUSCEPTIBLE
 
             for state, timeline in value.items():

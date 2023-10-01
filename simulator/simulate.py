@@ -10,7 +10,7 @@ class InterventionManager:
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
-    def __init__(self, timestep=15):
+    def __init__(self, timestep=60):
         self.timestep = timestep        # in minutes
         self.people = []
         self.households = []            # list of all houses
@@ -114,10 +114,10 @@ if __name__ == '__main__':
                 # Move people to facilities for this timestep
                 move_people(simulator, data['places'].items(), False)
                 
+                infectionmgr.run_model(file, last_timestep)
+                
                 timestamps.pop(0)
                 #print(f'Completed movement for timestep {timestamps.pop(0)}')  
-            
-            infectionmgr.run_model(4, file, last_timestep)
-            
+                        
             last_timestep += simulator.timestep
       
