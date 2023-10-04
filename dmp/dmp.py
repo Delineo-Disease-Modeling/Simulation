@@ -27,7 +27,14 @@ def transition():
 # Simulate disease progression for an individual
 for _ in range(10):
     print("Current state:", states[current_state])
+
+    # Check if the current state is "Recovered" or "Removed" and stop the simulation
+    if states[current_state] in ["Recovered", "Removed"]:
+        print("Reached terminal state. Simulation stopped.")
+        break
+
     next_state = transition()
     print()
+
 
 
