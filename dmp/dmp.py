@@ -24,9 +24,26 @@ def transition():
     current_state = states.index(next_state)
     return next_state
 
+# Function to sample time intervals from a normal distribution
+def sample_time_interval(mean, std_dev):
+    while True:
+        interval = int(random.normalvariate(mean, std_dev))
+        if interval >= 0:
+            return interval
+
+# Set parameters for time intervals (mean and standard deviation)
+mean_time_interval = 5  
+std_dev_time_interval = 2 
+
+total_time_steps = 0
+
+
+
 # Simulate disease progression for an individual
-for _ in range(10):
-    print("Current state:", states[current_state])
+while True:
+    time_interval = sample_time_interval(mean_time_interval, std_dev_time_interval)
+    total_time_steps += time_interval
+    print(f"Current state:", states[current_state], "|  Time step:", total_time_steps)
 
     # Check if the current state is "Recovered" or "Removed" and stop the simulation
     if states[current_state] in ["Recovered", "Removed"]:
