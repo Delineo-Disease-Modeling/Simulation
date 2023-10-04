@@ -26,9 +26,8 @@ def transition():
 
 # Simulate disease progression for an individual
 for _ in range(10):
-    next_state = transition()
     print("Current state:", states[current_state])
-    print("Next state:", next_state)
+    next_state = transition()
     print()
 
 
