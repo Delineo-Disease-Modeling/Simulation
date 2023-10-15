@@ -62,7 +62,7 @@ if __name__ == '__main__':
         simulator.add_household(Household(data['cbg'], id))
 
     for id, data in pap['places'].items():
-        facility = simulator.add_facility(Facility(id, data['cbg'], data['label']))
+        facility = simulator.add_facility(Facility(id, data['cbg'], data['label'],50))
 
     for id, data in pap['people'].items():
         household = simulator.get_household(data['home'])

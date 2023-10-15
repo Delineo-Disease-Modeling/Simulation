@@ -2,9 +2,9 @@ import random
 import math
 
 def set_droplets_num(p, Rh):
-    #droplets per minute if speaking
+    #droplets per timestamp if speaking
     if p.age < 3:
-        Rh = 0
+        Rh = 30
     # Adjust for children below 10
     elif p.age < 10 or p.age > 60:
         Rh = 100
@@ -25,13 +25,13 @@ def set_frac_aerosol(p, fah):
     # fraction of droplets that become aerosol (smaller than 10 microns)
     return fah
 
-def calculate_droplets_transport(p): 
+def calculate_droplets_transport(p, num_time_steps): 
         #fat: fraction of droplets with viable virons
         average_fractions = []
-        num_time_steps = p.timeline_end - p.timeline_start #TODO replace
+        num_time_steps = num_time_steps
 
-        # TODO: Iterate over each time step within p's timeline
-        for t in range(p.timeline_start, p.timeline_end):
+        #Iterate over each time step within p's timeline
+        for t in range(num_time_steps):
             total_infectious_people = 0
 
             # Iterate over each person in the location at time step t
@@ -47,7 +47,7 @@ def calculate_droplets_transport(p):
                         total_infectious_people += 1
 
             # Calculate the average fraction at time step t and add it to the list
-            average_fraction = total_infectious_people / p.location.capacity
+            average_fraction = total_infectious_people / p.location.total_count
             average_fraction = math.exp(-average_fraction)
             average_fractions.append(average_fraction)
 
@@ -78,25 +78,37 @@ def calculate_inhalation_rate(p, indoor):
     
 def calculate_frac_filtered(p):
     #fms % filtered by facemask
-    fms = random.uniform(0.3, 0.6)
+    fms = random.uniform(0.1, 0.3)
     if p.masked == False:
-        fms = 0
+        fms = 1
     return fms
 
 
 def calculate_host_variables(p, Rh = 250, fvh=0.37, fah=0.35):
+    # print(f"droplets {set_droplets_num(p, Rh)}")
+    # print(f"viral load {set_viral_load(p, fvh)}")
+    # print(f"droplets passed mask {set_droplets_passed_mask(p)}")
+    # print(f"frac aerosol {set_frac_aerosol(p, fah)}")
     return set_droplets_num(p, Rh) * set_viral_load(p, fvh) * set_droplets_passed_mask(p) * set_frac_aerosol(p, fah)
 
-def calculate_environment_variables(p):
-    return calculate_droplets_transport(p) * calculate_aerosol_transport()
+def calculate_environment_variables(p, num_time_steps):
+    return calculate_droplets_transport(p, num_time_steps) * calculate_aerosol_transport()
 
 def calculate_susceptible_variables(p, indoor, time):
+    # print(f"inhale {calculate_inhalation_rate(p, indoor)}")
+    # print(f"frac {calculate_frac_filtered(p)}")
+    # print(f"time {time}")
     return calculate_inhalation_rate(p, indoor) * calculate_frac_filtered(p) * time
 
 # times all the left side of the equation
-def CAT (p, indoor, time, Nid):
-    left = calculate_host_variables(p) * calculate_environment_variables(p, indoor, time) * calculate_susceptible_variables(p, indoor, time)
-    if left <= Nid:
+def CAT (p, indoor, num_time_steps, Nid):
+    left = calculate_host_variables(p) * calculate_environment_variables(p, num_time_steps) * calculate_susceptible_variables(p, indoor, num_time_steps)
+    # print(f"host {calculate_host_variables(p)}")
+    # print(f"env {calculate_environment_variables(p, num_time_steps)}")
+    # print(f"sus {calculate_susceptible_variables(p, indoor, num_time_steps)}")
+    # print(f"left {left}")
+    # print(f"right {Nid}")
+    if left <= Nid: # threhold for infection
         return False
     else:
         return True
