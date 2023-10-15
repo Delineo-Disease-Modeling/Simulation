@@ -14,11 +14,10 @@ def get_user_input():
         # Use default values
         mean_time_interval = default_mean_time_interval
         std_dev_time_interval = default_std_dev_time_interval
-        initial_state = default_initial_state  # Set the initial state to "Symptomatic"
 
     desired_iterations = 20
 
-    simulation_data = run_simulation(transition_matrix, mean_time_interval, std_dev_time_interval, initial_state, desired_iterations)
+    simulation_data = run_simulation(transition_matrix, mean_time_interval, std_dev_time_interval, default_initial_state, desired_iterations)
 
     with open(csv_file_path, mode="w", newline="") as file:
         writer = csv.writer(file)
