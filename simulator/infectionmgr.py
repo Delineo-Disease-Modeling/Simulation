@@ -15,7 +15,7 @@ class InfectionManager:
                     self.infected.append(p)
 
     
-    def run_model(self, num_timesteps=1, file=None, curtime=0):
+    def run_model(self, num_timesteps=1, file="simulator_results.txt", curtime=0):
         if file == None:
             print(f'infected: {[i.id for i in self.infected]}')
         else:
@@ -43,18 +43,35 @@ class InfectionManager:
                     if p.states.get(disease) != None and InfectionState.INFECTED in p.states[disease]:
                         continue
                     
+                    count = 0
                     # Repeat the probability the number of timesteps we passed over the interval
                     for _ in range(num_timesteps):
-                        if CAT(disease, i, p, self.timestep) == True:
+                        if CAT(p, True, num_timesteps, 5e5) == True:
                             new_infections.append(disease)
+                            print(disease)
+                            p.states[disease] = InfectionState.INFECTED
+                            self.infected.append(p)
+                            count += 1
+                            # print("infected")
                             break # We can't re-infect someone
+
+                    # print(count)
+                    # print(new_infections)
+
+
+                    if file != None:
+                        file.write(f'{p.id} got infected @ location {p.location.id} w/ {disease}\n')
+                    # print(f'{p.id} got infected @ location {p.location.id} w/ {disease}')
                 
+
                 for disease in new_infections:
+                    print("heres")
                     # If a person is infected with more than one disease at the same time
                     # and the model does not support being infected with multiple diseases,
                     # this loop is used to remedy that case
                     
                     self.infected.append(p) # add to list of infected regardless
+                    
                     
                     # Set infection state if they were only infected once, or if multidisease is True
                     if len(new_infections) == 1 or self.multidisease == True:
@@ -64,7 +81,7 @@ class InfectionManager:
                         if file == None:
                             print(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}')
                         else:
-                            file.write(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}\n')
+                            file.write(f'{p.id} got infected @ location {p.location.id} w/ {disease}\n')
                         continue
                     
                     # TODO: Handle case where a person is infected by multiple diseases at once

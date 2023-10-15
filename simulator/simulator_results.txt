@@ -1,804 +1,4969 @@
 ====== TIMESTEP 0 ======
 delta: ['160']
 omicron: ['43']
+44 got infected @ location 16 w/ omicron
 ====== TIMESTEP 15 ======
 delta: ['160']
 omicron: ['43']
+44 got infected @ location 16 w/ omicron
 ====== TIMESTEP 30 ======
 delta: ['160']
 omicron: ['43']
+44 got infected @ location 16 w/ omicron
 ====== TIMESTEP 45 ======
 delta: ['160']
 omicron: ['43']
+44 got infected @ location 16 w/ omicron
 ====== TIMESTEP 60 ======
 delta: ['160']
 omicron: ['43']
+92 got infected @ location 37 w/ omicron
+62 got infected @ location 37 w/ omicron
+63 got infected @ location 37 w/ omicron
+175 got infected @ location 37 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 75 ======
 delta: ['160']
 omicron: ['43']
+92 got infected @ location 37 w/ omicron
+62 got infected @ location 37 w/ omicron
+63 got infected @ location 37 w/ omicron
+175 got infected @ location 37 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 90 ======
 delta: ['160']
 omicron: ['43']
+92 got infected @ location 37 w/ omicron
+62 got infected @ location 37 w/ omicron
+63 got infected @ location 37 w/ omicron
+175 got infected @ location 37 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 105 ======
 delta: ['160']
 omicron: ['43']
+92 got infected @ location 37 w/ omicron
+62 got infected @ location 37 w/ omicron
+63 got infected @ location 37 w/ omicron
+175 got infected @ location 37 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 120 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+77 got infected @ location 14 w/ delta
+15 got infected @ location 14 w/ delta
+53 got infected @ location 14 w/ delta
+100 got infected @ location 14 w/ delta
+141 got infected @ location 14 w/ delta
+165 got infected @ location 14 w/ delta
+55 got infected @ location 14 w/ delta
+90 got infected @ location 14 w/ delta
+56 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
 ====== TIMESTEP 135 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+77 got infected @ location 14 w/ delta
+15 got infected @ location 14 w/ delta
+53 got infected @ location 14 w/ delta
+100 got infected @ location 14 w/ delta
+141 got infected @ location 14 w/ delta
+165 got infected @ location 14 w/ delta
+55 got infected @ location 14 w/ delta
+90 got infected @ location 14 w/ delta
+56 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
 ====== TIMESTEP 150 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+77 got infected @ location 14 w/ delta
+15 got infected @ location 14 w/ delta
+53 got infected @ location 14 w/ delta
+100 got infected @ location 14 w/ delta
+141 got infected @ location 14 w/ delta
+165 got infected @ location 14 w/ delta
+55 got infected @ location 14 w/ delta
+90 got infected @ location 14 w/ delta
+56 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
 ====== TIMESTEP 165 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+77 got infected @ location 14 w/ delta
+15 got infected @ location 14 w/ delta
+53 got infected @ location 14 w/ delta
+100 got infected @ location 14 w/ delta
+141 got infected @ location 14 w/ delta
+165 got infected @ location 14 w/ delta
+55 got infected @ location 14 w/ delta
+90 got infected @ location 14 w/ delta
+56 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
 ====== TIMESTEP 180 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+100 got infected @ location 14 w/ delta
+141 got infected @ location 14 w/ delta
+165 got infected @ location 14 w/ delta
+79 got infected @ location 14 w/ delta
+55 got infected @ location 14 w/ delta
+90 got infected @ location 14 w/ delta
+56 got infected @ location 14 w/ delta
+91 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
 ====== TIMESTEP 195 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+100 got infected @ location 14 w/ delta
+141 got infected @ location 14 w/ delta
+165 got infected @ location 14 w/ delta
+79 got infected @ location 14 w/ delta
+55 got infected @ location 14 w/ delta
+90 got infected @ location 14 w/ delta
+56 got infected @ location 14 w/ delta
+91 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
 ====== TIMESTEP 210 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+100 got infected @ location 14 w/ delta
+141 got infected @ location 14 w/ delta
+165 got infected @ location 14 w/ delta
+79 got infected @ location 14 w/ delta
+55 got infected @ location 14 w/ delta
+90 got infected @ location 14 w/ delta
+56 got infected @ location 14 w/ delta
+91 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
 ====== TIMESTEP 225 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+100 got infected @ location 14 w/ delta
+141 got infected @ location 14 w/ delta
+165 got infected @ location 14 w/ delta
+79 got infected @ location 14 w/ delta
+55 got infected @ location 14 w/ delta
+90 got infected @ location 14 w/ delta
+56 got infected @ location 14 w/ delta
+91 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
 ====== TIMESTEP 240 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+143 got infected @ location 32 w/ omicron
+56 got infected @ location 14 w/ delta
+91 got infected @ location 14 w/ delta
+69 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+115 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+19 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 255 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+143 got infected @ location 32 w/ omicron
+56 got infected @ location 14 w/ delta
+91 got infected @ location 14 w/ delta
+69 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+115 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+19 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 270 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+143 got infected @ location 32 w/ omicron
+56 got infected @ location 14 w/ delta
+91 got infected @ location 14 w/ delta
+69 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+115 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+19 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 285 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 32 w/ omicron
+143 got infected @ location 32 w/ omicron
+56 got infected @ location 14 w/ delta
+91 got infected @ location 14 w/ delta
+69 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+115 got infected @ location 14 w/ delta
+166 got infected @ location 14 w/ delta
+19 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 300 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 17 w/ omicron
+19 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+154 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+47 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 315 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 17 w/ omicron
+19 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+154 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+47 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 330 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 17 w/ omicron
+19 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+154 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+47 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 345 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 17 w/ omicron
+19 got infected @ location 14 w/ delta
+78 got infected @ location 14 w/ delta
+76 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+154 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+47 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 360 ======
 delta: ['160']
 omicron: ['43']
+37 got infected @ location 33 w/ omicron
+76 got infected @ location 14 w/ delta
+82 got infected @ location 14 w/ delta
+13 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+154 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+47 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+101 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 375 ======
 delta: ['160']
 omicron: ['43']
+37 got infected @ location 33 w/ omicron
+76 got infected @ location 14 w/ delta
+82 got infected @ location 14 w/ delta
+13 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+154 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+47 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+101 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 390 ======
 delta: ['160']
 omicron: ['43']
+37 got infected @ location 33 w/ omicron
+76 got infected @ location 14 w/ delta
+82 got infected @ location 14 w/ delta
+13 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+154 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+47 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+101 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 405 ======
 delta: ['160']
 omicron: ['43']
+37 got infected @ location 33 w/ omicron
+76 got infected @ location 14 w/ delta
+82 got infected @ location 14 w/ delta
+13 got infected @ location 14 w/ delta
+70 got infected @ location 14 w/ delta
+155 got infected @ location 14 w/ delta
+96 got infected @ location 14 w/ delta
+67 got infected @ location 14 w/ delta
+97 got infected @ location 14 w/ delta
+120 got infected @ location 14 w/ delta
+162 got infected @ location 14 w/ delta
+172 got infected @ location 14 w/ delta
+135 got infected @ location 14 w/ delta
+20 got infected @ location 14 w/ delta
+154 got infected @ location 14 w/ delta
+139 got infected @ location 14 w/ delta
+47 got infected @ location 14 w/ delta
+173 got infected @ location 14 w/ delta
+101 got infected @ location 14 w/ delta
+62 got infected @ location 14 w/ delta
 ====== TIMESTEP 420 ======
 delta: ['160']
 omicron: ['43']
+41 got infected @ location 17 w/ omicron
+56 got infected @ location 17 w/ omicron
+102 got infected @ location 21 w/ delta
+145 got infected @ location 21 w/ delta
+32 got infected @ location 21 w/ delta
+69 got infected @ location 21 w/ delta
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 435 ======
 delta: ['160']
 omicron: ['43']
+41 got infected @ location 17 w/ omicron
+56 got infected @ location 17 w/ omicron
+102 got infected @ location 21 w/ delta
+145 got infected @ location 21 w/ delta
+32 got infected @ location 21 w/ delta
+69 got infected @ location 21 w/ delta
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 450 ======
 delta: ['160']
 omicron: ['43']
+41 got infected @ location 17 w/ omicron
+56 got infected @ location 17 w/ omicron
+102 got infected @ location 21 w/ delta
+145 got infected @ location 21 w/ delta
+32 got infected @ location 21 w/ delta
+69 got infected @ location 21 w/ delta
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 465 ======
 delta: ['160']
 omicron: ['43']
+41 got infected @ location 17 w/ omicron
+56 got infected @ location 17 w/ omicron
+102 got infected @ location 21 w/ delta
+145 got infected @ location 21 w/ delta
+32 got infected @ location 21 w/ delta
+69 got infected @ location 21 w/ delta
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 480 ======
 delta: ['160']
 omicron: ['43']
+155 got infected @ location 36 w/ omicron
+162 got infected @ location 36 w/ omicron
+148 got infected @ location 36 w/ omicron
+119 got infected @ location 21 w/ delta
+32 got infected @ location 21 w/ delta
+69 got infected @ location 21 w/ delta
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+122 got infected @ location 21 w/ delta
+4 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 495 ======
 delta: ['160']
 omicron: ['43']
+155 got infected @ location 36 w/ omicron
+162 got infected @ location 36 w/ omicron
+148 got infected @ location 36 w/ omicron
+119 got infected @ location 21 w/ delta
+32 got infected @ location 21 w/ delta
+69 got infected @ location 21 w/ delta
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+122 got infected @ location 21 w/ delta
+4 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 510 ======
 delta: ['160']
 omicron: ['43']
+155 got infected @ location 36 w/ omicron
+162 got infected @ location 36 w/ omicron
+148 got infected @ location 36 w/ omicron
+119 got infected @ location 21 w/ delta
+32 got infected @ location 21 w/ delta
+69 got infected @ location 21 w/ delta
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+122 got infected @ location 21 w/ delta
+4 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 525 ======
 delta: ['160']
 omicron: ['43']
+155 got infected @ location 36 w/ omicron
+162 got infected @ location 36 w/ omicron
+148 got infected @ location 36 w/ omicron
+119 got infected @ location 21 w/ delta
+32 got infected @ location 21 w/ delta
+69 got infected @ location 21 w/ delta
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+122 got infected @ location 21 w/ delta
+4 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 540 ======
 delta: ['160']
 omicron: ['43']
+34 got infected @ location 4 w/ omicron
+18 got infected @ location 4 w/ omicron
+30 got infected @ location 4 w/ omicron
+134 got infected @ location 4 w/ omicron
+145 got infected @ location 4 w/ omicron
+98 got infected @ location 4 w/ omicron
+127 got infected @ location 4 w/ omicron
+99 got infected @ location 4 w/ omicron
+74 got infected @ location 4 w/ omicron
+25 got infected @ location 4 w/ omicron
+55 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+89 got infected @ location 21 w/ delta
+94 got infected @ location 21 w/ delta
+122 got infected @ location 21 w/ delta
+147 got infected @ location 21 w/ delta
+4 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 555 ======
 delta: ['160']
 omicron: ['43']
+34 got infected @ location 4 w/ omicron
+18 got infected @ location 4 w/ omicron
+30 got infected @ location 4 w/ omicron
+134 got infected @ location 4 w/ omicron
+145 got infected @ location 4 w/ omicron
+98 got infected @ location 4 w/ omicron
+127 got infected @ location 4 w/ omicron
+99 got infected @ location 4 w/ omicron
+74 got infected @ location 4 w/ omicron
+25 got infected @ location 4 w/ omicron
+55 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+89 got infected @ location 21 w/ delta
+94 got infected @ location 21 w/ delta
+122 got infected @ location 21 w/ delta
+147 got infected @ location 21 w/ delta
+4 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 570 ======
 delta: ['160']
 omicron: ['43']
+34 got infected @ location 4 w/ omicron
+18 got infected @ location 4 w/ omicron
+30 got infected @ location 4 w/ omicron
+134 got infected @ location 4 w/ omicron
+145 got infected @ location 4 w/ omicron
+98 got infected @ location 4 w/ omicron
+127 got infected @ location 4 w/ omicron
+99 got infected @ location 4 w/ omicron
+74 got infected @ location 4 w/ omicron
+25 got infected @ location 4 w/ omicron
+55 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+89 got infected @ location 21 w/ delta
+94 got infected @ location 21 w/ delta
+122 got infected @ location 21 w/ delta
+147 got infected @ location 21 w/ delta
+4 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 585 ======
 delta: ['160']
 omicron: ['43']
+34 got infected @ location 4 w/ omicron
+18 got infected @ location 4 w/ omicron
+30 got infected @ location 4 w/ omicron
+134 got infected @ location 4 w/ omicron
+145 got infected @ location 4 w/ omicron
+98 got infected @ location 4 w/ omicron
+127 got infected @ location 4 w/ omicron
+99 got infected @ location 4 w/ omicron
+74 got infected @ location 4 w/ omicron
+25 got infected @ location 4 w/ omicron
+55 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+82 got infected @ location 21 w/ delta
+91 got infected @ location 21 w/ delta
+89 got infected @ location 21 w/ delta
+94 got infected @ location 21 w/ delta
+122 got infected @ location 21 w/ delta
+147 got infected @ location 21 w/ delta
+4 got infected @ location 21 w/ delta
+19 got infected @ location 21 w/ delta
+63 got infected @ location 21 w/ delta
 ====== TIMESTEP 600 ======
 delta: ['160']
 omicron: ['43']
+145 got infected @ location 4 w/ omicron
+98 got infected @ location 4 w/ omicron
+127 got infected @ location 4 w/ omicron
+104 got infected @ location 4 w/ omicron
+99 got infected @ location 4 w/ omicron
+21 got infected @ location 4 w/ omicron
+74 got infected @ location 4 w/ omicron
+25 got infected @ location 4 w/ omicron
+54 got infected @ location 4 w/ omicron
+152 got infected @ location 4 w/ omicron
+55 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+47 got infected @ location 30 w/ delta
+144 got infected @ location 30 w/ delta
+38 got infected @ location 30 w/ delta
 ====== TIMESTEP 615 ======
 delta: ['160']
 omicron: ['43']
+145 got infected @ location 4 w/ omicron
+98 got infected @ location 4 w/ omicron
+127 got infected @ location 4 w/ omicron
+104 got infected @ location 4 w/ omicron
+99 got infected @ location 4 w/ omicron
+21 got infected @ location 4 w/ omicron
+74 got infected @ location 4 w/ omicron
+25 got infected @ location 4 w/ omicron
+54 got infected @ location 4 w/ omicron
+152 got infected @ location 4 w/ omicron
+55 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+47 got infected @ location 30 w/ delta
+144 got infected @ location 30 w/ delta
+38 got infected @ location 30 w/ delta
 ====== TIMESTEP 630 ======
 delta: ['160']
 omicron: ['43']
+145 got infected @ location 4 w/ omicron
+98 got infected @ location 4 w/ omicron
+127 got infected @ location 4 w/ omicron
+104 got infected @ location 4 w/ omicron
+99 got infected @ location 4 w/ omicron
+21 got infected @ location 4 w/ omicron
+74 got infected @ location 4 w/ omicron
+25 got infected @ location 4 w/ omicron
+54 got infected @ location 4 w/ omicron
+152 got infected @ location 4 w/ omicron
+55 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+47 got infected @ location 30 w/ delta
+144 got infected @ location 30 w/ delta
+38 got infected @ location 30 w/ delta
 ====== TIMESTEP 645 ======
 delta: ['160']
 omicron: ['43']
+145 got infected @ location 4 w/ omicron
+98 got infected @ location 4 w/ omicron
+127 got infected @ location 4 w/ omicron
+104 got infected @ location 4 w/ omicron
+99 got infected @ location 4 w/ omicron
+21 got infected @ location 4 w/ omicron
+74 got infected @ location 4 w/ omicron
+25 got infected @ location 4 w/ omicron
+54 got infected @ location 4 w/ omicron
+152 got infected @ location 4 w/ omicron
+55 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+47 got infected @ location 30 w/ delta
+144 got infected @ location 30 w/ delta
+38 got infected @ location 30 w/ delta
 ====== TIMESTEP 660 ======
 delta: ['160']
 omicron: ['43']
+141 got infected @ location 30 w/ omicron
+154 got infected @ location 30 w/ omicron
+160 got infected @ location 30 w/ omicron
+144 got infected @ location 30 w/ omicron
+38 got infected @ location 30 w/ omicron
+43 got infected @ location 30 w/ delta
+141 got infected @ location 30 w/ delta
+154 got infected @ location 30 w/ delta
+144 got infected @ location 30 w/ delta
+38 got infected @ location 30 w/ delta
 ====== TIMESTEP 675 ======
 delta: ['160']
 omicron: ['43']
+141 got infected @ location 30 w/ omicron
+154 got infected @ location 30 w/ omicron
+160 got infected @ location 30 w/ omicron
+144 got infected @ location 30 w/ omicron
+38 got infected @ location 30 w/ omicron
+43 got infected @ location 30 w/ delta
+141 got infected @ location 30 w/ delta
+154 got infected @ location 30 w/ delta
+144 got infected @ location 30 w/ delta
+38 got infected @ location 30 w/ delta
 ====== TIMESTEP 690 ======
 delta: ['160']
 omicron: ['43']
+141 got infected @ location 30 w/ omicron
+154 got infected @ location 30 w/ omicron
+160 got infected @ location 30 w/ omicron
+144 got infected @ location 30 w/ omicron
+38 got infected @ location 30 w/ omicron
+43 got infected @ location 30 w/ delta
+141 got infected @ location 30 w/ delta
+154 got infected @ location 30 w/ delta
+144 got infected @ location 30 w/ delta
+38 got infected @ location 30 w/ delta
 ====== TIMESTEP 705 ======
 delta: ['160']
 omicron: ['43']
+141 got infected @ location 30 w/ omicron
+154 got infected @ location 30 w/ omicron
+160 got infected @ location 30 w/ omicron
+144 got infected @ location 30 w/ omicron
+38 got infected @ location 30 w/ omicron
+43 got infected @ location 30 w/ delta
+141 got infected @ location 30 w/ delta
+154 got infected @ location 30 w/ delta
+144 got infected @ location 30 w/ delta
+38 got infected @ location 30 w/ delta
 ====== TIMESTEP 720 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 32 w/ delta
+76 got infected @ location 32 w/ delta
+114 got infected @ location 32 w/ delta
+68 got infected @ location 32 w/ delta
 ====== TIMESTEP 735 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 32 w/ delta
+76 got infected @ location 32 w/ delta
+114 got infected @ location 32 w/ delta
+68 got infected @ location 32 w/ delta
 ====== TIMESTEP 750 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 32 w/ delta
+76 got infected @ location 32 w/ delta
+114 got infected @ location 32 w/ delta
+68 got infected @ location 32 w/ delta
 ====== TIMESTEP 765 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 32 w/ delta
+76 got infected @ location 32 w/ delta
+114 got infected @ location 32 w/ delta
+68 got infected @ location 32 w/ delta
 ====== TIMESTEP 780 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
 ====== TIMESTEP 795 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
 ====== TIMESTEP 810 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
 ====== TIMESTEP 825 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
 ====== TIMESTEP 840 ======
 delta: ['160']
 omicron: ['43']
+119 got infected @ location 3 w/ delta
+75 got infected @ location 3 w/ delta
+48 got infected @ location 3 w/ delta
+84 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
 ====== TIMESTEP 855 ======
 delta: ['160']
 omicron: ['43']
+119 got infected @ location 3 w/ delta
+75 got infected @ location 3 w/ delta
+48 got infected @ location 3 w/ delta
+84 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
 ====== TIMESTEP 870 ======
 delta: ['160']
 omicron: ['43']
+119 got infected @ location 3 w/ delta
+75 got infected @ location 3 w/ delta
+48 got infected @ location 3 w/ delta
+84 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
 ====== TIMESTEP 885 ======
 delta: ['160']
 omicron: ['43']
+119 got infected @ location 3 w/ delta
+75 got infected @ location 3 w/ delta
+48 got infected @ location 3 w/ delta
+84 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
 ====== TIMESTEP 900 ======
 delta: ['160']
 omicron: ['43']
+104 got infected @ location 17 w/ omicron
+56 got infected @ location 17 w/ omicron
+127 got infected @ location 17 w/ omicron
+82 got infected @ location 17 w/ omicron
+8 got infected @ location 17 w/ omicron
+20 got infected @ location 17 w/ omicron
+49 got infected @ location 3 w/ delta
+48 got infected @ location 3 w/ delta
+84 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 915 ======
 delta: ['160']
 omicron: ['43']
+104 got infected @ location 17 w/ omicron
+56 got infected @ location 17 w/ omicron
+127 got infected @ location 17 w/ omicron
+82 got infected @ location 17 w/ omicron
+8 got infected @ location 17 w/ omicron
+20 got infected @ location 17 w/ omicron
+49 got infected @ location 3 w/ delta
+48 got infected @ location 3 w/ delta
+84 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 930 ======
 delta: ['160']
 omicron: ['43']
+104 got infected @ location 17 w/ omicron
+56 got infected @ location 17 w/ omicron
+127 got infected @ location 17 w/ omicron
+82 got infected @ location 17 w/ omicron
+8 got infected @ location 17 w/ omicron
+20 got infected @ location 17 w/ omicron
+49 got infected @ location 3 w/ delta
+48 got infected @ location 3 w/ delta
+84 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 945 ======
 delta: ['160']
 omicron: ['43']
+104 got infected @ location 17 w/ omicron
+56 got infected @ location 17 w/ omicron
+127 got infected @ location 17 w/ omicron
+82 got infected @ location 17 w/ omicron
+8 got infected @ location 17 w/ omicron
+20 got infected @ location 17 w/ omicron
+49 got infected @ location 3 w/ delta
+48 got infected @ location 3 w/ delta
+84 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 960 ======
 delta: ['160']
 omicron: ['43']
+16 got infected @ location 30 w/ omicron
+102 got infected @ location 30 w/ omicron
+171 got infected @ location 30 w/ omicron
+25 got infected @ location 30 w/ omicron
+64 got infected @ location 30 w/ omicron
+66 got infected @ location 30 w/ omicron
+99 got infected @ location 30 w/ omicron
+70 got infected @ location 30 w/ omicron
+84 got infected @ location 3 w/ delta
+68 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 975 ======
 delta: ['160']
 omicron: ['43']
+16 got infected @ location 30 w/ omicron
+102 got infected @ location 30 w/ omicron
+171 got infected @ location 30 w/ omicron
+25 got infected @ location 30 w/ omicron
+64 got infected @ location 30 w/ omicron
+66 got infected @ location 30 w/ omicron
+99 got infected @ location 30 w/ omicron
+70 got infected @ location 30 w/ omicron
+84 got infected @ location 3 w/ delta
+68 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 990 ======
 delta: ['160']
 omicron: ['43']
+16 got infected @ location 30 w/ omicron
+102 got infected @ location 30 w/ omicron
+171 got infected @ location 30 w/ omicron
+25 got infected @ location 30 w/ omicron
+64 got infected @ location 30 w/ omicron
+66 got infected @ location 30 w/ omicron
+99 got infected @ location 30 w/ omicron
+70 got infected @ location 30 w/ omicron
+84 got infected @ location 3 w/ delta
+68 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 1005 ======
 delta: ['160']
 omicron: ['43']
+16 got infected @ location 30 w/ omicron
+102 got infected @ location 30 w/ omicron
+171 got infected @ location 30 w/ omicron
+25 got infected @ location 30 w/ omicron
+64 got infected @ location 30 w/ omicron
+66 got infected @ location 30 w/ omicron
+99 got infected @ location 30 w/ omicron
+70 got infected @ location 30 w/ omicron
+84 got infected @ location 3 w/ delta
+68 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 1020 ======
 delta: ['160']
 omicron: ['43']
+137 got infected @ location 36 w/ omicron
+22 got infected @ location 36 w/ omicron
+133 got infected @ location 36 w/ omicron
+150 got infected @ location 36 w/ omicron
+106 got infected @ location 36 w/ omicron
+138 got infected @ location 36 w/ omicron
+146 got infected @ location 36 w/ omicron
+162 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 1035 ======
 delta: ['160']
 omicron: ['43']
+137 got infected @ location 36 w/ omicron
+22 got infected @ location 36 w/ omicron
+133 got infected @ location 36 w/ omicron
+150 got infected @ location 36 w/ omicron
+106 got infected @ location 36 w/ omicron
+138 got infected @ location 36 w/ omicron
+146 got infected @ location 36 w/ omicron
+162 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 1050 ======
 delta: ['160']
 omicron: ['43']
+137 got infected @ location 36 w/ omicron
+22 got infected @ location 36 w/ omicron
+133 got infected @ location 36 w/ omicron
+150 got infected @ location 36 w/ omicron
+106 got infected @ location 36 w/ omicron
+138 got infected @ location 36 w/ omicron
+146 got infected @ location 36 w/ omicron
+162 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 1065 ======
 delta: ['160']
 omicron: ['43']
+137 got infected @ location 36 w/ omicron
+22 got infected @ location 36 w/ omicron
+133 got infected @ location 36 w/ omicron
+150 got infected @ location 36 w/ omicron
+106 got infected @ location 36 w/ omicron
+138 got infected @ location 36 w/ omicron
+146 got infected @ location 36 w/ omicron
+162 got infected @ location 3 w/ delta
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
 ====== TIMESTEP 1080 ======
 delta: ['160']
 omicron: ['43']
+106 got infected @ location 20 w/ omicron
+175 got infected @ location 20 w/ omicron
+65 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
+168 got infected @ location 3 w/ delta
+96 got infected @ location 3 w/ delta
+162 got infected @ location 3 w/ delta
 ====== TIMESTEP 1095 ======
 delta: ['160']
 omicron: ['43']
+106 got infected @ location 20 w/ omicron
+175 got infected @ location 20 w/ omicron
+65 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
+168 got infected @ location 3 w/ delta
+96 got infected @ location 3 w/ delta
+162 got infected @ location 3 w/ delta
 ====== TIMESTEP 1110 ======
 delta: ['160']
 omicron: ['43']
+106 got infected @ location 20 w/ omicron
+175 got infected @ location 20 w/ omicron
+65 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
+168 got infected @ location 3 w/ delta
+96 got infected @ location 3 w/ delta
+162 got infected @ location 3 w/ delta
 ====== TIMESTEP 1125 ======
 delta: ['160']
 omicron: ['43']
+106 got infected @ location 20 w/ omicron
+175 got infected @ location 20 w/ omicron
+65 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+81 got infected @ location 3 w/ delta
+67 got infected @ location 3 w/ delta
+168 got infected @ location 3 w/ delta
+96 got infected @ location 3 w/ delta
+162 got infected @ location 3 w/ delta
 ====== TIMESTEP 1140 ======
 delta: ['160']
 omicron: ['43']
+71 got infected @ location 20 w/ omicron
+33 got infected @ location 20 w/ omicron
+76 got infected @ location 20 w/ omicron
+52 got infected @ location 20 w/ omicron
+80 got infected @ location 20 w/ omicron
+162 got infected @ location 3 w/ delta
 ====== TIMESTEP 1155 ======
 delta: ['160']
 omicron: ['43']
+71 got infected @ location 20 w/ omicron
+33 got infected @ location 20 w/ omicron
+76 got infected @ location 20 w/ omicron
+52 got infected @ location 20 w/ omicron
+80 got infected @ location 20 w/ omicron
+162 got infected @ location 3 w/ delta
 ====== TIMESTEP 1170 ======
 delta: ['160']
 omicron: ['43']
+71 got infected @ location 20 w/ omicron
+33 got infected @ location 20 w/ omicron
+76 got infected @ location 20 w/ omicron
+52 got infected @ location 20 w/ omicron
+80 got infected @ location 20 w/ omicron
+162 got infected @ location 3 w/ delta
 ====== TIMESTEP 1185 ======
 delta: ['160']
 omicron: ['43']
+71 got infected @ location 20 w/ omicron
+33 got infected @ location 20 w/ omicron
+76 got infected @ location 20 w/ omicron
+52 got infected @ location 20 w/ omicron
+80 got infected @ location 20 w/ omicron
+162 got infected @ location 3 w/ delta
 ====== TIMESTEP 1200 ======
 delta: ['160']
 omicron: ['43']
+47 got infected @ location 20 w/ omicron
+121 got infected @ location 20 w/ omicron
+37 got infected @ location 20 w/ omicron
 ====== TIMESTEP 1215 ======
 delta: ['160']
 omicron: ['43']
+47 got infected @ location 20 w/ omicron
+121 got infected @ location 20 w/ omicron
+37 got infected @ location 20 w/ omicron
 ====== TIMESTEP 1230 ======
 delta: ['160']
 omicron: ['43']
+47 got infected @ location 20 w/ omicron
+121 got infected @ location 20 w/ omicron
+37 got infected @ location 20 w/ omicron
 ====== TIMESTEP 1245 ======
 delta: ['160']
 omicron: ['43']
+47 got infected @ location 20 w/ omicron
+121 got infected @ location 20 w/ omicron
+37 got infected @ location 20 w/ omicron
 ====== TIMESTEP 1260 ======
 delta: ['160']
 omicron: ['43']
+64 got infected @ location 20 w/ omicron
+30 got infected @ location 20 w/ omicron
+79 got infected @ location 20 w/ omicron
+145 got infected @ location 20 w/ omicron
+159 got infected @ location 20 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 1275 ======
 delta: ['160']
 omicron: ['43']
+64 got infected @ location 20 w/ omicron
+30 got infected @ location 20 w/ omicron
+79 got infected @ location 20 w/ omicron
+145 got infected @ location 20 w/ omicron
+159 got infected @ location 20 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 1290 ======
 delta: ['160']
 omicron: ['43']
+64 got infected @ location 20 w/ omicron
+30 got infected @ location 20 w/ omicron
+79 got infected @ location 20 w/ omicron
+145 got infected @ location 20 w/ omicron
+159 got infected @ location 20 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 1305 ======
 delta: ['160']
 omicron: ['43']
+64 got infected @ location 20 w/ omicron
+30 got infected @ location 20 w/ omicron
+79 got infected @ location 20 w/ omicron
+145 got infected @ location 20 w/ omicron
+159 got infected @ location 20 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 1320 ======
 delta: ['160']
 omicron: ['43']
+117 got infected @ location 11 w/ delta
+152 got infected @ location 11 w/ delta
+63 got infected @ location 11 w/ delta
+54 got infected @ location 11 w/ delta
+74 got infected @ location 11 w/ delta
 ====== TIMESTEP 1335 ======
 delta: ['160']
 omicron: ['43']
+117 got infected @ location 11 w/ delta
+152 got infected @ location 11 w/ delta
+63 got infected @ location 11 w/ delta
+54 got infected @ location 11 w/ delta
+74 got infected @ location 11 w/ delta
 ====== TIMESTEP 1350 ======
 delta: ['160']
 omicron: ['43']
+117 got infected @ location 11 w/ delta
+152 got infected @ location 11 w/ delta
+63 got infected @ location 11 w/ delta
+54 got infected @ location 11 w/ delta
+74 got infected @ location 11 w/ delta
 ====== TIMESTEP 1365 ======
 delta: ['160']
 omicron: ['43']
+117 got infected @ location 11 w/ delta
+152 got infected @ location 11 w/ delta
+63 got infected @ location 11 w/ delta
+54 got infected @ location 11 w/ delta
+74 got infected @ location 11 w/ delta
 ====== TIMESTEP 1380 ======
 delta: ['160']
 omicron: ['43']
+88 got infected @ location 30 w/ delta
+68 got infected @ location 30 w/ delta
+76 got infected @ location 30 w/ delta
+133 got infected @ location 30 w/ delta
+121 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1395 ======
 delta: ['160']
 omicron: ['43']
+88 got infected @ location 30 w/ delta
+68 got infected @ location 30 w/ delta
+76 got infected @ location 30 w/ delta
+133 got infected @ location 30 w/ delta
+121 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1410 ======
 delta: ['160']
 omicron: ['43']
+88 got infected @ location 30 w/ delta
+68 got infected @ location 30 w/ delta
+76 got infected @ location 30 w/ delta
+133 got infected @ location 30 w/ delta
+121 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1425 ======
 delta: ['160']
 omicron: ['43']
+88 got infected @ location 30 w/ delta
+68 got infected @ location 30 w/ delta
+76 got infected @ location 30 w/ delta
+133 got infected @ location 30 w/ delta
+121 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1440 ======
 delta: ['160']
 omicron: ['43']
+172 got infected @ location 30 w/ delta
+41 got infected @ location 30 w/ delta
+105 got infected @ location 30 w/ delta
+121 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1455 ======
 delta: ['160']
 omicron: ['43']
+172 got infected @ location 30 w/ delta
+41 got infected @ location 30 w/ delta
+105 got infected @ location 30 w/ delta
+121 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1470 ======
 delta: ['160']
 omicron: ['43']
+172 got infected @ location 30 w/ delta
+41 got infected @ location 30 w/ delta
+105 got infected @ location 30 w/ delta
+121 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1485 ======
 delta: ['160']
 omicron: ['43']
+172 got infected @ location 30 w/ delta
+41 got infected @ location 30 w/ delta
+105 got infected @ location 30 w/ delta
+121 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1500 ======
 delta: ['160']
 omicron: ['43']
+17 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+91 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+73 got infected @ location 13 w/ omicron
+168 got infected @ location 13 w/ omicron
+49 got infected @ location 13 w/ omicron
+7 got infected @ location 13 w/ omicron
+19 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+170 got infected @ location 30 w/ delta
+83 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+85 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+153 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1515 ======
 delta: ['160']
 omicron: ['43']
+17 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+91 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+73 got infected @ location 13 w/ omicron
+168 got infected @ location 13 w/ omicron
+49 got infected @ location 13 w/ omicron
+7 got infected @ location 13 w/ omicron
+19 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+170 got infected @ location 30 w/ delta
+83 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+85 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+153 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1530 ======
 delta: ['160']
 omicron: ['43']
+17 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+91 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+73 got infected @ location 13 w/ omicron
+168 got infected @ location 13 w/ omicron
+49 got infected @ location 13 w/ omicron
+7 got infected @ location 13 w/ omicron
+19 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+170 got infected @ location 30 w/ delta
+83 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+85 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+153 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1545 ======
 delta: ['160']
 omicron: ['43']
+17 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+91 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+73 got infected @ location 13 w/ omicron
+168 got infected @ location 13 w/ omicron
+49 got infected @ location 13 w/ omicron
+7 got infected @ location 13 w/ omicron
+19 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+170 got infected @ location 30 w/ delta
+83 got infected @ location 30 w/ delta
+163 got infected @ location 30 w/ delta
+85 got infected @ location 30 w/ delta
+1 got infected @ location 30 w/ delta
+96 got infected @ location 30 w/ delta
+153 got infected @ location 30 w/ delta
+107 got infected @ location 30 w/ delta
 ====== TIMESTEP 1560 ======
 delta: ['160']
 omicron: ['43']
+49 got infected @ location 13 w/ omicron
+7 got infected @ location 13 w/ omicron
+19 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+102 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+174 got infected @ location 20 w/ delta
+105 got infected @ location 20 w/ delta
+1 got infected @ location 20 w/ delta
+168 got infected @ location 20 w/ delta
 ====== TIMESTEP 1575 ======
 delta: ['160']
 omicron: ['43']
+49 got infected @ location 13 w/ omicron
+7 got infected @ location 13 w/ omicron
+19 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+102 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+174 got infected @ location 20 w/ delta
+105 got infected @ location 20 w/ delta
+1 got infected @ location 20 w/ delta
+168 got infected @ location 20 w/ delta
 ====== TIMESTEP 1590 ======
 delta: ['160']
 omicron: ['43']
+49 got infected @ location 13 w/ omicron
+7 got infected @ location 13 w/ omicron
+19 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+102 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+174 got infected @ location 20 w/ delta
+105 got infected @ location 20 w/ delta
+1 got infected @ location 20 w/ delta
+168 got infected @ location 20 w/ delta
 ====== TIMESTEP 1605 ======
 delta: ['160']
 omicron: ['43']
+49 got infected @ location 13 w/ omicron
+7 got infected @ location 13 w/ omicron
+19 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+102 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+174 got infected @ location 20 w/ delta
+105 got infected @ location 20 w/ delta
+1 got infected @ location 20 w/ delta
+168 got infected @ location 20 w/ delta
 ====== TIMESTEP 1620 ======
 delta: ['160']
 omicron: ['43']
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+102 got infected @ location 13 w/ omicron
+128 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+63 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+131 got infected @ location 12 w/ delta
+146 got infected @ location 12 w/ delta
+94 got infected @ location 12 w/ delta
+57 got infected @ location 12 w/ delta
+5 got infected @ location 12 w/ delta
+18 got infected @ location 12 w/ delta
+116 got infected @ location 12 w/ delta
+26 got infected @ location 12 w/ delta
+124 got infected @ location 12 w/ delta
 ====== TIMESTEP 1635 ======
 delta: ['160']
 omicron: ['43']
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+102 got infected @ location 13 w/ omicron
+128 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+63 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+131 got infected @ location 12 w/ delta
+146 got infected @ location 12 w/ delta
+94 got infected @ location 12 w/ delta
+57 got infected @ location 12 w/ delta
+5 got infected @ location 12 w/ delta
+18 got infected @ location 12 w/ delta
+116 got infected @ location 12 w/ delta
+26 got infected @ location 12 w/ delta
+124 got infected @ location 12 w/ delta
 ====== TIMESTEP 1650 ======
 delta: ['160']
 omicron: ['43']
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+102 got infected @ location 13 w/ omicron
+128 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+63 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+131 got infected @ location 12 w/ delta
+146 got infected @ location 12 w/ delta
+94 got infected @ location 12 w/ delta
+57 got infected @ location 12 w/ delta
+5 got infected @ location 12 w/ delta
+18 got infected @ location 12 w/ delta
+116 got infected @ location 12 w/ delta
+26 got infected @ location 12 w/ delta
+124 got infected @ location 12 w/ delta
 ====== TIMESTEP 1665 ======
 delta: ['160']
 omicron: ['43']
+33 got infected @ location 13 w/ omicron
+169 got infected @ location 13 w/ omicron
+102 got infected @ location 13 w/ omicron
+128 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+125 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+63 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+131 got infected @ location 12 w/ delta
+146 got infected @ location 12 w/ delta
+94 got infected @ location 12 w/ delta
+57 got infected @ location 12 w/ delta
+5 got infected @ location 12 w/ delta
+18 got infected @ location 12 w/ delta
+116 got infected @ location 12 w/ delta
+26 got infected @ location 12 w/ delta
+124 got infected @ location 12 w/ delta
 ====== TIMESTEP 1680 ======
 delta: ['160']
 omicron: ['43']
+63 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+167 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+173 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+57 got infected @ location 12 w/ delta
+5 got infected @ location 12 w/ delta
+18 got infected @ location 12 w/ delta
+116 got infected @ location 12 w/ delta
+26 got infected @ location 12 w/ delta
+124 got infected @ location 12 w/ delta
+79 got infected @ location 12 w/ delta
+102 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
 ====== TIMESTEP 1695 ======
 delta: ['160']
 omicron: ['43']
+63 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+167 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+173 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+57 got infected @ location 12 w/ delta
+5 got infected @ location 12 w/ delta
+18 got infected @ location 12 w/ delta
+116 got infected @ location 12 w/ delta
+26 got infected @ location 12 w/ delta
+124 got infected @ location 12 w/ delta
+79 got infected @ location 12 w/ delta
+102 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
 ====== TIMESTEP 1710 ======
 delta: ['160']
 omicron: ['43']
+63 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+167 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+173 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+57 got infected @ location 12 w/ delta
+5 got infected @ location 12 w/ delta
+18 got infected @ location 12 w/ delta
+116 got infected @ location 12 w/ delta
+26 got infected @ location 12 w/ delta
+124 got infected @ location 12 w/ delta
+79 got infected @ location 12 w/ delta
+102 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
 ====== TIMESTEP 1725 ======
 delta: ['160']
 omicron: ['43']
+63 got infected @ location 13 w/ omicron
+163 got infected @ location 13 w/ omicron
+89 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+167 got infected @ location 13 w/ omicron
+141 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+138 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+157 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+46 got infected @ location 13 w/ omicron
+123 got infected @ location 13 w/ omicron
+173 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+57 got infected @ location 12 w/ delta
+5 got infected @ location 12 w/ delta
+18 got infected @ location 12 w/ delta
+116 got infected @ location 12 w/ delta
+26 got infected @ location 12 w/ delta
+124 got infected @ location 12 w/ delta
+79 got infected @ location 12 w/ delta
+102 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
 ====== TIMESTEP 1740 ======
 delta: ['160']
 omicron: ['43']
+67 got infected @ location 16 w/ omicron
+11 got infected @ location 16 w/ omicron
+20 got infected @ location 16 w/ omicron
+25 got infected @ location 16 w/ omicron
+34 got infected @ location 16 w/ omicron
+54 got infected @ location 16 w/ omicron
+125 got infected @ location 16 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 1755 ======
 delta: ['160']
 omicron: ['43']
+67 got infected @ location 16 w/ omicron
+11 got infected @ location 16 w/ omicron
+20 got infected @ location 16 w/ omicron
+25 got infected @ location 16 w/ omicron
+34 got infected @ location 16 w/ omicron
+54 got infected @ location 16 w/ omicron
+125 got infected @ location 16 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 1770 ======
 delta: ['160']
 omicron: ['43']
+67 got infected @ location 16 w/ omicron
+11 got infected @ location 16 w/ omicron
+20 got infected @ location 16 w/ omicron
+25 got infected @ location 16 w/ omicron
+34 got infected @ location 16 w/ omicron
+54 got infected @ location 16 w/ omicron
+125 got infected @ location 16 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 1785 ======
 delta: ['160']
 omicron: ['43']
+67 got infected @ location 16 w/ omicron
+11 got infected @ location 16 w/ omicron
+20 got infected @ location 16 w/ omicron
+25 got infected @ location 16 w/ omicron
+34 got infected @ location 16 w/ omicron
+54 got infected @ location 16 w/ omicron
+125 got infected @ location 16 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 1800 ======
 delta: ['160']
 omicron: ['43']
+137 got infected @ location 20 w/ delta
+156 got infected @ location 20 w/ delta
+124 got infected @ location 20 w/ delta
+93 got infected @ location 20 w/ delta
+4 got infected @ location 20 w/ delta
+169 got infected @ location 20 w/ delta
+50 got infected @ location 20 w/ delta
+33 got infected @ location 20 w/ delta
+89 got infected @ location 20 w/ delta
 ====== TIMESTEP 1815 ======
 delta: ['160']
 omicron: ['43']
+137 got infected @ location 20 w/ delta
+156 got infected @ location 20 w/ delta
+124 got infected @ location 20 w/ delta
+93 got infected @ location 20 w/ delta
+4 got infected @ location 20 w/ delta
+169 got infected @ location 20 w/ delta
+50 got infected @ location 20 w/ delta
+33 got infected @ location 20 w/ delta
+89 got infected @ location 20 w/ delta
 ====== TIMESTEP 1830 ======
 delta: ['160']
 omicron: ['43']
+137 got infected @ location 20 w/ delta
+156 got infected @ location 20 w/ delta
+124 got infected @ location 20 w/ delta
+93 got infected @ location 20 w/ delta
+4 got infected @ location 20 w/ delta
+169 got infected @ location 20 w/ delta
+50 got infected @ location 20 w/ delta
+33 got infected @ location 20 w/ delta
+89 got infected @ location 20 w/ delta
 ====== TIMESTEP 1845 ======
 delta: ['160']
 omicron: ['43']
+137 got infected @ location 20 w/ delta
+156 got infected @ location 20 w/ delta
+124 got infected @ location 20 w/ delta
+93 got infected @ location 20 w/ delta
+4 got infected @ location 20 w/ delta
+169 got infected @ location 20 w/ delta
+50 got infected @ location 20 w/ delta
+33 got infected @ location 20 w/ delta
+89 got infected @ location 20 w/ delta
 ====== TIMESTEP 1860 ======
 delta: ['160']
 omicron: ['43']
+17 got infected @ location 12 w/ omicron
+78 got infected @ location 12 w/ omicron
+100 got infected @ location 12 w/ omicron
+132 got infected @ location 12 w/ omicron
+140 got infected @ location 12 w/ omicron
+152 got infected @ location 10 w/ delta
+136 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+121 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+20 got infected @ location 10 w/ delta
+138 got infected @ location 10 w/ delta
+69 got infected @ location 10 w/ delta
+9 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+2 got infected @ location 10 w/ delta
+139 got infected @ location 10 w/ delta
+169 got infected @ location 10 w/ delta
+10 got infected @ location 10 w/ delta
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
 ====== TIMESTEP 1875 ======
 delta: ['160']
 omicron: ['43']
+17 got infected @ location 12 w/ omicron
+78 got infected @ location 12 w/ omicron
+100 got infected @ location 12 w/ omicron
+132 got infected @ location 12 w/ omicron
+140 got infected @ location 12 w/ omicron
+152 got infected @ location 10 w/ delta
+136 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+121 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+20 got infected @ location 10 w/ delta
+138 got infected @ location 10 w/ delta
+69 got infected @ location 10 w/ delta
+9 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+2 got infected @ location 10 w/ delta
+139 got infected @ location 10 w/ delta
+169 got infected @ location 10 w/ delta
+10 got infected @ location 10 w/ delta
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
 ====== TIMESTEP 1890 ======
 delta: ['160']
 omicron: ['43']
+17 got infected @ location 12 w/ omicron
+78 got infected @ location 12 w/ omicron
+100 got infected @ location 12 w/ omicron
+132 got infected @ location 12 w/ omicron
+140 got infected @ location 12 w/ omicron
+152 got infected @ location 10 w/ delta
+136 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+121 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+20 got infected @ location 10 w/ delta
+138 got infected @ location 10 w/ delta
+69 got infected @ location 10 w/ delta
+9 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+2 got infected @ location 10 w/ delta
+139 got infected @ location 10 w/ delta
+169 got infected @ location 10 w/ delta
+10 got infected @ location 10 w/ delta
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
 ====== TIMESTEP 1905 ======
 delta: ['160']
 omicron: ['43']
+17 got infected @ location 12 w/ omicron
+78 got infected @ location 12 w/ omicron
+100 got infected @ location 12 w/ omicron
+132 got infected @ location 12 w/ omicron
+140 got infected @ location 12 w/ omicron
+152 got infected @ location 10 w/ delta
+136 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+121 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+20 got infected @ location 10 w/ delta
+138 got infected @ location 10 w/ delta
+69 got infected @ location 10 w/ delta
+9 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+2 got infected @ location 10 w/ delta
+139 got infected @ location 10 w/ delta
+169 got infected @ location 10 w/ delta
+10 got infected @ location 10 w/ delta
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
 ====== TIMESTEP 1920 ======
 delta: ['160']
 omicron: ['43']
+100 got infected @ location 12 w/ omicron
+132 got infected @ location 12 w/ omicron
+140 got infected @ location 12 w/ omicron
+139 got infected @ location 10 w/ delta
+169 got infected @ location 10 w/ delta
+10 got infected @ location 10 w/ delta
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+170 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+119 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
 ====== TIMESTEP 1935 ======
 delta: ['160']
 omicron: ['43']
+100 got infected @ location 12 w/ omicron
+132 got infected @ location 12 w/ omicron
+140 got infected @ location 12 w/ omicron
+139 got infected @ location 10 w/ delta
+169 got infected @ location 10 w/ delta
+10 got infected @ location 10 w/ delta
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+170 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+119 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
 ====== TIMESTEP 1950 ======
 delta: ['160']
 omicron: ['43']
+100 got infected @ location 12 w/ omicron
+132 got infected @ location 12 w/ omicron
+140 got infected @ location 12 w/ omicron
+139 got infected @ location 10 w/ delta
+169 got infected @ location 10 w/ delta
+10 got infected @ location 10 w/ delta
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+170 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+119 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
 ====== TIMESTEP 1965 ======
 delta: ['160']
 omicron: ['43']
+100 got infected @ location 12 w/ omicron
+132 got infected @ location 12 w/ omicron
+140 got infected @ location 12 w/ omicron
+139 got infected @ location 10 w/ delta
+169 got infected @ location 10 w/ delta
+10 got infected @ location 10 w/ delta
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+170 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+119 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
 ====== TIMESTEP 1980 ======
 delta: ['160']
 omicron: ['43']
+72 got infected @ location 12 w/ omicron
+122 got infected @ location 12 w/ omicron
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+170 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+123 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+119 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
 ====== TIMESTEP 1995 ======
 delta: ['160']
 omicron: ['43']
+72 got infected @ location 12 w/ omicron
+122 got infected @ location 12 w/ omicron
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+170 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+123 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+119 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
 ====== TIMESTEP 2010 ======
 delta: ['160']
 omicron: ['43']
+72 got infected @ location 12 w/ omicron
+122 got infected @ location 12 w/ omicron
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+170 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+123 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+119 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
 ====== TIMESTEP 2025 ======
 delta: ['160']
 omicron: ['43']
+72 got infected @ location 12 w/ omicron
+122 got infected @ location 12 w/ omicron
+1 got infected @ location 10 w/ delta
+168 got infected @ location 10 w/ delta
+170 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+123 got infected @ location 10 w/ delta
+154 got infected @ location 10 w/ delta
+119 got infected @ location 10 w/ delta
+110 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
 ====== TIMESTEP 2040 ======
 delta: ['160']
 omicron: ['43']
+20 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+66 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+65 got infected @ location 13 w/ omicron
+80 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+134 got infected @ location 13 w/ omicron
+36 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+155 got infected @ location 13 w/ omicron
+62 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+158 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+29 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+32 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+53 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+95 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+115 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+67 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+75 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+132 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+18 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
 ====== TIMESTEP 2055 ======
 delta: ['160']
 omicron: ['43']
+20 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+66 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+65 got infected @ location 13 w/ omicron
+80 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+134 got infected @ location 13 w/ omicron
+36 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+155 got infected @ location 13 w/ omicron
+62 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+158 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+29 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+32 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+53 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+95 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+115 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+67 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+75 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+132 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+18 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
 ====== TIMESTEP 2070 ======
 delta: ['160']
 omicron: ['43']
+20 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+66 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+65 got infected @ location 13 w/ omicron
+80 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+134 got infected @ location 13 w/ omicron
+36 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+155 got infected @ location 13 w/ omicron
+62 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+158 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+29 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+32 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+53 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+95 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+115 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+67 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+75 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+132 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+18 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
 ====== TIMESTEP 2085 ======
 delta: ['160']
 omicron: ['43']
+20 got infected @ location 13 w/ omicron
+101 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+66 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+65 got infected @ location 13 w/ omicron
+80 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+134 got infected @ location 13 w/ omicron
+36 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+155 got infected @ location 13 w/ omicron
+62 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+158 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+29 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+32 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+53 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+95 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+115 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+67 got infected @ location 10 w/ delta
+96 got infected @ location 10 w/ delta
+75 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+132 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+18 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
 ====== TIMESTEP 2100 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+155 got infected @ location 13 w/ omicron
+62 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+158 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+29 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+32 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+53 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+135 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+95 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+115 got infected @ location 13 w/ omicron
+2 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+109 got infected @ location 13 w/ omicron
+165 got infected @ location 13 w/ omicron
+72 got infected @ location 10 w/ delta
+83 got infected @ location 10 w/ delta
+123 got infected @ location 10 w/ delta
+75 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+132 got infected @ location 10 w/ delta
+71 got infected @ location 10 w/ delta
+67 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+18 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+161 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
+55 got infected @ location 10 w/ delta
+101 got infected @ location 10 w/ delta
+149 got infected @ location 10 w/ delta
 ====== TIMESTEP 2115 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+155 got infected @ location 13 w/ omicron
+62 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+158 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+29 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+32 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+53 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+135 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+95 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+115 got infected @ location 13 w/ omicron
+2 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+109 got infected @ location 13 w/ omicron
+165 got infected @ location 13 w/ omicron
+72 got infected @ location 10 w/ delta
+83 got infected @ location 10 w/ delta
+123 got infected @ location 10 w/ delta
+75 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+132 got infected @ location 10 w/ delta
+71 got infected @ location 10 w/ delta
+67 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+18 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+161 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
+55 got infected @ location 10 w/ delta
+101 got infected @ location 10 w/ delta
+149 got infected @ location 10 w/ delta
 ====== TIMESTEP 2130 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+155 got infected @ location 13 w/ omicron
+62 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+158 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+29 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+32 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+53 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+135 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+95 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+115 got infected @ location 13 w/ omicron
+2 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+109 got infected @ location 13 w/ omicron
+165 got infected @ location 13 w/ omicron
+72 got infected @ location 10 w/ delta
+83 got infected @ location 10 w/ delta
+123 got infected @ location 10 w/ delta
+75 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+132 got infected @ location 10 w/ delta
+71 got infected @ location 10 w/ delta
+67 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+18 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+161 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
+55 got infected @ location 10 w/ delta
+101 got infected @ location 10 w/ delta
+149 got infected @ location 10 w/ delta
 ====== TIMESTEP 2145 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 13 w/ omicron
+40 got infected @ location 13 w/ omicron
+68 got infected @ location 13 w/ omicron
+155 got infected @ location 13 w/ omicron
+62 got infected @ location 13 w/ omicron
+104 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+158 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+29 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+32 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+106 got infected @ location 13 w/ omicron
+53 got infected @ location 13 w/ omicron
+127 got infected @ location 13 w/ omicron
+135 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+95 got infected @ location 13 w/ omicron
+88 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+115 got infected @ location 13 w/ omicron
+2 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+109 got infected @ location 13 w/ omicron
+165 got infected @ location 13 w/ omicron
+72 got infected @ location 10 w/ delta
+83 got infected @ location 10 w/ delta
+123 got infected @ location 10 w/ delta
+75 got infected @ location 10 w/ delta
+130 got infected @ location 10 w/ delta
+132 got infected @ location 10 w/ delta
+71 got infected @ location 10 w/ delta
+67 got infected @ location 10 w/ delta
+63 got infected @ location 10 w/ delta
+90 got infected @ location 10 w/ delta
+18 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+161 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
+55 got infected @ location 10 w/ delta
+101 got infected @ location 10 w/ delta
+149 got infected @ location 10 w/ delta
 ====== TIMESTEP 2160 ======
 delta: ['160']
 omicron: ['43']
+35 got infected @ location 20 w/ omicron
+48 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+14 got infected @ location 25 w/ delta
+82 got infected @ location 25 w/ delta
+8 got infected @ location 25 w/ delta
+112 got infected @ location 25 w/ delta
+119 got infected @ location 25 w/ delta
+126 got infected @ location 25 w/ delta
+83 got infected @ location 25 w/ delta
 ====== TIMESTEP 2175 ======
 delta: ['160']
 omicron: ['43']
+35 got infected @ location 20 w/ omicron
+48 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+14 got infected @ location 25 w/ delta
+82 got infected @ location 25 w/ delta
+8 got infected @ location 25 w/ delta
+112 got infected @ location 25 w/ delta
+119 got infected @ location 25 w/ delta
+126 got infected @ location 25 w/ delta
+83 got infected @ location 25 w/ delta
 ====== TIMESTEP 2190 ======
 delta: ['160']
 omicron: ['43']
+35 got infected @ location 20 w/ omicron
+48 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+14 got infected @ location 25 w/ delta
+82 got infected @ location 25 w/ delta
+8 got infected @ location 25 w/ delta
+112 got infected @ location 25 w/ delta
+119 got infected @ location 25 w/ delta
+126 got infected @ location 25 w/ delta
+83 got infected @ location 25 w/ delta
 ====== TIMESTEP 2205 ======
 delta: ['160']
 omicron: ['43']
+35 got infected @ location 20 w/ omicron
+48 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+14 got infected @ location 25 w/ delta
+82 got infected @ location 25 w/ delta
+8 got infected @ location 25 w/ delta
+112 got infected @ location 25 w/ delta
+119 got infected @ location 25 w/ delta
+126 got infected @ location 25 w/ delta
+83 got infected @ location 25 w/ delta
 ====== TIMESTEP 2220 ======
 delta: ['160']
 omicron: ['43']
+133 got infected @ location 10 w/ omicron
+63 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+90 got infected @ location 10 w/ omicron
+129 got infected @ location 10 w/ omicron
+18 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2235 ======
 delta: ['160']
 omicron: ['43']
+133 got infected @ location 10 w/ omicron
+63 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+90 got infected @ location 10 w/ omicron
+129 got infected @ location 10 w/ omicron
+18 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2250 ======
 delta: ['160']
 omicron: ['43']
+133 got infected @ location 10 w/ omicron
+63 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+90 got infected @ location 10 w/ omicron
+129 got infected @ location 10 w/ omicron
+18 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2265 ======
 delta: ['160']
 omicron: ['43']
+133 got infected @ location 10 w/ omicron
+63 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+90 got infected @ location 10 w/ omicron
+129 got infected @ location 10 w/ omicron
+18 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2280 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 10 w/ omicron
+0 got infected @ location 10 w/ omicron
+72 got infected @ location 10 w/ omicron
+18 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+80 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2295 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 10 w/ omicron
+0 got infected @ location 10 w/ omicron
+72 got infected @ location 10 w/ omicron
+18 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+80 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2310 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 10 w/ omicron
+0 got infected @ location 10 w/ omicron
+72 got infected @ location 10 w/ omicron
+18 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+80 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2325 ======
 delta: ['160']
 omicron: ['43']
+48 got infected @ location 10 w/ omicron
+0 got infected @ location 10 w/ omicron
+72 got infected @ location 10 w/ omicron
+18 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+80 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2340 ======
 delta: ['160']
 omicron: ['43']
+69 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+80 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+160 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+93 got infected @ location 10 w/ omicron
+94 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+19 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+116 got infected @ location 10 w/ omicron
+69 got infected @ location 10 w/ delta
+33 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+161 got infected @ location 10 w/ delta
+80 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
+55 got infected @ location 10 w/ delta
+43 got infected @ location 10 w/ delta
+101 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+94 got infected @ location 10 w/ delta
+102 got infected @ location 10 w/ delta
+149 got infected @ location 10 w/ delta
+62 got infected @ location 10 w/ delta
+19 got infected @ location 10 w/ delta
+44 got infected @ location 10 w/ delta
+116 got infected @ location 10 w/ delta
 ====== TIMESTEP 2355 ======
 delta: ['160']
 omicron: ['43']
+69 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+80 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+160 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+93 got infected @ location 10 w/ omicron
+94 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+19 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+116 got infected @ location 10 w/ omicron
+69 got infected @ location 10 w/ delta
+33 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+161 got infected @ location 10 w/ delta
+80 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
+55 got infected @ location 10 w/ delta
+43 got infected @ location 10 w/ delta
+101 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+94 got infected @ location 10 w/ delta
+102 got infected @ location 10 w/ delta
+149 got infected @ location 10 w/ delta
+62 got infected @ location 10 w/ delta
+19 got infected @ location 10 w/ delta
+44 got infected @ location 10 w/ delta
+116 got infected @ location 10 w/ delta
 ====== TIMESTEP 2370 ======
 delta: ['160']
 omicron: ['43']
+69 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+80 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+160 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+93 got infected @ location 10 w/ omicron
+94 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+19 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+116 got infected @ location 10 w/ omicron
+69 got infected @ location 10 w/ delta
+33 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+161 got infected @ location 10 w/ delta
+80 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
+55 got infected @ location 10 w/ delta
+43 got infected @ location 10 w/ delta
+101 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+94 got infected @ location 10 w/ delta
+102 got infected @ location 10 w/ delta
+149 got infected @ location 10 w/ delta
+62 got infected @ location 10 w/ delta
+19 got infected @ location 10 w/ delta
+44 got infected @ location 10 w/ delta
+116 got infected @ location 10 w/ delta
 ====== TIMESTEP 2385 ======
 delta: ['160']
 omicron: ['43']
+69 got infected @ location 10 w/ omicron
+33 got infected @ location 10 w/ omicron
+144 got infected @ location 10 w/ omicron
+161 got infected @ location 10 w/ omicron
+80 got infected @ location 10 w/ omicron
+156 got infected @ location 10 w/ omicron
+160 got infected @ location 10 w/ omicron
+55 got infected @ location 10 w/ omicron
+101 got infected @ location 10 w/ omicron
+93 got infected @ location 10 w/ omicron
+94 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+19 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+116 got infected @ location 10 w/ omicron
+69 got infected @ location 10 w/ delta
+33 got infected @ location 10 w/ delta
+144 got infected @ location 10 w/ delta
+161 got infected @ location 10 w/ delta
+80 got infected @ location 10 w/ delta
+156 got infected @ location 10 w/ delta
+55 got infected @ location 10 w/ delta
+43 got infected @ location 10 w/ delta
+101 got infected @ location 10 w/ delta
+93 got infected @ location 10 w/ delta
+94 got infected @ location 10 w/ delta
+102 got infected @ location 10 w/ delta
+149 got infected @ location 10 w/ delta
+62 got infected @ location 10 w/ delta
+19 got infected @ location 10 w/ delta
+44 got infected @ location 10 w/ delta
+116 got infected @ location 10 w/ delta
 ====== TIMESTEP 2400 ======
 delta: ['160']
 omicron: ['43']
+101 got infected @ location 10 w/ omicron
+52 got infected @ location 10 w/ omicron
+93 got infected @ location 10 w/ omicron
+94 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+95 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+19 got infected @ location 10 w/ omicron
+10 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+107 got infected @ location 10 w/ omicron
+116 got infected @ location 10 w/ omicron
+2 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 2415 ======
 delta: ['160']
 omicron: ['43']
+101 got infected @ location 10 w/ omicron
+52 got infected @ location 10 w/ omicron
+93 got infected @ location 10 w/ omicron
+94 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+95 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+19 got infected @ location 10 w/ omicron
+10 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+107 got infected @ location 10 w/ omicron
+116 got infected @ location 10 w/ omicron
+2 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 2430 ======
 delta: ['160']
 omicron: ['43']
+101 got infected @ location 10 w/ omicron
+52 got infected @ location 10 w/ omicron
+93 got infected @ location 10 w/ omicron
+94 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+95 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+19 got infected @ location 10 w/ omicron
+10 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+107 got infected @ location 10 w/ omicron
+116 got infected @ location 10 w/ omicron
+2 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 2445 ======
 delta: ['160']
 omicron: ['43']
+101 got infected @ location 10 w/ omicron
+52 got infected @ location 10 w/ omicron
+93 got infected @ location 10 w/ omicron
+94 got infected @ location 10 w/ omicron
+102 got infected @ location 10 w/ omicron
+149 got infected @ location 10 w/ omicron
+95 got infected @ location 10 w/ omicron
+62 got infected @ location 10 w/ omicron
+19 got infected @ location 10 w/ omicron
+10 got infected @ location 10 w/ omicron
+44 got infected @ location 10 w/ omicron
+107 got infected @ location 10 w/ omicron
+116 got infected @ location 10 w/ omicron
+2 got infected @ location 10 w/ omicron
+187 got infected @ location 89 w/ delta
+161 got infected @ location 89 w/ delta
 ====== TIMESTEP 2460 ======
 delta: ['160']
 omicron: ['43']
+53 got infected @ location 12 w/ delta
+57 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
+6 got infected @ location 12 w/ delta
 ====== TIMESTEP 2475 ======
 delta: ['160']
 omicron: ['43']
+53 got infected @ location 12 w/ delta
+57 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
+6 got infected @ location 12 w/ delta
 ====== TIMESTEP 2490 ======
 delta: ['160']
 omicron: ['43']
+53 got infected @ location 12 w/ delta
+57 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
+6 got infected @ location 12 w/ delta
 ====== TIMESTEP 2505 ======
 delta: ['160']
 omicron: ['43']
+53 got infected @ location 12 w/ delta
+57 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
+6 got infected @ location 12 w/ delta
 ====== TIMESTEP 2520 ======
 delta: ['160']
 omicron: ['43']
+72 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+126 got infected @ location 4 w/ omicron
+175 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+57 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
+6 got infected @ location 12 w/ delta
+8 got infected @ location 12 w/ delta
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
 ====== TIMESTEP 2535 ======
 delta: ['160']
 omicron: ['43']
+72 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+126 got infected @ location 4 w/ omicron
+175 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+57 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
+6 got infected @ location 12 w/ delta
+8 got infected @ location 12 w/ delta
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
 ====== TIMESTEP 2550 ======
 delta: ['160']
 omicron: ['43']
+72 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+126 got infected @ location 4 w/ omicron
+175 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+57 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
+6 got infected @ location 12 w/ delta
+8 got infected @ location 12 w/ delta
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
 ====== TIMESTEP 2565 ======
 delta: ['160']
 omicron: ['43']
+72 got infected @ location 4 w/ omicron
+106 got infected @ location 4 w/ omicron
+126 got infected @ location 4 w/ omicron
+175 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+57 got infected @ location 12 w/ delta
+17 got infected @ location 12 w/ delta
+6 got infected @ location 12 w/ delta
+8 got infected @ location 12 w/ delta
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
 ====== TIMESTEP 2580 ======
 delta: ['160']
 omicron: ['43']
+108 got infected @ location 4 w/ omicron
+52 got infected @ location 4 w/ omicron
+175 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+118 got infected @ location 12 w/ delta
+8 got infected @ location 12 w/ delta
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
 ====== TIMESTEP 2595 ======
 delta: ['160']
 omicron: ['43']
+108 got infected @ location 4 w/ omicron
+52 got infected @ location 4 w/ omicron
+175 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+118 got infected @ location 12 w/ delta
+8 got infected @ location 12 w/ delta
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
 ====== TIMESTEP 2610 ======
 delta: ['160']
 omicron: ['43']
+108 got infected @ location 4 w/ omicron
+52 got infected @ location 4 w/ omicron
+175 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+118 got infected @ location 12 w/ delta
+8 got infected @ location 12 w/ delta
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
 ====== TIMESTEP 2625 ======
 delta: ['160']
 omicron: ['43']
+108 got infected @ location 4 w/ omicron
+52 got infected @ location 4 w/ omicron
+175 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+118 got infected @ location 12 w/ delta
+8 got infected @ location 12 w/ delta
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
 ====== TIMESTEP 2640 ======
 delta: ['160']
 omicron: ['43']
+87 got infected @ location 4 w/ omicron
+36 got infected @ location 4 w/ omicron
+122 got infected @ location 4 w/ omicron
+58 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
+145 got infected @ location 12 w/ delta
+131 got infected @ location 12 w/ delta
+155 got infected @ location 12 w/ delta
 ====== TIMESTEP 2655 ======
 delta: ['160']
 omicron: ['43']
+87 got infected @ location 4 w/ omicron
+36 got infected @ location 4 w/ omicron
+122 got infected @ location 4 w/ omicron
+58 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
+145 got infected @ location 12 w/ delta
+131 got infected @ location 12 w/ delta
+155 got infected @ location 12 w/ delta
 ====== TIMESTEP 2670 ======
 delta: ['160']
 omicron: ['43']
+87 got infected @ location 4 w/ omicron
+36 got infected @ location 4 w/ omicron
+122 got infected @ location 4 w/ omicron
+58 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
+145 got infected @ location 12 w/ delta
+131 got infected @ location 12 w/ delta
+155 got infected @ location 12 w/ delta
 ====== TIMESTEP 2685 ======
 delta: ['160']
 omicron: ['43']
+87 got infected @ location 4 w/ omicron
+36 got infected @ location 4 w/ omicron
+122 got infected @ location 4 w/ omicron
+58 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+60 got infected @ location 12 w/ delta
+75 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
+145 got infected @ location 12 w/ delta
+131 got infected @ location 12 w/ delta
+155 got infected @ location 12 w/ delta
 ====== TIMESTEP 2700 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 4 w/ omicron
+147 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+46 got infected @ location 4 w/ omicron
+124 got infected @ location 12 w/ delta
+44 got infected @ location 12 w/ delta
+101 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
+145 got infected @ location 12 w/ delta
+131 got infected @ location 12 w/ delta
+155 got infected @ location 12 w/ delta
+34 got infected @ location 12 w/ delta
+106 got infected @ location 12 w/ delta
+122 got infected @ location 12 w/ delta
 ====== TIMESTEP 2715 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 4 w/ omicron
+147 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+46 got infected @ location 4 w/ omicron
+124 got infected @ location 12 w/ delta
+44 got infected @ location 12 w/ delta
+101 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
+145 got infected @ location 12 w/ delta
+131 got infected @ location 12 w/ delta
+155 got infected @ location 12 w/ delta
+34 got infected @ location 12 w/ delta
+106 got infected @ location 12 w/ delta
+122 got infected @ location 12 w/ delta
 ====== TIMESTEP 2730 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 4 w/ omicron
+147 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+46 got infected @ location 4 w/ omicron
+124 got infected @ location 12 w/ delta
+44 got infected @ location 12 w/ delta
+101 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
+145 got infected @ location 12 w/ delta
+131 got infected @ location 12 w/ delta
+155 got infected @ location 12 w/ delta
+34 got infected @ location 12 w/ delta
+106 got infected @ location 12 w/ delta
+122 got infected @ location 12 w/ delta
 ====== TIMESTEP 2745 ======
 delta: ['160']
 omicron: ['43']
+36 got infected @ location 4 w/ omicron
+147 got infected @ location 4 w/ omicron
+157 got infected @ location 4 w/ omicron
+46 got infected @ location 4 w/ omicron
+124 got infected @ location 12 w/ delta
+44 got infected @ location 12 w/ delta
+101 got infected @ location 12 w/ delta
+165 got infected @ location 12 w/ delta
+145 got infected @ location 12 w/ delta
+131 got infected @ location 12 w/ delta
+155 got infected @ location 12 w/ delta
+34 got infected @ location 12 w/ delta
+106 got infected @ location 12 w/ delta
+122 got infected @ location 12 w/ delta
 ====== TIMESTEP 2760 ======
 delta: ['160']
 omicron: ['43']
+46 got infected @ location 4 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2775 ======
 delta: ['160']
 omicron: ['43']
+46 got infected @ location 4 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2790 ======
 delta: ['160']
 omicron: ['43']
+46 got infected @ location 4 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2805 ======
 delta: ['160']
 omicron: ['43']
+46 got infected @ location 4 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 2820 ======
 delta: ['160']
 omicron: ['43']
+92 got infected @ location 13 w/ omicron
+82 got infected @ location 13 w/ omicron
+50 got infected @ location 13 w/ omicron
+67 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+103 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+60 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
 ====== TIMESTEP 2835 ======
 delta: ['160']
 omicron: ['43']
+92 got infected @ location 13 w/ omicron
+82 got infected @ location 13 w/ omicron
+50 got infected @ location 13 w/ omicron
+67 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+103 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+60 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
 ====== TIMESTEP 2850 ======
 delta: ['160']
 omicron: ['43']
+92 got infected @ location 13 w/ omicron
+82 got infected @ location 13 w/ omicron
+50 got infected @ location 13 w/ omicron
+67 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+103 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+60 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
 ====== TIMESTEP 2865 ======
 delta: ['160']
 omicron: ['43']
+92 got infected @ location 13 w/ omicron
+82 got infected @ location 13 w/ omicron
+50 got infected @ location 13 w/ omicron
+67 got infected @ location 13 w/ omicron
+69 got infected @ location 13 w/ omicron
+103 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+60 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
 ====== TIMESTEP 2880 ======
 delta: ['160']
 omicron: ['43']
+103 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+60 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+151 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+6 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+145 got infected @ location 13 w/ omicron
+5 got infected @ location 13 w/ omicron
+174 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+25 got infected @ location 13 w/ omicron
+82 got infected @ location 30 w/ delta
+63 got infected @ location 30 w/ delta
+24 got infected @ location 30 w/ delta
+81 got infected @ location 30 w/ delta
+22 got infected @ location 30 w/ delta
+175 got infected @ location 30 w/ delta
+64 got infected @ location 30 w/ delta
 ====== TIMESTEP 2895 ======
 delta: ['160']
 omicron: ['43']
+103 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+60 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+151 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+6 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+145 got infected @ location 13 w/ omicron
+5 got infected @ location 13 w/ omicron
+174 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+25 got infected @ location 13 w/ omicron
+82 got infected @ location 30 w/ delta
+63 got infected @ location 30 w/ delta
+24 got infected @ location 30 w/ delta
+81 got infected @ location 30 w/ delta
+22 got infected @ location 30 w/ delta
+175 got infected @ location 30 w/ delta
+64 got infected @ location 30 w/ delta
 ====== TIMESTEP 2910 ======
 delta: ['160']
 omicron: ['43']
+103 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+60 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+151 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+6 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+145 got infected @ location 13 w/ omicron
+5 got infected @ location 13 w/ omicron
+174 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+25 got infected @ location 13 w/ omicron
+82 got infected @ location 30 w/ delta
+63 got infected @ location 30 w/ delta
+24 got infected @ location 30 w/ delta
+81 got infected @ location 30 w/ delta
+22 got infected @ location 30 w/ delta
+175 got infected @ location 30 w/ delta
+64 got infected @ location 30 w/ delta
 ====== TIMESTEP 2925 ======
 delta: ['160']
 omicron: ['43']
+103 got infected @ location 13 w/ omicron
+77 got infected @ location 13 w/ omicron
+33 got infected @ location 13 w/ omicron
+60 got infected @ location 13 w/ omicron
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+151 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+6 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+145 got infected @ location 13 w/ omicron
+5 got infected @ location 13 w/ omicron
+174 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+25 got infected @ location 13 w/ omicron
+82 got infected @ location 30 w/ delta
+63 got infected @ location 30 w/ delta
+24 got infected @ location 30 w/ delta
+81 got infected @ location 30 w/ delta
+22 got infected @ location 30 w/ delta
+175 got infected @ location 30 w/ delta
+64 got infected @ location 30 w/ delta
 ====== TIMESTEP 2940 ======
 delta: ['160']
 omicron: ['43']
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+122 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+36 got infected @ location 13 w/ omicron
+151 got infected @ location 13 w/ omicron
+54 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+100 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+39 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+6 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+26 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+145 got infected @ location 13 w/ omicron
+5 got infected @ location 13 w/ omicron
+174 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+25 got infected @ location 13 w/ omicron
+58 got infected @ location 30 w/ delta
+56 got infected @ location 30 w/ delta
+72 got infected @ location 30 w/ delta
+124 got infected @ location 30 w/ delta
+49 got infected @ location 30 w/ delta
+175 got infected @ location 30 w/ delta
+130 got infected @ location 30 w/ delta
+64 got infected @ location 30 w/ delta
 ====== TIMESTEP 2955 ======
 delta: ['160']
 omicron: ['43']
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+122 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+36 got infected @ location 13 w/ omicron
+151 got infected @ location 13 w/ omicron
+54 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+100 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+39 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+6 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+26 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+145 got infected @ location 13 w/ omicron
+5 got infected @ location 13 w/ omicron
+174 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+25 got infected @ location 13 w/ omicron
+58 got infected @ location 30 w/ delta
+56 got infected @ location 30 w/ delta
+72 got infected @ location 30 w/ delta
+124 got infected @ location 30 w/ delta
+49 got infected @ location 30 w/ delta
+175 got infected @ location 30 w/ delta
+130 got infected @ location 30 w/ delta
+64 got infected @ location 30 w/ delta
 ====== TIMESTEP 2970 ======
 delta: ['160']
 omicron: ['43']
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+122 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+36 got infected @ location 13 w/ omicron
+151 got infected @ location 13 w/ omicron
+54 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+100 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+39 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+6 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+26 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+145 got infected @ location 13 w/ omicron
+5 got infected @ location 13 w/ omicron
+174 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+25 got infected @ location 13 w/ omicron
+58 got infected @ location 30 w/ delta
+56 got infected @ location 30 w/ delta
+72 got infected @ location 30 w/ delta
+124 got infected @ location 30 w/ delta
+49 got infected @ location 30 w/ delta
+175 got infected @ location 30 w/ delta
+130 got infected @ location 30 w/ delta
+64 got infected @ location 30 w/ delta
 ====== TIMESTEP 2985 ======
 delta: ['160']
 omicron: ['43']
+172 got infected @ location 13 w/ omicron
+48 got infected @ location 13 w/ omicron
+15 got infected @ location 13 w/ omicron
+90 got infected @ location 13 w/ omicron
+122 got infected @ location 13 w/ omicron
+42 got infected @ location 13 w/ omicron
+71 got infected @ location 13 w/ omicron
+36 got infected @ location 13 w/ omicron
+151 got infected @ location 13 w/ omicron
+54 got infected @ location 13 w/ omicron
+8 got infected @ location 13 w/ omicron
+100 got infected @ location 13 w/ omicron
+38 got infected @ location 13 w/ omicron
+39 got infected @ location 13 w/ omicron
+28 got infected @ location 13 w/ omicron
+6 got infected @ location 13 w/ omicron
+97 got infected @ location 13 w/ omicron
+26 got infected @ location 13 w/ omicron
+166 got infected @ location 13 w/ omicron
+139 got infected @ location 13 w/ omicron
+145 got infected @ location 13 w/ omicron
+5 got infected @ location 13 w/ omicron
+174 got infected @ location 13 w/ omicron
+87 got infected @ location 13 w/ omicron
+25 got infected @ location 13 w/ omicron
+58 got infected @ location 30 w/ delta
+56 got infected @ location 30 w/ delta
+72 got infected @ location 30 w/ delta
+124 got infected @ location 30 w/ delta
+49 got infected @ location 30 w/ delta
+175 got infected @ location 30 w/ delta
+130 got infected @ location 30 w/ delta
+64 got infected @ location 30 w/ delta
 ====== TIMESTEP 3000 ======
 delta: ['160']
 omicron: ['43']
+66 got infected @ location 2 w/ omicron
+126 got infected @ location 2 w/ omicron
+70 got infected @ location 2 w/ omicron
+77 got infected @ location 2 w/ omicron
+165 got infected @ location 2 w/ omicron
+133 got infected @ location 2 w/ omicron
+104 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+66 got infected @ location 2 w/ delta
+126 got infected @ location 2 w/ delta
+70 got infected @ location 2 w/ delta
+77 got infected @ location 2 w/ delta
+165 got infected @ location 2 w/ delta
+133 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
 ====== TIMESTEP 3015 ======
 delta: ['160']
 omicron: ['43']
+66 got infected @ location 2 w/ omicron
+126 got infected @ location 2 w/ omicron
+70 got infected @ location 2 w/ omicron
+77 got infected @ location 2 w/ omicron
+165 got infected @ location 2 w/ omicron
+133 got infected @ location 2 w/ omicron
+104 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+66 got infected @ location 2 w/ delta
+126 got infected @ location 2 w/ delta
+70 got infected @ location 2 w/ delta
+77 got infected @ location 2 w/ delta
+165 got infected @ location 2 w/ delta
+133 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
 ====== TIMESTEP 3030 ======
 delta: ['160']
 omicron: ['43']
+66 got infected @ location 2 w/ omicron
+126 got infected @ location 2 w/ omicron
+70 got infected @ location 2 w/ omicron
+77 got infected @ location 2 w/ omicron
+165 got infected @ location 2 w/ omicron
+133 got infected @ location 2 w/ omicron
+104 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+66 got infected @ location 2 w/ delta
+126 got infected @ location 2 w/ delta
+70 got infected @ location 2 w/ delta
+77 got infected @ location 2 w/ delta
+165 got infected @ location 2 w/ delta
+133 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
 ====== TIMESTEP 3045 ======
 delta: ['160']
 omicron: ['43']
+66 got infected @ location 2 w/ omicron
+126 got infected @ location 2 w/ omicron
+70 got infected @ location 2 w/ omicron
+77 got infected @ location 2 w/ omicron
+165 got infected @ location 2 w/ omicron
+133 got infected @ location 2 w/ omicron
+104 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+66 got infected @ location 2 w/ delta
+126 got infected @ location 2 w/ delta
+70 got infected @ location 2 w/ delta
+77 got infected @ location 2 w/ delta
+165 got infected @ location 2 w/ delta
+133 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
 ====== TIMESTEP 3060 ======
 delta: ['160']
 omicron: ['43']
+165 got infected @ location 2 w/ omicron
+70 got infected @ location 2 w/ omicron
+133 got infected @ location 2 w/ omicron
+104 got infected @ location 2 w/ omicron
+77 got infected @ location 2 w/ omicron
+170 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+165 got infected @ location 2 w/ delta
+70 got infected @ location 2 w/ delta
+133 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
+77 got infected @ location 2 w/ delta
+170 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
+81 got infected @ location 2 w/ delta
 ====== TIMESTEP 3075 ======
 delta: ['160']
 omicron: ['43']
+165 got infected @ location 2 w/ omicron
+70 got infected @ location 2 w/ omicron
+133 got infected @ location 2 w/ omicron
+104 got infected @ location 2 w/ omicron
+77 got infected @ location 2 w/ omicron
+170 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+165 got infected @ location 2 w/ delta
+70 got infected @ location 2 w/ delta
+133 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
+77 got infected @ location 2 w/ delta
+170 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
+81 got infected @ location 2 w/ delta
 ====== TIMESTEP 3090 ======
 delta: ['160']
 omicron: ['43']
+165 got infected @ location 2 w/ omicron
+70 got infected @ location 2 w/ omicron
+133 got infected @ location 2 w/ omicron
+104 got infected @ location 2 w/ omicron
+77 got infected @ location 2 w/ omicron
+170 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+165 got infected @ location 2 w/ delta
+70 got infected @ location 2 w/ delta
+133 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
+77 got infected @ location 2 w/ delta
+170 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
+81 got infected @ location 2 w/ delta
 ====== TIMESTEP 3105 ======
 delta: ['160']
 omicron: ['43']
+165 got infected @ location 2 w/ omicron
+70 got infected @ location 2 w/ omicron
+133 got infected @ location 2 w/ omicron
+104 got infected @ location 2 w/ omicron
+77 got infected @ location 2 w/ omicron
+170 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+165 got infected @ location 2 w/ delta
+70 got infected @ location 2 w/ delta
+133 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
+77 got infected @ location 2 w/ delta
+170 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
+81 got infected @ location 2 w/ delta
 ====== TIMESTEP 3120 ======
 delta: ['160']
 omicron: ['43']
+170 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+41 got infected @ location 2 w/ omicron
+131 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+95 got infected @ location 2 w/ omicron
+40 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+128 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+170 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+131 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+95 got infected @ location 2 w/ delta
+40 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+128 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
+81 got infected @ location 2 w/ delta
 ====== TIMESTEP 3135 ======
 delta: ['160']
 omicron: ['43']
+170 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+41 got infected @ location 2 w/ omicron
+131 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+95 got infected @ location 2 w/ omicron
+40 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+128 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+170 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+131 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+95 got infected @ location 2 w/ delta
+40 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+128 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
+81 got infected @ location 2 w/ delta
 ====== TIMESTEP 3150 ======
 delta: ['160']
 omicron: ['43']
+170 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+41 got infected @ location 2 w/ omicron
+131 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+95 got infected @ location 2 w/ omicron
+40 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+128 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+170 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+131 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+95 got infected @ location 2 w/ delta
+40 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+128 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
+81 got infected @ location 2 w/ delta
 ====== TIMESTEP 3165 ======
 delta: ['160']
 omicron: ['43']
+170 got infected @ location 2 w/ omicron
+160 got infected @ location 2 w/ omicron
+41 got infected @ location 2 w/ omicron
+131 got infected @ location 2 w/ omicron
+61 got infected @ location 2 w/ omicron
+162 got infected @ location 2 w/ omicron
+95 got infected @ location 2 w/ omicron
+40 got infected @ location 2 w/ omicron
+24 got infected @ location 2 w/ omicron
+128 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+170 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+131 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+95 got infected @ location 2 w/ delta
+40 got infected @ location 2 w/ delta
+24 got infected @ location 2 w/ delta
+128 got infected @ location 2 w/ delta
+127 got infected @ location 2 w/ delta
+43 got infected @ location 2 w/ delta
+113 got infected @ location 2 w/ delta
+81 got infected @ location 2 w/ delta
 ====== TIMESTEP 3180 ======
 delta: ['160']
 omicron: ['43']
+24 got infected @ location 2 w/ omicron
+128 got infected @ location 2 w/ omicron
+108 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 3195 ======
 delta: ['160']
 omicron: ['43']
+24 got infected @ location 2 w/ omicron
+128 got infected @ location 2 w/ omicron
+108 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 3210 ======
 delta: ['160']
 omicron: ['43']
+24 got infected @ location 2 w/ omicron
+128 got infected @ location 2 w/ omicron
+108 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 3225 ======
 delta: ['160']
 omicron: ['43']
+24 got infected @ location 2 w/ omicron
+128 got infected @ location 2 w/ omicron
+108 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 3240 ======
 delta: ['160']
 omicron: ['43']
+27 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+54 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+2 got infected @ location 2 w/ omicron
+55 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+28 got infected @ location 2 w/ omicron
+148 got infected @ location 2 w/ omicron
+137 got infected @ location 20 w/ delta
+138 got infected @ location 20 w/ delta
+91 got infected @ location 20 w/ delta
+42 got infected @ location 20 w/ delta
+101 got infected @ location 20 w/ delta
+174 got infected @ location 20 w/ delta
+141 got infected @ location 20 w/ delta
 ====== TIMESTEP 3255 ======
 delta: ['160']
 omicron: ['43']
+27 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+54 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+2 got infected @ location 2 w/ omicron
+55 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+28 got infected @ location 2 w/ omicron
+148 got infected @ location 2 w/ omicron
+137 got infected @ location 20 w/ delta
+138 got infected @ location 20 w/ delta
+91 got infected @ location 20 w/ delta
+42 got infected @ location 20 w/ delta
+101 got infected @ location 20 w/ delta
+174 got infected @ location 20 w/ delta
+141 got infected @ location 20 w/ delta
 ====== TIMESTEP 3270 ======
 delta: ['160']
 omicron: ['43']
+27 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+54 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+2 got infected @ location 2 w/ omicron
+55 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+28 got infected @ location 2 w/ omicron
+148 got infected @ location 2 w/ omicron
+137 got infected @ location 20 w/ delta
+138 got infected @ location 20 w/ delta
+91 got infected @ location 20 w/ delta
+42 got infected @ location 20 w/ delta
+101 got infected @ location 20 w/ delta
+174 got infected @ location 20 w/ delta
+141 got infected @ location 20 w/ delta
 ====== TIMESTEP 3285 ======
 delta: ['160']
 omicron: ['43']
+27 got infected @ location 2 w/ omicron
+127 got infected @ location 2 w/ omicron
+54 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+2 got infected @ location 2 w/ omicron
+55 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+28 got infected @ location 2 w/ omicron
+148 got infected @ location 2 w/ omicron
+137 got infected @ location 20 w/ delta
+138 got infected @ location 20 w/ delta
+91 got infected @ location 20 w/ delta
+42 got infected @ location 20 w/ delta
+101 got infected @ location 20 w/ delta
+174 got infected @ location 20 w/ delta
+141 got infected @ location 20 w/ delta
 ====== TIMESTEP 3300 ======
 delta: ['160']
 omicron: ['43']
+54 got infected @ location 2 w/ omicron
+22 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+112 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+2 got infected @ location 2 w/ omicron
+55 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+28 got infected @ location 2 w/ omicron
+6 got infected @ location 2 w/ omicron
+151 got infected @ location 2 w/ omicron
+148 got infected @ location 2 w/ omicron
 ====== TIMESTEP 3315 ======
 delta: ['160']
 omicron: ['43']
+54 got infected @ location 2 w/ omicron
+22 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+112 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+2 got infected @ location 2 w/ omicron
+55 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+28 got infected @ location 2 w/ omicron
+6 got infected @ location 2 w/ omicron
+151 got infected @ location 2 w/ omicron
+148 got infected @ location 2 w/ omicron
 ====== TIMESTEP 3330 ======
 delta: ['160']
 omicron: ['43']
+54 got infected @ location 2 w/ omicron
+22 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+112 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+2 got infected @ location 2 w/ omicron
+55 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+28 got infected @ location 2 w/ omicron
+6 got infected @ location 2 w/ omicron
+151 got infected @ location 2 w/ omicron
+148 got infected @ location 2 w/ omicron
 ====== TIMESTEP 3345 ======
 delta: ['160']
 omicron: ['43']
+54 got infected @ location 2 w/ omicron
+22 got infected @ location 2 w/ omicron
+113 got infected @ location 2 w/ omicron
+112 got infected @ location 2 w/ omicron
+81 got infected @ location 2 w/ omicron
+68 got infected @ location 2 w/ omicron
+124 got infected @ location 2 w/ omicron
+2 got infected @ location 2 w/ omicron
+55 got infected @ location 2 w/ omicron
+4 got infected @ location 2 w/ omicron
+28 got infected @ location 2 w/ omicron
+6 got infected @ location 2 w/ omicron
+151 got infected @ location 2 w/ omicron
+148 got infected @ location 2 w/ omicron
 ====== TIMESTEP 3360 ======
 delta: ['160']
 omicron: ['43']
+147 got infected @ location 12 w/ omicron
+31 got infected @ location 12 w/ omicron
+78 got infected @ location 12 w/ omicron
+145 got infected @ location 12 w/ omicron
+131 got infected @ location 12 w/ omicron
+109 got infected @ location 12 w/ omicron
+110 got infected @ location 12 w/ omicron
+176 got infected @ location 12 w/ omicron
+119 got infected @ location 12 w/ omicron
+34 got infected @ location 12 w/ omicron
+126 got infected @ location 35 w/ delta
+133 got infected @ location 35 w/ delta
+29 got infected @ location 35 w/ delta
 ====== TIMESTEP 3375 ======
 delta: ['160']
 omicron: ['43']
+147 got infected @ location 12 w/ omicron
+31 got infected @ location 12 w/ omicron
+78 got infected @ location 12 w/ omicron
+145 got infected @ location 12 w/ omicron
+131 got infected @ location 12 w/ omicron
+109 got infected @ location 12 w/ omicron
+110 got infected @ location 12 w/ omicron
+176 got infected @ location 12 w/ omicron
+119 got infected @ location 12 w/ omicron
+34 got infected @ location 12 w/ omicron
+126 got infected @ location 35 w/ delta
+133 got infected @ location 35 w/ delta
+29 got infected @ location 35 w/ delta
 ====== TIMESTEP 3390 ======
 delta: ['160']
 omicron: ['43']
+147 got infected @ location 12 w/ omicron
+31 got infected @ location 12 w/ omicron
+78 got infected @ location 12 w/ omicron
+145 got infected @ location 12 w/ omicron
+131 got infected @ location 12 w/ omicron
+109 got infected @ location 12 w/ omicron
+110 got infected @ location 12 w/ omicron
+176 got infected @ location 12 w/ omicron
+119 got infected @ location 12 w/ omicron
+34 got infected @ location 12 w/ omicron
+126 got infected @ location 35 w/ delta
+133 got infected @ location 35 w/ delta
+29 got infected @ location 35 w/ delta
 ====== TIMESTEP 3405 ======
 delta: ['160']
 omicron: ['43']
+147 got infected @ location 12 w/ omicron
+31 got infected @ location 12 w/ omicron
+78 got infected @ location 12 w/ omicron
+145 got infected @ location 12 w/ omicron
+131 got infected @ location 12 w/ omicron
+109 got infected @ location 12 w/ omicron
+110 got infected @ location 12 w/ omicron
+176 got infected @ location 12 w/ omicron
+119 got infected @ location 12 w/ omicron
+34 got infected @ location 12 w/ omicron
+126 got infected @ location 35 w/ delta
+133 got infected @ location 35 w/ delta
+29 got infected @ location 35 w/ delta
 ====== TIMESTEP 3420 ======
 delta: ['160']
 omicron: ['43']
+95 got infected @ location 20 w/ omicron
+39 got infected @ location 20 w/ omicron
+60 got infected @ location 20 w/ omicron
+77 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+141 got infected @ location 20 w/ omicron
+152 got infected @ location 20 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 3435 ======
 delta: ['160']
 omicron: ['43']
+95 got infected @ location 20 w/ omicron
+39 got infected @ location 20 w/ omicron
+60 got infected @ location 20 w/ omicron
+77 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+141 got infected @ location 20 w/ omicron
+152 got infected @ location 20 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 3450 ======
 delta: ['160']
 omicron: ['43']
+95 got infected @ location 20 w/ omicron
+39 got infected @ location 20 w/ omicron
+60 got infected @ location 20 w/ omicron
+77 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+141 got infected @ location 20 w/ omicron
+152 got infected @ location 20 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 3465 ======
 delta: ['160']
 omicron: ['43']
+95 got infected @ location 20 w/ omicron
+39 got infected @ location 20 w/ omicron
+60 got infected @ location 20 w/ omicron
+77 got infected @ location 20 w/ omicron
+54 got infected @ location 20 w/ omicron
+141 got infected @ location 20 w/ omicron
+152 got infected @ location 20 w/ omicron
+187 got infected @ location 89 w/ delta
 ====== TIMESTEP 3480 ======
 delta: ['160']
 omicron: ['43']
+19 got infected @ location 22 w/ omicron
+49 got infected @ location 22 w/ omicron
+22 got infected @ location 22 w/ omicron
+108 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+31 got infected @ location 21 w/ delta
+120 got infected @ location 21 w/ delta
+136 got infected @ location 21 w/ delta
+88 got infected @ location 21 w/ delta
 ====== TIMESTEP 3495 ======
 delta: ['160']
 omicron: ['43']
+19 got infected @ location 22 w/ omicron
+49 got infected @ location 22 w/ omicron
+22 got infected @ location 22 w/ omicron
+108 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+31 got infected @ location 21 w/ delta
+120 got infected @ location 21 w/ delta
+136 got infected @ location 21 w/ delta
+88 got infected @ location 21 w/ delta
 ====== TIMESTEP 3510 ======
 delta: ['160']
 omicron: ['43']
+19 got infected @ location 22 w/ omicron
+49 got infected @ location 22 w/ omicron
+22 got infected @ location 22 w/ omicron
+108 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+31 got infected @ location 21 w/ delta
+120 got infected @ location 21 w/ delta
+136 got infected @ location 21 w/ delta
+88 got infected @ location 21 w/ delta
 ====== TIMESTEP 3525 ======
 delta: ['160']
 omicron: ['43']
+19 got infected @ location 22 w/ omicron
+49 got infected @ location 22 w/ omicron
+22 got infected @ location 22 w/ omicron
+108 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+31 got infected @ location 21 w/ delta
+120 got infected @ location 21 w/ delta
+136 got infected @ location 21 w/ delta
+88 got infected @ location 21 w/ delta
 ====== TIMESTEP 3540 ======
 delta: ['160']
 omicron: ['43']
+56 got infected @ location 22 w/ omicron
+102 got infected @ location 22 w/ omicron
+111 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+125 got infected @ location 30 w/ delta
+119 got infected @ location 30 w/ delta
+101 got infected @ location 30 w/ delta
+3 got infected @ location 30 w/ delta
+50 got infected @ location 30 w/ delta
+174 got infected @ location 30 w/ delta
+156 got infected @ location 30 w/ delta
 ====== TIMESTEP 3555 ======
 delta: ['160']
 omicron: ['43']
+56 got infected @ location 22 w/ omicron
+102 got infected @ location 22 w/ omicron
+111 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+125 got infected @ location 30 w/ delta
+119 got infected @ location 30 w/ delta
+101 got infected @ location 30 w/ delta
+3 got infected @ location 30 w/ delta
+50 got infected @ location 30 w/ delta
+174 got infected @ location 30 w/ delta
+156 got infected @ location 30 w/ delta
 ====== TIMESTEP 3570 ======
 delta: ['160']
 omicron: ['43']
+56 got infected @ location 22 w/ omicron
+102 got infected @ location 22 w/ omicron
+111 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+125 got infected @ location 30 w/ delta
+119 got infected @ location 30 w/ delta
+101 got infected @ location 30 w/ delta
+3 got infected @ location 30 w/ delta
+50 got infected @ location 30 w/ delta
+174 got infected @ location 30 w/ delta
+156 got infected @ location 30 w/ delta
 ====== TIMESTEP 3585 ======
 delta: ['160']
 omicron: ['43']
+56 got infected @ location 22 w/ omicron
+102 got infected @ location 22 w/ omicron
+111 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+125 got infected @ location 30 w/ delta
+119 got infected @ location 30 w/ delta
+101 got infected @ location 30 w/ delta
+3 got infected @ location 30 w/ delta
+50 got infected @ location 30 w/ delta
+174 got infected @ location 30 w/ delta
+156 got infected @ location 30 w/ delta
 ====== TIMESTEP 3600 ======
 delta: ['160']
 omicron: ['43']
+104 got infected @ location 22 w/ omicron
+160 got infected @ location 22 w/ omicron
+136 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+104 got infected @ location 22 w/ delta
+136 got infected @ location 22 w/ delta
+43 got infected @ location 22 w/ delta
+127 got infected @ location 22 w/ delta
 ====== TIMESTEP 3615 ======
 delta: ['160']
 omicron: ['43']
+104 got infected @ location 22 w/ omicron
+160 got infected @ location 22 w/ omicron
+136 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+104 got infected @ location 22 w/ delta
+136 got infected @ location 22 w/ delta
+43 got infected @ location 22 w/ delta
+127 got infected @ location 22 w/ delta
 ====== TIMESTEP 3630 ======
 delta: ['160']
 omicron: ['43']
+104 got infected @ location 22 w/ omicron
+160 got infected @ location 22 w/ omicron
+136 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+104 got infected @ location 22 w/ delta
+136 got infected @ location 22 w/ delta
+43 got infected @ location 22 w/ delta
+127 got infected @ location 22 w/ delta
 ====== TIMESTEP 3645 ======
 delta: ['160']
 omicron: ['43']
+104 got infected @ location 22 w/ omicron
+160 got infected @ location 22 w/ omicron
+136 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+104 got infected @ location 22 w/ delta
+136 got infected @ location 22 w/ delta
+43 got infected @ location 22 w/ delta
+127 got infected @ location 22 w/ delta
 ====== TIMESTEP 3660 ======
 delta: ['160']
 omicron: ['43']
+136 got infected @ location 22 w/ omicron
+7 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+4 got infected @ location 2 w/ delta
+63 got infected @ location 2 w/ delta
+165 got infected @ location 2 w/ delta
+105 got infected @ location 2 w/ delta
+115 got infected @ location 2 w/ delta
+139 got infected @ location 2 w/ delta
+42 got infected @ location 2 w/ delta
+150 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3675 ======
 delta: ['160']
 omicron: ['43']
+136 got infected @ location 22 w/ omicron
+7 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+4 got infected @ location 2 w/ delta
+63 got infected @ location 2 w/ delta
+165 got infected @ location 2 w/ delta
+105 got infected @ location 2 w/ delta
+115 got infected @ location 2 w/ delta
+139 got infected @ location 2 w/ delta
+42 got infected @ location 2 w/ delta
+150 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3690 ======
 delta: ['160']
 omicron: ['43']
+136 got infected @ location 22 w/ omicron
+7 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+4 got infected @ location 2 w/ delta
+63 got infected @ location 2 w/ delta
+165 got infected @ location 2 w/ delta
+105 got infected @ location 2 w/ delta
+115 got infected @ location 2 w/ delta
+139 got infected @ location 2 w/ delta
+42 got infected @ location 2 w/ delta
+150 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3705 ======
 delta: ['160']
 omicron: ['43']
+136 got infected @ location 22 w/ omicron
+7 got infected @ location 22 w/ omicron
+127 got infected @ location 22 w/ omicron
+4 got infected @ location 2 w/ delta
+63 got infected @ location 2 w/ delta
+165 got infected @ location 2 w/ delta
+105 got infected @ location 2 w/ delta
+115 got infected @ location 2 w/ delta
+139 got infected @ location 2 w/ delta
+42 got infected @ location 2 w/ delta
+150 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3720 ======
 delta: ['160']
 omicron: ['43']
+127 got infected @ location 22 w/ omicron
+125 got infected @ location 2 w/ delta
+139 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+42 got infected @ location 2 w/ delta
+150 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3735 ======
 delta: ['160']
 omicron: ['43']
+127 got infected @ location 22 w/ omicron
+125 got infected @ location 2 w/ delta
+139 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+42 got infected @ location 2 w/ delta
+150 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3750 ======
 delta: ['160']
 omicron: ['43']
+127 got infected @ location 22 w/ omicron
+125 got infected @ location 2 w/ delta
+139 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+42 got infected @ location 2 w/ delta
+150 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3765 ======
 delta: ['160']
 omicron: ['43']
+127 got infected @ location 22 w/ omicron
+125 got infected @ location 2 w/ delta
+139 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+42 got infected @ location 2 w/ delta
+150 got infected @ location 2 w/ delta
+162 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3780 ======
 delta: ['160']
 omicron: ['43']
+157 got infected @ location 3 w/ omicron
+56 got infected @ location 3 w/ omicron
+162 got infected @ location 2 w/ delta
+124 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3795 ======
 delta: ['160']
 omicron: ['43']
+157 got infected @ location 3 w/ omicron
+56 got infected @ location 3 w/ omicron
+162 got infected @ location 2 w/ delta
+124 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3810 ======
 delta: ['160']
 omicron: ['43']
+157 got infected @ location 3 w/ omicron
+56 got infected @ location 3 w/ omicron
+162 got infected @ location 2 w/ delta
+124 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3825 ======
 delta: ['160']
 omicron: ['43']
+157 got infected @ location 3 w/ omicron
+56 got infected @ location 3 w/ omicron
+162 got infected @ location 2 w/ delta
+124 got infected @ location 2 w/ delta
+46 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
 ====== TIMESTEP 3840 ======
 delta: ['160']
 omicron: ['43']
+154 got infected @ location 3 w/ omicron
+143 got infected @ location 3 w/ omicron
+56 got infected @ location 3 w/ omicron
+170 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+31 got infected @ location 2 w/ delta
+15 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
+121 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
 ====== TIMESTEP 3855 ======
 delta: ['160']
 omicron: ['43']
+154 got infected @ location 3 w/ omicron
+143 got infected @ location 3 w/ omicron
+56 got infected @ location 3 w/ omicron
+170 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+31 got infected @ location 2 w/ delta
+15 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
+121 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
 ====== TIMESTEP 3870 ======
 delta: ['160']
 omicron: ['43']
+154 got infected @ location 3 w/ omicron
+143 got infected @ location 3 w/ omicron
+56 got infected @ location 3 w/ omicron
+170 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+31 got infected @ location 2 w/ delta
+15 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
+121 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
 ====== TIMESTEP 3885 ======
 delta: ['160']
 omicron: ['43']
+154 got infected @ location 3 w/ omicron
+143 got infected @ location 3 w/ omicron
+56 got infected @ location 3 w/ omicron
+170 got infected @ location 2 w/ delta
+44 got infected @ location 2 w/ delta
+10 got infected @ location 2 w/ delta
+140 got infected @ location 2 w/ delta
+31 got infected @ location 2 w/ delta
+15 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
+121 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
 ====== TIMESTEP 3900 ======
 delta: ['160']
 omicron: ['43']
+138 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+147 got infected @ location 13 w/ omicron
+148 got infected @ location 13 w/ omicron
+85 got infected @ location 13 w/ omicron
+96 got infected @ location 13 w/ omicron
+144 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+162 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+173 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+93 got infected @ location 13 w/ omicron
+113 got infected @ location 13 w/ omicron
+64 got infected @ location 13 w/ omicron
+94 got infected @ location 13 w/ omicron
+21 got infected @ location 13 w/ omicron
+117 got infected @ location 13 w/ omicron
+60 got infected @ location 2 w/ delta
+31 got infected @ location 2 w/ delta
+15 got infected @ location 2 w/ delta
+14 got infected @ location 2 w/ delta
+23 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
+121 got infected @ location 2 w/ delta
+88 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
 ====== TIMESTEP 3915 ======
 delta: ['160']
 omicron: ['43']
+138 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+147 got infected @ location 13 w/ omicron
+148 got infected @ location 13 w/ omicron
+85 got infected @ location 13 w/ omicron
+96 got infected @ location 13 w/ omicron
+144 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+162 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+173 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+93 got infected @ location 13 w/ omicron
+113 got infected @ location 13 w/ omicron
+64 got infected @ location 13 w/ omicron
+94 got infected @ location 13 w/ omicron
+21 got infected @ location 13 w/ omicron
+117 got infected @ location 13 w/ omicron
+60 got infected @ location 2 w/ delta
+31 got infected @ location 2 w/ delta
+15 got infected @ location 2 w/ delta
+14 got infected @ location 2 w/ delta
+23 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
+121 got infected @ location 2 w/ delta
+88 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
 ====== TIMESTEP 3930 ======
 delta: ['160']
 omicron: ['43']
+138 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+147 got infected @ location 13 w/ omicron
+148 got infected @ location 13 w/ omicron
+85 got infected @ location 13 w/ omicron
+96 got infected @ location 13 w/ omicron
+144 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+162 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+173 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+93 got infected @ location 13 w/ omicron
+113 got infected @ location 13 w/ omicron
+64 got infected @ location 13 w/ omicron
+94 got infected @ location 13 w/ omicron
+21 got infected @ location 13 w/ omicron
+117 got infected @ location 13 w/ omicron
+60 got infected @ location 2 w/ delta
+31 got infected @ location 2 w/ delta
+15 got infected @ location 2 w/ delta
+14 got infected @ location 2 w/ delta
+23 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
+121 got infected @ location 2 w/ delta
+88 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
 ====== TIMESTEP 3945 ======
 delta: ['160']
 omicron: ['43']
+138 got infected @ location 13 w/ omicron
+86 got infected @ location 13 w/ omicron
+0 got infected @ location 13 w/ omicron
+30 got infected @ location 13 w/ omicron
+147 got infected @ location 13 w/ omicron
+148 got infected @ location 13 w/ omicron
+85 got infected @ location 13 w/ omicron
+96 got infected @ location 13 w/ omicron
+144 got infected @ location 13 w/ omicron
+74 got infected @ location 13 w/ omicron
+162 got infected @ location 13 w/ omicron
+150 got infected @ location 13 w/ omicron
+173 got infected @ location 13 w/ omicron
+34 got infected @ location 13 w/ omicron
+153 got infected @ location 13 w/ omicron
+93 got infected @ location 13 w/ omicron
+113 got infected @ location 13 w/ omicron
+64 got infected @ location 13 w/ omicron
+94 got infected @ location 13 w/ omicron
+21 got infected @ location 13 w/ omicron
+117 got infected @ location 13 w/ omicron
+60 got infected @ location 2 w/ delta
+31 got infected @ location 2 w/ delta
+15 got infected @ location 2 w/ delta
+14 got infected @ location 2 w/ delta
+23 got infected @ location 2 w/ delta
+49 got infected @ location 2 w/ delta
+8 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
+121 got infected @ location 2 w/ delta
+88 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
 ====== TIMESTEP 3960 ======
 delta: ['160']
 omicron: ['43']
+169 got infected @ location 25 w/ omicron
+51 got infected @ location 25 w/ omicron
+45 got infected @ location 25 w/ omicron
+65 got infected @ location 25 w/ omicron
+136 got infected @ location 25 w/ omicron
+3 got infected @ location 25 w/ omicron
+86 got infected @ location 25 w/ omicron
+75 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+30 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
+121 got infected @ location 2 w/ delta
+88 got infected @ location 2 w/ delta
+22 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
+37 got infected @ location 2 w/ delta
 ====== TIMESTEP 3975 ======
 delta: ['160']
 omicron: ['43']
+169 got infected @ location 25 w/ omicron
+51 got infected @ location 25 w/ omicron
+45 got infected @ location 25 w/ omicron
+65 got infected @ location 25 w/ omicron
+136 got infected @ location 25 w/ omicron
+3 got infected @ location 25 w/ omicron
+86 got infected @ location 25 w/ omicron
+75 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+30 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
+121 got infected @ location 2 w/ delta
+88 got infected @ location 2 w/ delta
+22 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
+37 got infected @ location 2 w/ delta
 ====== TIMESTEP 3990 ======
 delta: ['160']
 omicron: ['43']
+169 got infected @ location 25 w/ omicron
+51 got infected @ location 25 w/ omicron
+45 got infected @ location 25 w/ omicron
+65 got infected @ location 25 w/ omicron
+136 got infected @ location 25 w/ omicron
+3 got infected @ location 25 w/ omicron
+86 got infected @ location 25 w/ omicron
+75 got infected @ location 2 w/ delta
+41 got infected @ location 2 w/ delta
+68 got infected @ location 2 w/ delta
+125 got infected @ location 2 w/ delta
+30 got infected @ location 2 w/ delta
+69 got infected @ location 2 w/ delta
+121 got infected @ location 2 w/ delta
+88 got infected @ location 2 w/ delta
+22 got infected @ location 2 w/ delta
+61 got infected @ location 2 w/ delta
+104 got infected @ location 2 w/ delta
+37 got infected @ location 2 w/ delta
 ====== TIMESTEP 4005 ======
 delta: ['160']
 omicron: ['43']
