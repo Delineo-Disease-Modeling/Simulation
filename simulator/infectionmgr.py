@@ -126,6 +126,8 @@ class InfectionManager:
             file.write(f'====== TIMESTEP {curtime} ======\n')
             file.write(f'delta: {[i.id for i in self.infected if i.states.get("delta") != None]}\n')
             file.write(f'omicron: {[i.id for i in self.infected if i.states.get("omicron") != None]}\n')
+            file.write(f"delta count: {len([i.id for i in self.infected if i.states.get('delta') != None])}\n")
+            file.write(f"omicron count: {len([i.id for i in self.infected if i.states.get('omicron') != None])}\n")
         
         for i in self.infected:
             i.update_state(curtime)
@@ -148,8 +150,10 @@ class InfectionManager:
                     
                     # Repeat the probability the number of timesteps we passed over the interval
                     for _ in range(num_timesteps):
-                        if CAT(p, True, num_timesteps, 3e5) == True:
+                        if (disease == "delta" and CAT(p, True, num_timesteps, 3.23e5) == True) or (disease == "omicron" and CAT(p, True, num_timesteps, 3.2275e5) == True):
                             new_infections.append(disease)
+                            p.states[disease] = InfectionState.INFECTED
+                            self.infected.append(p)
                             break
                 
                 for disease in new_infections:

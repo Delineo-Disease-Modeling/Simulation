@@ -95,7 +95,7 @@ if __name__ == '__main__':
     
     infectionmgr = InfectionManager(people=simulator.people)
     
-    with open('patterns.json') as file:
+    with open('pattern_simple.json') as file:
         patterns = json.load(file)
 
     last_timestep = 0
