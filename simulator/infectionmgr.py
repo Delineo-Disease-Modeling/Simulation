@@ -150,7 +150,7 @@ class InfectionManager:
                     
                     # Repeat the probability the number of timesteps we passed over the interval
                     for _ in range(num_timesteps):
-                        if (disease == "delta" and CAT(p, True, num_timesteps, 3.23e5) == True) or (disease == "omicron" and CAT(p, True, num_timesteps, 3.2275e5) == True):
+                        if (disease == "delta" and CAT(p, True, num_timesteps, 3.237e5) == True) or (disease == "omicron" and CAT(p, True, num_timesteps, 3.2355e5) == True):
                             new_infections.append(disease)
                             p.states[disease] = InfectionState.INFECTED
                             self.infected.append(p)
@@ -161,7 +161,7 @@ class InfectionManager:
                     # and the model does not support being infected with multiple diseases,
                     # this loop is used to remedy that case
                     
-                    self.infected.append(p) # add to list of infected regardless
+                    # self.infected.append(p) # add to list of infected regardless
                     
                     # Set infection state if they were only infected once, or if multidisease is True
                     if len(new_infections) == 1 or self.multidisease == True:
