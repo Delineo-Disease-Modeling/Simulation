@@ -1,4 +1,3 @@
-import random
 from simulation_functions import run_simulation, states, default_mean_time_interval, default_std_dev_time_interval, default_initial_state, transition_matrix
 import csv
 
