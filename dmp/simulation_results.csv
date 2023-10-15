@@ -1,4 +1,5 @@
 State,Time Step
 Symptomatic,6
-Infectious,13
+Hospitalized,12
+ICU,17
 Recovered,20
