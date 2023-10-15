@@ -241,8 +241,16 @@ if __name__== '__main__':
         
         json.dump(data, f, ensure_ascii=False, indent=4)
 
+    with open('facility_data.json', 'r', encoding='utf-8') as f:
+        facility_data = json.load(f)
+
+    data['places'] = facility_data['places']
+
+    with open('papdata.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+    
+    print("Successfully Created PAP Data")
+
     # Dump household list data into households.yaml file
     #with open('households.yaml', mode="wt", encoding="utf-8") as outstream:
     #    yaml.dump(household_list, outstream)
-
-    print("Successfully Created Households")
