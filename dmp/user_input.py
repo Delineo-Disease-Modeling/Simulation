@@ -25,17 +25,34 @@ def get_user_input():
     if use_default_values == "n":
         parameters = read_parameters_from_csv(args.csv_file)
         if parameters:
-            mean_time_interval = float(parameters["Mean Time Interval"])
-            std_dev_time_interval = float(parameters["Standard Deviation"])
-            initial_state = parameters.get("Initial State")
+            mean_time_interval = float(parameters.get("Mean Time Interval", default_mean_time_interval))
+            std_dev_time_interval = float(parameters.get("Standard Deviation", default_std_dev_time_interval))
+            initial_state = parameters.get("Initial State", default_initial_state)
             desired_iterations = int(parameters.get("Desired Iterations", 20))
-            age = int(parameters.get("Age"))
-            ethnicity = parameters.get("Ethnicity")
-            group_quarters = parameters.get("Group Quarters").lower() == "yes"
-            length_of_stay = int(parameters.get("Length of Stay"))
-            num_under_5 = int(parameters.get("Number of People Under 5"))
-            mobile_home = parameters.get("Mobile Home").lower() == "yes"
-            origin = parameters.get("Origin")
+
+            # Age input validation
+            age = int(parameters.get("Age", 0))
+            if age < 0 or age > 120:
+                print("Age should be between 0 and 120. Using default value.")
+                age = 0
+
+            ethnicity = parameters.get("Ethnicity", "")
+            group_quarters = parameters.get("Group Quarters", "no").lower() == "yes"
+
+            # Length of Stay input validation
+            length_of_stay = int(parameters.get("Length of Stay", 0))
+            if length_of_stay < 0:
+                print("Length of Stay should be a positive integer. Using default value.")
+                length_of_stay = 0
+
+            # Number of People Under 5 input validation
+            num_under_5 = int(parameters.get("Number of People Under 5", 0))
+            if num_under_5 < 0:
+                print("Number of People Under 5 should be a non-negative integer. Using default value.")
+                num_under_5 = 0
+
+            mobile_home = parameters.get("Mobile Home", "no").lower() == "yes"
+            origin = parameters.get("Origin", "")
             print("Loaded parameters from CSV file.")
         else:
             # If the CSV file is not found or doesn't contain valid parameters, use defaults.
@@ -43,7 +60,7 @@ def get_user_input():
             std_dev_time_interval = default_std_dev_time_interval
             initial_state = default_initial_state
             desired_iterations = 20
-            age = 18
+            age = 0
             ethnicity = ""
             group_quarters = False
             length_of_stay = 0
@@ -57,7 +74,7 @@ def get_user_input():
         std_dev_time_interval = default_std_dev_time_interval
         initial_state = default_initial_state
         desired_iterations = 20
-        age = 18
+        age = 0
         ethnicity = ""
         group_quarters = False
         length_of_stay = 0
