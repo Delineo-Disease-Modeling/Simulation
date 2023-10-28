@@ -1,16 +1,14 @@
 import argparse
 import csv
 import os
-from simulation_functions import run_simulation, states, default_mean_time_interval, default_std_dev_time_interval, default_initial_state, transition_matrix
+from simulation_functions import run_simulation, states, transition_matrix
 
 def read_parameters_from_csv(csv_filename):
     try:
         with open(csv_filename, mode="r", newline="") as file:
             reader = csv.DictReader(file)
-            for row in reader:
-                return row  # Return the first row found in the CSV
-        print("CSV file is empty or does not contain valid parameters.")
-        return None
+            parameters = next(reader)  # Assuming there is only one row of parameters in the CSV
+            return parameters
     except FileNotFoundError:
         print("CSV file not found.")
         return None
@@ -20,51 +18,39 @@ def get_output_csv_path(csv_filename):
     return f"{base_filename}_results.csv"
 
 def get_user_input():
-    use_default_values = input("Use default values for parameters? (y/n): ").lower()
-
-    if use_default_values == "n":
-        parameters = read_parameters_from_csv(args.csv_file)
-        if parameters:
-            mean_time_interval = float(parameters["Mean Time Interval"])
-            std_dev_time_interval = float(parameters["Standard Deviation"])
-            initial_state = parameters.get("Initial State", default_initial_state)
-            desired_iterations = int(parameters.get("Desired Iterations", 20))
-            print("Loaded parameters from CSV file.")
-        else:
-            # If the CSV file is not found or doesn't contain valid parameters, use defaults.
-            mean_time_interval = default_mean_time_interval
-            std_dev_time_interval = default_std_dev_time_interval
-            initial_state = default_initial_state
-            desired_iterations = 20
-            print("Using default parameters.")
-    else:
-        # Use default values
-        mean_time_interval = default_mean_time_interval
-        std_dev_time_interval = default_std_dev_time_interval
-        initial_state = default_initial_state
-        desired_iterations = 20
-        print("Using default parameters.")
-
-    output_csv_path = get_output_csv_path(args.csv_file)
-    simulation_data = run_simulation(transition_matrix, mean_time_interval, std_dev_time_interval, initial_state, desired_iterations)
-
-    with open(output_csv_path, mode="w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(["State", "Time Step"])
-        writer.writerows(simulation_data)
-
-    return simulation_data
-
-if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Disease Simulation")
     parser.add_argument("--csv_file", type=str, help="CSV file containing simulation parameters")
     args = parser.parse_args()
 
     if not args.csv_file:
         print("Please provide a CSV file with simulation parameters using the --csv_file argument.")
-    else:
-        simulation_data = get_user_input()
-        print("Simulation completed. Results:")
-        for state, time_step in simulation_data:
-            print(f"State: {state}, Time Step: {time_step}")
-        print(f"Results saved to {get_output_csv_path(args.csv_file)}")
+        return
+
+    parameters = read_parameters_from_csv(args.csv_file)
+    if not parameters:
+        return
+
+    mean_time_interval = float(parameters["Mean Time Interval"])
+    std_dev_time_interval = float(parameters["Standard Deviation"])
+    initial_state = parameters.get("Initial State")
+    desired_iterations = int(parameters.get("Desired Iterations", 20))
+    age = int(parameters.get("Age"))
+    ethnicity = parameters.get("Ethnicity")
+    group_quarters = parameters.get("Group Quarters").lower() == "yes"
+    length_of_stay = int(parameters.get("Length of Stay"))
+
+    output_csv_path = get_output_csv_path(args.csv_file)
+    simulation_data = run_simulation(transition_matrix, mean_time_interval, std_dev_time_interval, initial_state, desired_iterations, age, ethnicity, group_quarters, length_of_stay)
+
+    with open(output_csv_path, mode="w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["State", "Time Step"])
+        writer.writerows(simulation_data)
+
+    print("Simulation completed. Results:")
+    for state, time_step in simulation_data:
+        print(f"State: {state}, Time Step: {time_step}")
+    print(f"Results saved to {output_csv_path}")
+
+if __name__ == "__main__":
+    get_user_input()
