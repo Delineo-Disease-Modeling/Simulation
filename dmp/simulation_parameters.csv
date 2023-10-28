@@ -1,2 +1,2 @@
-"Mean Time Interval","Standard Deviation","Initial State","Desired Iterations"
-10,2,"Null",20
+"Mean Time Interval","Standard Deviation","Initial State","Desired Iterations","Age","Ethnicity","Group Quarters","Length of Stay"
+5,2,"Null",20,30,"White","yes",7

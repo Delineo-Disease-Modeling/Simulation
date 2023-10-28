@@ -1,5 +1,3 @@
 State,Time Step
-Null,95
-Infectious,189
-Hospitalized,288
-Recovered,390
+Null,5
+Recovered,11
