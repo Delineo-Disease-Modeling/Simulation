@@ -1,5 +1,5 @@
-from pap import InfectionState, InfectionTimeline
-from infection_model import probability_model
+from .pap import InfectionState, InfectionTimeline
+from .infection_model import probability_model
 import random
 
 class InfectionManager:
