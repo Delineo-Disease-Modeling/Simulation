@@ -11,7 +11,7 @@ from enum import Flag, Enum
 '''
 
 '''
-    Classe Definitions to use in pop_mov_sim
+    Class Definitions to use in pop_mov_sim
 '''
 
 # Use bitwise operators
@@ -51,10 +51,16 @@ class Person:
         }
     
     def set_masked(self, masked):
-        self.masked = masked
+        self.interventions['mask'] = masked
+    
+    def get_masked(self):
+        return self.interventions['mask']
     
     def set_vaccinated(self, state):
-        self.vaccinated = state
+        self.interventions['vaccine'] = state
+        
+    def get_vaccinated(self):
+        return self.interventions['vaccine']
     
     def update_state(self, curtime):
         '''
@@ -78,11 +84,9 @@ class Person:
             
 
 class Population:
-
     '''
     Class for storing population
     '''
-
     def __init__(self):
         #total population
         self.total_count = 0
@@ -117,11 +121,14 @@ class Household(Population):
             self.id = id
 
 class Facility(Population):
-    def __init__(self, id, cbg, label):
+    def __init__(self, id, cbg, label, capacity=-1):
         super().__init__()
         self.cbg = cbg
         self.id = id
         self.label = label
+        
+        # maximum amount of people that can be in this population (-1 = no limit)
+        self.capacity = capacity
 
 
     
@@ -241,9 +248,5 @@ if __name__== '__main__':
                 data['people'][person.id] = { 'sex': person.sex, 'age': person.age, 'home': house.id }
         
         json.dump(data, f, ensure_ascii=False, indent=4)
-
-    # Dump household list data into households.yaml file
-    #with open('households.yaml', mode="wt", encoding="utf-8") as outstream:
-    #    yaml.dump(household_list, outstream)
 
     print("Successfully Created Households")
