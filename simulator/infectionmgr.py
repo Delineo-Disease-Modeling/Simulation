@@ -4,8 +4,6 @@ import random
 
 class InfectionManager:
     def __init__(self, timestep=15, people=[]):
-        random.seed(0)
-        
         self.timestep = timestep
         self.multidisease = False
         self.infected = []
