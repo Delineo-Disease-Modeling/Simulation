@@ -53,14 +53,12 @@ def move_people(simulator, items, is_household):
             # Otherwise, if we are enforcing a lockdown, they may randomly decide to head home
             if not is_household:
                 at_capacity = place.total_count >= place.capacity * simulator.iv_weights['capacity'] if place.capacity != -1 else False
-                hit_lockdown = place != person.location and random.random() >= simulator.iv_weights['lockdown']
+                hit_lockdown = place != person.location and random.random() < simulator.iv_weights['lockdown']
                 if at_capacity or hit_lockdown:
                     person.location.remove_member(person_id)
                     person.household.add_member(person)
                     person.location = person.household
                     continue
-
-            #print(f'person {person_id}: {person.location.id} -> {place.id} ({is_household})')
 
             person.location.remove_member(person_id)
             place.add_member(person)
@@ -76,7 +74,7 @@ def run_simulator(interventions):
         simulator.add_household(Household(data['cbg'], id))
 
     for id, data in pap['places'].items():
-        facility = simulator.add_facility(Facility(id, data['cbg'], data['label'], data.get('capacity', -1)))
+        simulator.add_facility(Facility(id, data['cbg'], data['label'], data.get('capacity', -1)))
 
     for id, data in pap['people'].items():
         household = simulator.get_household(data['home'])

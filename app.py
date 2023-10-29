@@ -30,6 +30,7 @@ def run_simulation():
     except KeyError:
         return 'Missing required intervention metric'
 
+# This is for testing purposes
 @app.route("/", methods=['GET'])
 @cross_origin()
 def run_main():
@@ -37,7 +38,7 @@ def run_main():
             'mask': 0.4,
             'vaccine': 0.2,
             'capacity': 1.0,
-            'lockdown': 0.8
+            'lockdown': 0.01
         })
 
 if __name__ == '__main__':
