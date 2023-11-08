@@ -18,7 +18,7 @@ transition_matrix = [
     [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0]
 ]
 
-def run_simulation(transition_matrix, mean_time_interval, std_dev_time_interval, initial_state, desired_iterations, age, ethnicity, group_quarters, length_of_stay, num_under_5, mobile_home, origin):
+def run_simulation(transition_matrix, mean_time_interval, std_dev_time_interval, initial_state, desired_iterations):
     current_state = states.index(initial_state)
     total_time_steps = 0
     simulation_data = []
