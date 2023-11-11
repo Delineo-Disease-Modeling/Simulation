@@ -44,7 +44,7 @@ class InfectionManager:
                     
                     # Repeat the probability the number of timesteps we passed over the interval
                     for _ in range(num_timesteps):
-                        if (disease == "delta" and CAT(p, True, num_timesteps, 3.237e5) == True) or (disease == "omicron" and CAT(p, True, num_timesteps, 3.2355e5) == True):
+                        if (disease == "delta" and CAT(p, True, num_timesteps, 1.1e4) == True) or (disease == "omicron" and CAT(p, True, num_timesteps, 1.3e4) == True):
                             new_infections.append(disease)
                             p.states[disease] = InfectionState.INFECTED
                             self.infected.append(p)
