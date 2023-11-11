@@ -16,7 +16,11 @@ def set_viral_load(p, fvh):
 
 def set_droplets_passed_mask(p, droplets=1):
     # droplets passed through mask
-    if p.masked:
+    # self.interventions = {
+    #         'mask': False,
+    #         'vaccine': VaccinationState.NONE
+    #     }
+    if p.get_masked == True:
         filter_efficiency = random.uniform(0.3, 0.6)
         droplets = droplets * filter_efficiency
     return droplets
@@ -79,7 +83,7 @@ def calculate_inhalation_rate(p, indoor):
 def calculate_frac_filtered(p):
     #fms % filtered by facemask
     fms = random.uniform(0.1, 0.3)
-    if p.masked == False:
+    if p.get_masked == False:
         fms = 1
     return fms
 

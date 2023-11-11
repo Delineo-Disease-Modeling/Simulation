@@ -1,5 +1,5 @@
-from .pap import Person, Household, Facility, InfectionState, VaccinationState
-from .infectionmgr import *
+from pap import Person, Household, Facility, InfectionState, VaccinationState
+from infectionmgr import *
 import json
 import os
 
