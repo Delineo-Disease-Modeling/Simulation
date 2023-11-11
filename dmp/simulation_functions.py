@@ -15,10 +15,11 @@ transition_matrix = [
     [0.0, 0.0, 0.0, 0.6, 0.0, 0.0, 0.4],
     [0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.7],
     [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0], 
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 ]
 
-def run_simulation(transition_matrix, mean_time_interval, std_dev_time_interval, initial_state, desired_iterations):
+def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_interval_matrix, initial_state, desired_iterations):
     current_state = states.index(initial_state)
     total_time_steps = 0
     simulation_data = []
@@ -29,15 +30,17 @@ def run_simulation(transition_matrix, mean_time_interval, std_dev_time_interval,
         current_state = states.index(next_state)
         return next_state
 
-    def sample_time_interval(mean, std_dev):
+    def sample_time_interval(mean_matrix, std_dev_matrix, current_state_index, next_state_index):
         while True:
-            interval = int(random.normalvariate(mean, std_dev))
+            interval = int(random.normalvariate(mean_matrix[current_state_index][next_state_index], std_dev_matrix[current_state_index][next_state_index]))
             if interval >= 0:
                 return interval
 
     iterations = 0
     while iterations < desired_iterations:
-        time_interval = sample_time_interval(mean_time_interval, std_dev_time_interval)
+        next_state = transition()
+        next_state_index = states.index(next_state)  # convert next_state to its index
+        time_interval = sample_time_interval(mean_time_interval_matrix, std_dev_time_interval_matrix, current_state, next_state_index)
         total_time_steps += time_interval
         current_state_str = states[current_state]
 
@@ -46,8 +49,6 @@ def run_simulation(transition_matrix, mean_time_interval, std_dev_time_interval,
         if states[current_state] in ["Removed", "Recovered"]:
             break
 
-        # Use the adjusted transition matrix for the next state transition
-        next_state = transition()
         iterations += 1
 
     return simulation_data
