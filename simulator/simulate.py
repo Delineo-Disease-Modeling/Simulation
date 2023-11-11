@@ -125,77 +125,27 @@ def run_simulator(interventions):
     
     result = {}
     
-    with open(curdir + '/simulator_results.txt', 'w') as file:
-        while len(timestamps) > 0:
-            if last_timestep >= int(timestamps[0]):        
-                data = patterns[timestamps[0]]
-                
-                # Move people to homes for this timestep
-                move_people(simulator, data['homes'].items(), True)
-                
-                # Move people to facilities for this timestep
-                move_people(simulator, data['places'].items(), False)
-                
-                infectionmgr.run_model(file, last_timestep)
-                
-                result[last_timestep] = { 'omicron': [], 'delta': [] }
-                for p in simulator.people:
-                    for disease, state in p.states.items():
-                        if InfectionState.INFECTED in state:
-                            result[last_timestep][disease].append(p.id)
-                
-                timestamps.pop(0)
-                        
-            last_timestep += simulator.timestep
-        
-        num_infected_none = 0
-        num_infected_masked = 0
-        num_infected_vaccinated = 0
-        num_infected_both = 0
-        
-        num_none = 0
-        num_masked = 0
-        num_vaccinated = 0
-        num_both = 0
-        
-        for person in simulator.people:
-            if person.get_masked():
-                if person.get_vaccinated() != VaccinationState.NONE:
-                    num_both += 1
-                else:
-                    num_masked += 1
-                continue
-            if person.get_vaccinated() != VaccinationState.NONE:
-                num_vaccinated += 1
-                continue
-            num_none += 1
-        
-        for person in simulator.people:
-            infected = False
-            for state in person.states.values():
-                if InfectionState.INFECTED in state:
-                    infected = True
-                    
-            if not infected:
-                continue
+    while len(timestamps) > 0:
+        if last_timestep >= int(timestamps[0]):        
+            data = patterns[timestamps[0]]
             
-            if person.get_masked():
-                if person.get_vaccinated() != VaccinationState.NONE:
-                    num_infected_both += 1
-                else:
-                    num_infected_masked += 1
-                continue
-            if person.get_vaccinated() != VaccinationState.NONE:
-                num_infected_vaccinated += 1
-                continue
-            num_infected_none += 1
-        
-        file.write('========================================\n')
-        file.write(f'% Infected (no interventions): {100 * num_infected_none / num_none}\n')
-        file.write(f'% Infected (masked): {100 * num_infected_masked / num_masked}\n')
-        file.write(f'% Infected (vaccinated): {100 * num_infected_vaccinated / num_vaccinated}\n')
-        file.write(f'% Infected (both): {100 * num_infected_both / num_both}\n')
-        file.write('========================================\n')
+            # Move people to homes for this timestep
+            move_people(simulator, data['homes'].items(), True)
+            
+            # Move people to facilities for this timestep
+            move_people(simulator, data['places'].items(), False)
+            
+            infectionmgr.run_model(last_timestep)
+            
+            result[last_timestep] = { 'omicron': [], 'delta': [] }
+            for p in simulator.people:
+                for disease, state in p.states.items():
+                    if InfectionState.INFECTED in state:
+                        result[last_timestep][disease].append(p.id)
+            
+            timestamps.pop(0)
+                    
+        last_timestep += simulator.timestep
 
     return result
 
