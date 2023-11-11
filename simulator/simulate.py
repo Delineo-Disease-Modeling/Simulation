@@ -125,27 +125,48 @@ def run_simulator(interventions):
     
     result = {}
     
-    while len(timestamps) > 0:
-        if last_timestep >= int(timestamps[0]):        
-            data = patterns[timestamps[0]]
+    # while len(timestamps) > 0:
+    #     if last_timestep >= int(timestamps[0]):        
+    #         data = patterns[timestamps[0]]
             
-            # Move people to homes for this timestep
-            move_people(simulator, data['homes'].items(), True)
+    #         # Move people to homes for this timestep
+    #         move_people(simulator, data['homes'].items(), True)
             
-            # Move people to facilities for this timestep
-            move_people(simulator, data['places'].items(), False)
+    #         # Move people to facilities for this timestep
+    #         move_people(simulator, data['places'].items(), False)
             
-            infectionmgr.run_model(last_timestep)
+    #         infectionmgr.run_model(last_timestep)
             
-            result[last_timestep] = { 'omicron': [], 'delta': [] }
-            for p in simulator.people:
-                for disease, state in p.states.items():
-                    if InfectionState.INFECTED in state:
-                        result[last_timestep][disease].append(p.id)
+    #         result[last_timestep] = { 'omicron': [], 'delta': [] }
+    #         for p in simulator.people:
+    #             for disease, state in p.states.items():
+    #                 if InfectionState.INFECTED in state:
+    #                     result[last_timestep][disease].append(p.id)
             
-            timestamps.pop(0)
+    #         timestamps.pop(0)
                     
-        last_timestep += simulator.timestep
+    #     last_timestep += simulator.timestep
+
+    with open('simulator_results.txt', 'w') as file:
+        while len(timestamps) > 0:
+            #print(f'Running movement simulator for timestep {last_timestep}')
+            
+            if last_timestep >= int(timestamps[0]):        
+                data = patterns[timestamps[0]]
+                
+                # Move people to homes for this timestep
+                move_people(simulator, data['homes'].items(), True)
+                
+                # Move people to facilities for this timestep
+                move_people(simulator, data['places'].items(), False)
+                
+                timestamps.pop(0)
+                #print(f'Completed movement for timestep {timestamps.pop(0)}')  
+            
+            infectionmgr.run_model(4, file, last_timestep)
+            
+            last_timestep += simulator.timestep
+
 
     return result
 
