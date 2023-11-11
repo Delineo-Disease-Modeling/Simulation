@@ -33,7 +33,7 @@ demographic_info = pd.read_csv('demographic_info.csv', names=demo_cols)
 print('Demographic Info')
 print(demographic_info)
 print(matrices_dict["Mean"])
-simulation_data = run_simulation(matrices_dict["Transition Matrix"], matrices_dict["Mean"], matrices_dict["Standard Deviation"], default_initial_state, 20)
+simulation_data = run_simulation(matrices_dict["Transition Matrix"], matrices_dict["Mean"], matrices_dict["Standard Deviation"], matrices_dict["Min Cut-Off"], matrices_dict["Max Cut-Off"], matrices_dict["Distribution Type"], default_initial_state, 20)
 output_file = "simulation_parameters_results.csv"
 with open(output_file, "w", newline='') as file:
       writer = csv.writer(file)

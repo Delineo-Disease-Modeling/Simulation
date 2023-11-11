@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 # Define the states variable at the top level
 states = ["Null", "Symptomatic", "Infectious", "Hospitalized", "ICU", "Removed", "Recovered"]
@@ -19,7 +20,18 @@ transition_matrix = [
     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 ]
 
-def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_interval_matrix, initial_state, desired_iterations):
+# Define the distribution type matrix
+distribution_type_matrix = [
+    [1, 2, 1, 1, 1, 1, 1],  # Distribution types for transitions from "Null"
+    [1, 1, 2, 1, 1, 1, 1],
+    [1, 1, 1, 2, 1, 1, 1],
+    [1, 1, 1, 1, 2, 1, 1],
+    [1, 1, 1, 1, 1, 2, 1],
+    [1, 1, 1, 1, 1, 1, 2], 
+    [1, 1, 1, 1, 1, 1, 1]
+]
+
+def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_interval_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, initial_state, desired_iterations):
     current_state = states.index(initial_state)
     total_time_steps = 0
     simulation_data = []
@@ -30,17 +42,21 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
         current_state = states.index(next_state)
         return next_state
 
-    def sample_time_interval(mean_matrix, std_dev_matrix, current_state_index, next_state_index):
+    def sample_time_interval(mean_matrix, std_dev_matrix, min_matrix, max_matrix, distribution_matrix, current_state_index, next_state_index):
         while True:
-            interval = int(random.normalvariate(mean_matrix[current_state_index][next_state_index], std_dev_matrix[current_state_index][next_state_index]))
-            if interval >= 0:
+            if distribution_matrix[current_state_index][next_state_index] == 1:  # Normal distribution
+                interval = int(random.normalvariate(mean_matrix[current_state_index][next_state_index], std_dev_matrix[current_state_index][next_state_index]))
+            else:
+                raise ValueError(f"Unsupported distribution type {distribution_matrix[current_state_index][next_state_index]}")
+            
+            if min_matrix[current_state_index][next_state_index] <= interval <= max_matrix[current_state_index][next_state_index]:
                 return interval
 
     iterations = 0
     while iterations < desired_iterations:
         next_state = transition()
         next_state_index = states.index(next_state)  # convert next_state to its index
-        time_interval = sample_time_interval(mean_time_interval_matrix, std_dev_time_interval_matrix, current_state, next_state_index)
+        time_interval = sample_time_interval(mean_time_interval_matrix, std_dev_time_interval_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, current_state, next_state_index)
         total_time_steps += time_interval
         current_state_str = states[current_state]
 
