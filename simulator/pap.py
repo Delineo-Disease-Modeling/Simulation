@@ -249,4 +249,4 @@ if __name__== '__main__':
         
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-    print("Successfully Created Households")
+    print('Successfully Created Households')

@@ -13,16 +13,7 @@ class InfectionManager:
                 if InfectionState.INFECTED in v:
                     self.infected.append(p)
     
-    def run_model(self, file=None, curtime=0):
-        if file == None:
-            print(f'infected: {[i.id for i in self.infected]}')
-        else:
-            file.write(f'====== TIMESTEP {curtime} ======\n')
-            file.write(f'delta: {[i.id for i in self.infected if i.states.get("delta") != None]}\n')
-            file.write(f'omicron: {[i.id for i in self.infected if i.states.get("omicron") != None]}\n')
-            file.write(f'delta_inf: {[i.id for i in self.infected if i.states.get("delta") != None and InfectionState.INFECTIOUS in i.states.get("delta")]}\n')
-            file.write(f'omicron_inf: {[i.id for i in self.infected if i.states.get("omicron") != None and InfectionState.INFECTIOUS in i.states.get("omicron")]}\n')
-        
+    def run_model(self, curtime=0):        
         for i in self.infected:
             i.update_state(curtime)
             
@@ -34,10 +25,6 @@ class InfectionManager:
             
             if stay == False:
                 self.infected.remove(i)
-                if file == None:
-                    print(f'{i.id} is no longer infected')
-                else:
-                    file.write(f'{i.id} is no longer infected\n')
         
         for i in self.infected:
             for p in i.location.population:
@@ -83,11 +70,6 @@ class InfectionManager:
                     if len(new_infections) == 1:
                         p.states[disease] = InfectionState.INFECTED
                         self.create_timeline(p, disease, curtime)
-                        
-                        if file == None:
-                            print(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}')
-                        else:
-                            file.write(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}\n')
                         continue
                     
                     if self.multidisease == False:
@@ -95,8 +77,7 @@ class InfectionManager:
                     
                     # TODO: Handle case where a person is infected by multiple diseases at once
                     p.state = InfectionState.INFECTED
-                    print(f'{i.id} infected {p.id} @ location {p.location.id}')
-
+        
         
     # When will this person turn from infected to infectious? And later symptomatic? Hospitalized?
     def create_timeline(self, person, disease, curtime):
