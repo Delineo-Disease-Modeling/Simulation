@@ -1,5 +1,3 @@
 State,Time Step
-Null,7
-Symptomatic,11
-Infectious,16
-Recovered,22
+Symptomatic,5
+Recovered,10
