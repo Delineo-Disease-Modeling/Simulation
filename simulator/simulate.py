@@ -117,7 +117,10 @@ def run_simulator(interventions):
     
     infectionmgr = InfectionManager(people=simulator.people)
     
-    with open(curdir + '/patterns.json') as file:
+    # with open(curdir + '/patterns.json') as file:
+    #     patterns = json.load(file)
+
+    with open(curdir + '/pattern_simple.json') as file:
         patterns = json.load(file)
 
     last_timestep = 0

@@ -25,9 +25,18 @@ class InfectionManager:
         
         for i in self.infected:
             i.update_state(curtime)
+
+
         
         for i in self.infected:
+            # all_p = []
+            # all_locations = []
             for p in i.location.population:
+                # if p.location not in all_locations:
+                #     all_locations.append(p.location)
+                # if p not in all_p:
+                #     all_p.append(p)
+
                 if i == p or p.states.get("omicron") != None or p.states.get("delta") != None:
                     continue
 
@@ -44,7 +53,7 @@ class InfectionManager:
                     
                     # Repeat the probability the number of timesteps we passed over the interval
                     for _ in range(num_timesteps):
-                        if (disease == "delta" and CAT(p, True, num_timesteps, 1.3e4) == True) or (disease == "omicron" and CAT(p, True, num_timesteps, 1.1e4) == True):
+                        if (disease == "delta" and CAT(p, True, num_timesteps, 7.237e4) == True) or (disease == "omicron" and CAT(p, True, num_timesteps, 7.2255e4) == True):
                             new_infections.append(disease)
                             p.states[disease] = InfectionState.INFECTED
                             self.infected.append(p)
@@ -71,8 +80,10 @@ class InfectionManager:
                     # TODO: Handle case where a person is infected by multiple diseases at once
                     p.state = InfectionState.INFECTED
                     print(f'{i.id} infected {p.id} @ location {p.location.id}')
+            
+            # print(len(all_p))
 
-        
+
     # When will this person turn from infected to infectious? And later symptomatic? Hospitalized?
     def create_timeline(self, person, disease, curtime):
         person.timeline = {
