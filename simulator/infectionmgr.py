@@ -1,5 +1,5 @@
-from .pap import InfectionState, InfectionTimeline
-from .infection_model import probability_model
+from pap import InfectionState, InfectionTimeline
+from infection_model import CAT
 import random
 
 class InfectionManager:
@@ -13,7 +13,14 @@ class InfectionManager:
                 if InfectionState.INFECTED in v:
                     self.infected.append(p)
     
-    def run_model(self, curtime=0):        
+    def run_model(self, num_timesteps=1, file=None, curtime=0):
+        if file == None:
+            print(f'infected: {[i.id for i in self.infected]}')
+        else:
+            file.write(f'====== TIMESTEP {curtime} ======\n')
+            file.write(f'delta: {[i.id for i in self.infected if i.states.get("delta") != None]}\n')
+            file.write(f'omicron: {[i.id for i in self.infected if i.states.get("omicron") != None]}\n')
+        
         for i in self.infected:
             i.update_state(curtime)
             
@@ -28,9 +35,9 @@ class InfectionManager:
         
         for i in self.infected:
             for p in i.location.population:
-                if i == p:
+                if i == p or p.states.get("omicron") != None or p.states.get("delta") != None:
                     continue
-                
+
                 new_infections = []
 
                 for disease, state in i.states.items():   
@@ -43,26 +50,16 @@ class InfectionManager:
                         if InfectionState.INFECTED in p.states[disease]:
                             continue
                     
-                    if random.random() < probability_model(i, p):
-                        new_infections.append(disease)
-                        break # We can't re-infect someone
-                                    
+                    # Repeat the probability the number of timesteps we passed over the interval
+                    for _ in range(num_timesteps):
+                        if random.random() < probability_model(i, p):
+                            new_infections.append(disease)
+                            break # We can't re-infect someone
+                
                 for disease in new_infections:
                     # If a person is infected with more than one disease at the same time
                     # and the model does not support being infected with multiple diseases,
                     # this loop is used to remedy that case
-                    
-                    currently_infected = False
-                    if self.multidisease == False:
-                        for state in p.states.values():
-                            if InfectionState.INFECTED in state:
-                                currently_infected = True
-                                break
-                    
-                    # If someone is already infected in a simulator that doesn't allow
-                    # for multiple disease infections at once, we break
-                    if currently_infected == True:
-                        break
                     
                     self.infected.append(p) # add to list of infected regardless
                     

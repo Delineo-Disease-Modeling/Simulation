@@ -1,0 +1,263 @@
+{
+    "places": {
+        "1": {
+            "label": "American Heritage Bank",
+            "cbg": "-1",
+            "latitude": 36.562036,
+            "longitude": -96.160775,
+            "capacity": 50
+        },
+        "2": {
+            "label": "Andy's Hamburgers",
+            "cbg": "-1",
+            "latitude": 36.561392,
+            "longitude": -96.161652,
+            "capacity": 30
+        },
+        "3": {
+            "label": "Ascension Health",
+            "cbg": "-1",
+            "latitude": 36.562417,
+            "longitude": -96.161487,
+            "capacity": 60
+        },
+        "4": {
+            "label": "Assembly of God Church",
+            "cbg": "-1",
+            "latitude": 36.562665,
+            "longitude": -96.158863,
+            "capacity": 100
+        },
+        "5": {
+            "label": "B Square Hair",
+            "cbg": "-1",
+            "latitude": 36.561492,
+            "longitude": -96.162838,
+            "capacity": 15
+        },
+        "6": {
+            "label": "Baptist Church",
+            "cbg": "-1",
+            "latitude": 36.545544,
+            "longitude": -96.165471,
+            "capacity": 80
+        },
+        "7": {
+            "label": "Barnsdall Building Blocks",
+            "cbg": "-1",
+            "latitude": 36.560908,
+            "longitude": -96.16973,
+            "capacity": 45
+        },
+        "8": {
+            "label": "Barnsdall Church Of The Nazarene",
+            "cbg": "-1",
+            "latitude": 36.562023,
+            "longitude": -96.165251,
+            "capacity": 70
+        },
+        "9": {
+            "label": "Barnsdall City Cemetery",
+            "cbg": "-1",
+            "latitude": 36.562015,
+            "longitude": -96.161655,
+            "capacity": 150
+        },
+        "10": {
+            "label": "Barnsdall Es",
+            "cbg": "-1",
+            "latitude": 36.559073,
+            "longitude": -96.168532,
+            "capacity": 200
+        },
+        "11": {
+            "label": "Barnsdall Flower",
+            "cbg": "-1",
+            "latitude": 36.559652,
+            "longitude": -96.162075,
+            "capacity": 30
+        },
+        "12": {
+            "label": "Barnsdall Hs",
+            "cbg": "-1",
+            "latitude": 36.560596,
+            "longitude": -96.16706,
+            "capacity": 150
+        },
+        "13": {
+            "label": "Barnsdall Jhs",
+            "cbg": "-1",
+            "latitude": 36.560582,
+            "longitude": -96.167079,
+            "capacity": 100
+        },
+        "14": {
+            "label": "Barnsdall Main Street Oil Well",
+            "cbg": "-1",
+            "latitude": 36.562039,
+            "longitude": -96.166822,
+            "capacity": 40
+        },
+        "15": {
+            "label": "Barnsdall Market",
+            "cbg": "-1",
+            "latitude": 36.561444,
+            "longitude": -96.164043,
+            "capacity": 25
+        },
+        "16": {
+            "label": "Barnsdall Nursing Home",
+            "cbg": "-1",
+            "latitude": 36.558105,
+            "longitude": -96.159978,
+            "capacity": 90
+        },
+        "17": {
+            "label": "Barnsdall Police Department Barnsdall Oklahoma",
+            "cbg": "-1",
+            "latitude": 36.561542,
+            "longitude": -96.160934,
+            "capacity": 40
+        },
+        "18": {
+            "label": "Barnsdall Rural Fire Fighters Association",
+            "cbg": "-1",
+            "latitude": 36.558092,
+            "longitude": -96.162012,
+            "capacity": 60
+        },
+        "19": {
+            "label": "Barnsdall Tag Agency",
+            "cbg": "-1",
+            "latitude": 36.561996,
+            "longitude": -96.161477,
+            "capacity": 25
+        },
+        "20": {
+            "label": "Dollar General",
+            "cbg": "-1",
+            "latitude": 36.567718,
+            "longitude": -96.166975,
+            "capacity": 150
+        },
+        "21": {
+            "label": "Free Will Baptist Church",
+            "cbg": "-1",
+            "latitude": 36.55807,
+            "longitude": -96.15821,
+            "capacity": 100
+        },
+        "22": {
+            "label": "Garretts Country Store & Grill",
+            "cbg": "-1",
+            "latitude": 36.557294,
+            "longitude": -96.160824,
+            "capacity": 40
+        },
+        "23": {
+            "label": "Kelley Insurance Agency",
+            "cbg": "-1",
+            "latitude": 36.561955,
+            "longitude": -96.161496,
+            "capacity": 30
+        },
+        "24": {
+            "label": "Kelley's Trucks and More",
+            "cbg": "-1",
+            "latitude": 36.557218,
+            "longitude": -96.160001,
+            "capacity": 60
+        },
+        "25": {
+            "label": "Lighthouse Church",
+            "cbg": "-1",
+            "latitude": 36.554103,
+            "longitude": -96.148825,
+            "capacity": 50
+        },
+        "26": {
+            "label": "Osage Nation Head Start Barnsdall",
+            "cbg": "-1",
+            "latitude": 36.560925,
+            "longitude": -96.169752,
+            "capacity": 80
+        },
+        "27": {
+            "label": "Reece Cemetery",
+            "cbg": "-1",
+            "latitude": 36.559645,
+            "longitude": -96.149388,
+            "capacity": 150
+        },
+        "28": {
+            "label": "Robinowitz Oil",
+            "cbg": "-1",
+            "latitude": 36.561618,
+            "longitude": -96.162073,
+            "capacity": 40
+        },
+        "29": {
+            "label": "Siggins Memorial Clinic",
+            "cbg": "-1",
+            "latitude": 36.562406,
+            "longitude": -96.161499,
+            "capacity": 60
+        },
+        "30": {
+            "label": "Sinclair Oil",
+            "cbg": "-1",
+            "latitude": 36.557646,
+            "longitude": -96.161388,
+            "capacity": 70
+        },
+        "31": {
+            "label": "Stumpff Chapel",
+            "cbg": "-1",
+            "latitude": 36.562951,
+            "longitude": -96.164192,
+            "capacity": 80
+        },
+        "32": {
+            "label": "Sweet Scripture",
+            "cbg": "-1",
+            "latitude": 36.562046,
+            "longitude": -96.164165,
+            "capacity": 40
+        },
+        "33": {
+            "label": "Tone Ur Hyde",
+            "cbg": "-1",
+            "latitude": 36.561988,
+            "longitude": -96.162188,
+            "capacity": 30
+        },
+        "34": {
+            "label": "Toon Hardware and Lumber",
+            "cbg": "-1",
+            "latitude": 36.561075,
+            "longitude": -96.16224,
+            "capacity": 50
+        },
+        "35": {
+            "label": "United Methodist Church",
+            "cbg": "-1",
+            "latitude": 36.560623,
+            "longitude": -96.164499,
+            "capacity": 100
+        },
+        "36": {
+            "label": "United States Postal Service (USPS)",
+            "cbg": "-1",
+            "latitude": 36.562008,
+            "longitude": -96.162844,
+            "capacity": 30
+        },
+        "37": {
+            "label": "Uptown Pizza",
+            "cbg": "-1",
+            "latitude": 36.561626,
+            "longitude": -96.165414,
+            "capacity": 60
+        }
+    }
+}
