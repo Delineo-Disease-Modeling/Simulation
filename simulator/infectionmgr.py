@@ -13,7 +13,7 @@ class InfectionManager:
                 if InfectionState.INFECTED in v:
                     self.infected.append(p)
     
-    def run_model(self, num_timesteps=1, file=None, curtime=0):
+    def run_model(self, num_timesteps=1, file=None, curtime=0, numDeltaInfected=[], numOmicronInfected=[]):
         if file == None:
             print(f'infected: {[i.id for i in self.infected]}')
         else:
@@ -22,6 +22,10 @@ class InfectionManager:
             file.write(f'omicron: {[i.id for i in self.infected if i.states.get("omicron") != None]}\n')
             file.write(f"delta count: {len([i.id for i in self.infected if i.states.get('delta') != None])}\n")
             file.write(f"omicron count: {len([i.id for i in self.infected if i.states.get('omicron') != None])}\n")
+
+        # keep an array of number of people infected at each time step
+        numDeltaInfected.append(len([i.id for i in self.infected if i.states.get('delta') != None]))
+        numOmicronInfected.append(len([i.id for i in self.infected if i.states.get('omicron') != None]))
         
         for i in self.infected:
             i.update_state(curtime)
