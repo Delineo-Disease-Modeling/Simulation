@@ -1,3 +1,4 @@
+from .pap import InfectionState
 import random
 import math
 
@@ -20,7 +21,7 @@ def set_droplets_passed_mask(p, droplets=1):
     #         'mask': False,
     #         'vaccine': VaccinationState.NONE
     #     }
-    if p.get_masked == True:
+    if p.get_masked() == True:
         filter_efficiency = random.uniform(0.3, 0.6)
         droplets = droplets * filter_efficiency
     return droplets
@@ -33,6 +34,11 @@ def calculate_droplets_transport(p, num_time_steps):
         #fat: fraction of droplets with viable virons
         average_fractions = []
         num_time_steps = num_time_steps
+        
+        disease = ''
+        for d, v in p.states.items():
+            if InfectionState.INFECTED in v:
+                disease = d
 
         #Iterate over each time step within p's timeline
         for t in range(num_time_steps):
@@ -41,10 +47,10 @@ def calculate_droplets_transport(p, num_time_steps):
             # Iterate over each person in the location at time step t
             for person in p.location.population:
                 # Check if the person has an infectious state at time t
-                if "infectious" in person.states and person.states["infectious"].start <= t <= person.states["infectious"].end:
+                if person.states.get(disease) != None and InfectionState.INFECTIOUS in person.states.get(disease):
                     # Calculate the total number of infectious people at time t
                     # if the infected person is wearing a mask
-                    if person.masked == True:
+                    if person.get_masked() == True:
                         filtered_droplets = random.uniform(0.3, 0.9)
                         total_infectious_people += filtered_droplets
                     else:
@@ -56,7 +62,7 @@ def calculate_droplets_transport(p, num_time_steps):
             average_fractions.append(average_fraction)
 
         # Calculate the average fraction over the entire timeline
-        average_frac = sum(average_fractions) / num_time_steps
+        average_frac = sum(average_fractions) / num_time_steps * 15
 
         return average_frac
 
@@ -83,7 +89,7 @@ def calculate_inhalation_rate(p, indoor):
 def calculate_frac_filtered(p):
     #fms % filtered by facemask
     fms = random.uniform(0.1, 0.3)
-    if p.get_masked == False:
+    if p.get_masked() == False:
         fms = 1
     return fms
 
