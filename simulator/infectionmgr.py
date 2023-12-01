@@ -55,12 +55,12 @@ class InfectionManager:
                         continue
                     
                     # Repeat the probability the number of timesteps we passed over the interval
-                    for _ in range(num_timesteps):
-                        if (disease == "delta" and CAT(p, True, num_timesteps, 7.237e4) == True) or (disease == "omicron" and CAT(p, True, num_timesteps, 7.2255e4) == True):
-                            new_infections.append(disease)
-                            p.states[disease] = InfectionState.INFECTED
-                            self.infected.append(p)
-                            break
+                    # for _ in range(num_timesteps):
+                    if (disease == "delta" and CAT(p, True, num_timesteps, 10e4) == True) or (disease == "omicron" and CAT(p, True, num_timesteps, 10e4) == True):
+                        new_infections.append(disease)
+                        p.states[disease] = InfectionState.INFECTED
+                        self.infected.append(p)
+                        break
                 
                 for disease in new_infections:
                     # If a person is infected with more than one disease at the same time
