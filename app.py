@@ -38,7 +38,7 @@ def run_main():
             'mask': 0.4,
             'vaccine': 0.2,
             'capacity': 1.0,
-            'lockdown': 0.01
+            'lockdown': 0
         })
 
 if __name__ == '__main__':

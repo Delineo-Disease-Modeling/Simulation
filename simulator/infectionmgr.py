@@ -1,5 +1,6 @@
-from pap import InfectionState, InfectionTimeline
-from infection_model import CAT
+from .pap import InfectionState, InfectionTimeline
+from .infection_model import CAT
+from dmp.user_input import get_disease_matrix
 import random
 
 class InfectionManager:
@@ -13,7 +14,7 @@ class InfectionManager:
                 if InfectionState.INFECTED in v:
                     self.infected.append(p)
     
-    def run_model(self, num_timesteps=1, file=None, curtime=0, numDeltaInfected=[], numOmicronInfected=[]):
+    def run_model(self, num_timesteps=1, file=None, curtime=0, deltaInfected=[], omicronInfected=[]):
         if file == None:
             print(f'infected: {[i.id for i in self.infected]}')
         else:
@@ -24,13 +25,11 @@ class InfectionManager:
             file.write(f"omicron count: {len([i.id for i in self.infected if i.states.get('omicron') != None])}\n")
 
         # keep an array of number of people infected at each time step
-        numDeltaInfected.append(len([i.id for i in self.infected if i.states.get('delta') != None]))
-        numOmicronInfected.append(len([i.id for i in self.infected if i.states.get('omicron') != None]))
+        deltaInfected[:] = [i.id for i in self.infected if i.states.get('delta') != None]
+        omicronInfected[:] = [i.id for i in self.infected if i.states.get('omicron') != None]
         
         for i in self.infected:
             i.update_state(curtime)
-
-
         
         for i in self.infected:
             # all_p = []
@@ -90,6 +89,8 @@ class InfectionManager:
 
     # When will this person turn from infected to infectious? And later symptomatic? Hospitalized?
     def create_timeline(self, person, disease, curtime):
+        #print(str(person.id) + ': ' + str(get_disease_matrix(person)))
+        
         person.timeline = {
             disease: {
                 InfectionState.INFECTIOUS: InfectionTimeline(curtime, curtime + 4000)

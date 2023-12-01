@@ -1,5 +1,5 @@
-from pap import Person, Household, Facility, InfectionState, VaccinationState
-from infectionmgr import *
+from .pap import Person, Household, Facility, InfectionState, VaccinationState
+from .infectionmgr import *
 import json
 import os
 
@@ -127,12 +127,12 @@ def run_simulator(interventions):
     timestamps = list(patterns.keys())
     
     result = {}
-    numDeltaInfected = []
-    numOmicronInfected = []
+    deltaInfected = []
+    omicronInfected = []
 
     with open('simulator_results.txt', 'w') as file:
         while len(timestamps) > 0:
-            #print(f'Running movement simulator for timestep {last_timestep}')
+            print(f'Running movement simulator for timestep {last_timestep}')
             
             if last_timestep >= int(timestamps[0]):        
                 data = patterns[timestamps[0]]
@@ -146,14 +146,16 @@ def run_simulator(interventions):
                 timestamps.pop(0)
                 #print(f'Completed movement for timestep {timestamps.pop(0)}')  
             
-            infectionmgr.run_model(4, file, last_timestep, numDeltaInfected, numOmicronInfected)
+            infectionmgr.run_model(4, file, last_timestep, deltaInfected, omicronInfected)
+            
+            result[last_timestep] = {'delta': deltaInfected, 'omicron': omicronInfected }
             
             last_timestep += simulator.timestep
 
         print("Delta Infected:")
-        print(numDeltaInfected)
+        print(deltaInfected)
         print("Omicron Infected:")
-        print(numOmicronInfected)
+        print(omicronInfected)
 
 
     return result
