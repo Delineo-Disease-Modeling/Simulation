@@ -11,13 +11,13 @@ default_initial_state = "Null"
 
 # Define the transition matrix
 transition_matrix = [
-    [0.0, 0.5, 0.2, 0.0, 0.0, 0.0, 0],  # Transition from "Null" to "Symptomatic"
-    [0.0, 0.0, 0.4, 0.1, 0.0, 0.0, 0.5],
-    [0.0, 0.0, 0.0, 0.6, 0.0, 0.0, 0.4],
-    [0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.7],
-    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+    [0.0, 0.7, 0.3, 0.0, 0.0, 0.0, 0],  # Transition from "Null" to "Symptomatic"
+    [0.0, 0.0, 0.5, 0.2, 0.1, 0.0, 0.2],
+    [0.0, 0.0, 0.0, 0.4, 0.2, 0.0, 0.4],
+    [0.0, 0.0, 0.0, 0.0, 0.7, 0.0, 0.3],
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.4, 0.6],
     [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0], 
-    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
 ]
 
 # Define the distribution type matrix
@@ -56,7 +56,7 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
     while iterations < desired_iterations:
         next_state = transition()
         next_state_index = states.index(next_state)  # convert next_state to its index
-        time_interval = sample_time_interval(mean_time_interval_matrix, std_dev_time_interval_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, current_state, next_state_index)
+        time_interval = sample_time_interval(mean_time_interval_matrix, std_dev_time_interval_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, current_state, next_state_index) * 60 * 24
         total_time_steps += time_interval
         current_state_str = states[current_state]
 

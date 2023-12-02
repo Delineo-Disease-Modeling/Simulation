@@ -25,7 +25,7 @@ for label, matrix in matrices_dict.items():
 
 
 # Define the column names for the demographic info
-demo_cols = ["Sex", "Age", "Comorbidity"]
+demo_cols = ["Sex", "Age", "Is_Vaccinated"]
 
 # Read the demographic info from the CSV file
 demographic_info = pd.read_csv('demographic_info.csv', names=demo_cols)

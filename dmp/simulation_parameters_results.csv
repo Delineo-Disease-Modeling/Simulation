@@ -1,5 +1,3 @@
 State,Time Step
-Infectious,2
-Hospitalized,4
-ICU,7
-Recovered,10
+Symptomatic,2880
+Recovered,7200
