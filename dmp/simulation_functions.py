@@ -46,6 +46,8 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
         while True:
             if distribution_matrix[current_state_index][next_state_index] == 1:  # Normal distribution
                 interval = int(random.normalvariate(mean_matrix[current_state_index][next_state_index], std_dev_matrix[current_state_index][next_state_index]))
+            elif distribution_matrix[current_state_index][next_state_index] == 2:  # Exponential distribution
+                interval = int(random.expovariate(1 / mean_matrix[current_state_index][next_state_index]))
             else:
                 raise ValueError(f"Unsupported distribution type {distribution_matrix[current_state_index][next_state_index]}")
             
