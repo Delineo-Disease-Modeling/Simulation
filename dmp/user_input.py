@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 import csv
-from simulation_functions import run_simulation, states, default_mean_time_interval, default_std_dev_time_interval, default_initial_state, transition_matrix
+from simulation_functions import run_simulation, default_initial_state
+# , states, default_mean_time_interval, default_std_dev_time_interval, default_initial_state, transition_matrix
 
 def process_dataframes(df, demographic_info):
     # Define the labels for the matrices

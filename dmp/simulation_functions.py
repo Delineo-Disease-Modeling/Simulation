@@ -4,32 +4,32 @@ import numpy as np
 # Define the states variable at the top level
 states = ["Null", "Symptomatic", "Infectious", "Hospitalized", "ICU", "Removed", "Recovered"]
 
-# Define other default values and transition matrix
-default_mean_time_interval = 5
-default_std_dev_time_interval = 2
+# # Define other default values and transition matrix
+# default_mean_time_interval = 5
+# default_std_dev_time_interval = 2
 default_initial_state = "Null"
 
-# Define the transition matrix
-transition_matrix = [
-    [0.0, 0.7, 0.3, 0.0, 0.0, 0.0, 0],  # Transition from "Null" to "Symptomatic"
-    [0.0, 0.0, 0.5, 0.2, 0.1, 0.0, 0.2],
-    [0.0, 0.0, 0.0, 0.4, 0.2, 0.0, 0.4],
-    [0.0, 0.0, 0.0, 0.0, 0.7, 0.0, 0.3],
-    [0.0, 0.0, 0.0, 0.0, 0.0, 0.4, 0.6],
-    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0], 
-    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-]
+# # Define the transition matrix
+# transition_matrix = [
+#     [0.0, 0.7, 0.3, 0.0, 0.0, 0.0, 0],  # Transition from "Null" to "Symptomatic"
+#     [0.0, 0.0, 0.5, 0.2, 0.1, 0.0, 0.2],
+#     [0.0, 0.0, 0.0, 0.4, 0.2, 0.0, 0.4],
+#     [0.0, 0.0, 0.0, 0.0, 0.7, 0.0, 0.3],
+#     [0.0, 0.0, 0.0, 0.0, 0.0, 0.4, 0.6],
+#     [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0], 
+#     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+# ]
 
-# Define the distribution type matrix
-distribution_type_matrix = [
-    [1, 2, 1, 1, 1, 1, 1],  # Distribution types for transitions from "Null"
-    [1, 1, 2, 1, 1, 1, 1],
-    [1, 1, 1, 2, 1, 1, 1],
-    [1, 1, 1, 1, 2, 1, 1],
-    [1, 1, 1, 1, 1, 2, 1],
-    [1, 1, 1, 1, 1, 1, 2], 
-    [1, 1, 1, 1, 1, 1, 1]
-]
+# # Define the distribution type matrix
+# distribution_type_matrix = [
+#     [1, 2, 1, 1, 1, 1, 1],  # Distribution types for transitions from "Null"
+#     [1, 1, 2, 1, 1, 1, 1],
+#     [1, 1, 1, 2, 1, 1, 1],
+#     [1, 1, 1, 1, 2, 1, 1],
+#     [1, 1, 1, 1, 1, 2, 1],
+#     [1, 1, 1, 1, 1, 1, 2], 
+#     [1, 1, 1, 1, 1, 1, 1]
+# ]
 
 def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_interval_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, initial_state, desired_iterations):
     current_state = states.index(initial_state)
