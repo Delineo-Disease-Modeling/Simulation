@@ -22,6 +22,7 @@ class InfectionState(Flag):
     SYMPTOMATIC = 4
     HOSPITALIZED = 8
     RECOVERED = 16
+    REMOVED = 32
     
 class VaccinationState(Enum):
     NONE = 0 

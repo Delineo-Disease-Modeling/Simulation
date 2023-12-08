@@ -62,7 +62,7 @@ def calculate_droplets_transport(p, num_time_steps):
             average_fractions.append(average_fraction)
 
         # Calculate the average fraction over the entire timeline
-        average_frac = sum(average_fractions) / num_time_steps * 15
+        average_frac = sum(average_fractions) / num_time_steps
 
         return average_frac
 

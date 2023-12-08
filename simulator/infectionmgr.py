@@ -56,7 +56,7 @@ class InfectionManager:
                     
                     # Repeat the probability the number of timesteps we passed over the interval
                     # for _ in range(num_timesteps):
-                    if (disease == "delta" and CAT(p, True, num_timesteps, 3.237e5) == True) or (disease == "omicron" and CAT(p, True, num_timesteps, 3.2355e5) == True):
+                    if (disease == "delta" and CAT(p, True, num_timesteps, 100)) or (disease == "omicron" and CAT(p, True, num_timesteps, 100)):
                         new_infections.append(disease)
                         p.states[disease] = InfectionState.INFECTED
                         self.infected.append(p)
@@ -89,7 +89,7 @@ class InfectionManager:
 
     # When will this person turn from infected to infectious? And later symptomatic? Hospitalized?
     def create_timeline(self, person, disease, curtime):
-        #print(str(person.id) + ': ' + str(get_disease_matrix(person)))
+        print(str(person.id) + ': ' + str(get_disease_matrix(person)))
         
         person.timeline = {
             disease: {
