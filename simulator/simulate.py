@@ -146,9 +146,9 @@ def run_simulator(interventions):
                 timestamps.pop(0)
                 #print(f'Completed movement for timestep {timestamps.pop(0)}')  
             
-            infectionmgr.run_model(4, file, last_timestep, deltaInfected, omicronInfected)
+            infectionmgr.run_model(1, file, last_timestep, deltaInfected, omicronInfected)
             
-            result[last_timestep] = {'delta': deltaInfected, 'omicron': omicronInfected }
+            result[last_timestep] = {'delta': list(deltaInfected), 'omicron': list(omicronInfected) }
             
             last_timestep += simulator.timestep
 
