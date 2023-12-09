@@ -48,6 +48,8 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
                 interval = int(random.normalvariate(mean_matrix[current_state_index][next_state_index], std_dev_matrix[current_state_index][next_state_index]))
             elif distribution_matrix[current_state_index][next_state_index] == 2:  # Exponential distribution
                 interval = int(random.expovariate(1 / mean_matrix[current_state_index][next_state_index]))
+            elif distribution_matrix[current_state_index][next_state_index] == 3:  # Uniform distribution
+                interval = int(random.uniform(min_cutoff_matrix[current_state_index][next_state_index], max_cutoff_matrix[current_state_index][next_state_index]))
             else:
                 raise ValueError(f"Unsupported distribution type {distribution_matrix[current_state_index][next_state_index]}")
             
