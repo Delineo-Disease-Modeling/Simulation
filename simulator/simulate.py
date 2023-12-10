@@ -1,5 +1,7 @@
 from .pap import Person, Household, Facility, InfectionState, VaccinationState
 from .infectionmgr import *
+from io import StringIO
+import pandas as pd
 import json
 import os
 
@@ -64,7 +66,7 @@ def move_people(simulator, items, is_household):
             place.add_member(person)
             person.location = place
 
-def run_simulator(interventions):
+def run_simulator(matrices, interventions):
     with open(curdir + '/papdata.json') as file:
         pap = json.load(file)
     
@@ -115,7 +117,8 @@ def run_simulator(interventions):
     #for house in simulator.households:
     #    print(house.id, house.total_count)
     
-    infectionmgr = InfectionManager(people=simulator.people)
+    matrices = (curdir + '/matrices.csv') if matrices is None else StringIO(matrices)
+    infectionmgr = InfectionManager(pd.read_csv(matrices, header=None), people=simulator.people)
     
     # with open(curdir + '/patterns.json') as file:
     #     patterns = json.load(file)
