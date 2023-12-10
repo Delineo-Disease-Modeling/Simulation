@@ -20,7 +20,7 @@ def run_simulation():
         return 'Nothing Sent'
     
     try:
-        return simulate.run_simulator({
+        return simulate.run_simulator(request.json['matrices'], {
             'mask': request.json['mask'],
             'vaccine': request.json['vaccine'],
             'capacity': request.json['capacity'],
@@ -28,18 +28,23 @@ def run_simulation():
         })
 
     except KeyError:
-        return 'Missing required intervention metric'
-
-# This is for testing purposes
-@app.route("/", methods=['GET'])
-@cross_origin()
-def run_main():
-    return simulate.run_simulator({
+        return simulate.run_simulator(None, {
             'mask': 0.4,
             'vaccine': 0.2,
             'capacity': 1.0,
             'lockdown': 0
         })
+
+# This is for testing purposes
+@app.route("/", methods=['GET'])
+@cross_origin()
+def run_main():
+    return simulate.run_simulator(None, {
+        'mask': 0.4,
+        'vaccine': 0.2,
+        'capacity': 1.0,
+        'lockdown': 0
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

@@ -1,10 +1,11 @@
 from .pap import InfectionState, InfectionTimeline
 from .infection_model import CAT
-from dmp.user_input import get_disease_matrix
+from dmp.user_input import process_dataframes
 import random
 
 class InfectionManager:
-    def __init__(self, timestep=15, people=[]):
+    def __init__(self, matrices, timestep=15, people=[]):
+        self.matrices = matrices
         self.timestep = timestep
         self.multidisease = True
         self.infected = []
@@ -89,10 +90,34 @@ class InfectionManager:
 
     # When will this person turn from infected to infectious? And later symptomatic? Hospitalized?
     def create_timeline(self, person, disease, curtime):
-        print(str(person.id) + ': ' + str(get_disease_matrix(person)))
+        tl = process_dataframes(self.matrices, {
+            "Age": person.age,
+            "Is_Vaccinated": "Yes" if person.get_vaccinated() != None else "No"
+        })
         
-        person.timeline = {
+        mint = tl[min(tl, key=tl.get)]
+        maxt = tl[max(tl, key=tl.get)]
+        
+        val = {
             disease: {
-                InfectionState.INFECTIOUS: InfectionTimeline(curtime, curtime + 4000)
+                # People are marked infected throughout everything
+                InfectionState.INFECTED: InfectionTimeline(mint, maxt)
             }
         }
+        
+        if 'Symptomatic' in tl.keys():
+            val[disease][InfectionState.SYMPTOMATIC] = InfectionTimeline(tl['Symptomatic'], maxt)
+        
+        if 'Infectious' in tl.keys():
+            val[disease][InfectionState.INFECTIOUS] = InfectionTimeline(tl['Infectious'], maxt)
+            
+        if 'Hospitalized' in tl.keys():
+            val[disease][InfectionState.HOSPITALIZED] = InfectionTimeline(tl['Hospitalized'], maxt)
+
+        if 'Recovered' in tl.keys():
+            val[disease][InfectionState.RECOVERED] = InfectionTimeline(tl['Recovered'], maxt)
+        
+        if 'Removed' in tl.keys():
+            val[disease][InfectionState.REMOVED] = InfectionTimeline(tl['Removed'], maxt)
+
+        person.timeline = val

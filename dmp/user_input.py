@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import csv
-from simulation_functions import run_simulation, default_initial_state
+from .simulation_functions import run_simulation, default_initial_state
 import os
 
 def process_dataframes(df, demographic_info):
@@ -38,8 +38,8 @@ def process_dataframes(df, demographic_info):
         matrices_dict["Distribution Type"],
         default_initial_state,
         20, 
-        demographic_info["Age"].iloc[0], 
-        demographic_info["Is_Vaccinated"].iloc[0]
+        demographic_info["Age"], 
+        demographic_info["Is_Vaccinated"]
     )
 
     output_dict = {}
@@ -48,14 +48,17 @@ def process_dataframes(df, demographic_info):
 
     return output_dict
 
-# Read the entire CSV file into a pandas DataFrame
-curdir = os.path.dirname(os.path.abspath(__file__))
-df = pd.read_csv(curdir + '/matrices.csv', header=None)
+if __name__ == '__main__':
+    # Read the entire CSV file into a pandas DataFrame
+    curdir = os.path.dirname(os.path.abspath(__file__))
+    df = pd.read_csv(curdir + '/matrices.csv', header=None)
+    
+    print(df)
 
-# Read the demographic info from the CSV file
-demo_cols = ["Sex", "Age", "Is_Vaccinated"]
-demographic_info = pd.read_csv('demographic_info.csv', names=demo_cols)
-result_dict = process_dataframes(df, demographic_info)
+    # Read the demographic info from the CSV file
+    demo_cols = ["Sex", "Age", "Is_Vaccinated"]
+    demographic_info = pd.read_csv(curdir + '/demographic_info.csv', names=demo_cols)
+    result_dict = process_dataframes(df, demographic_info)
 
-# Print the result dictionary
-print(result_dict)
+    # Print the result dictionary
+    print(result_dict)
