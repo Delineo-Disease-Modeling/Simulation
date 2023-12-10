@@ -15,10 +15,8 @@ class InfectionManager:
                 if InfectionState.INFECTED in v:
                     self.infected.append(p)
     
-    def run_model(self, num_timesteps=1, file=None, curtime=0, deltaInfected=[], omicronInfected=[]):
-        if file == None:
-            print(f'infected: {[i.id for i in self.infected]}')
-        else:
+    def run_model(self, num_timesteps=4, file=None, curtime=0, deltaInfected=[], omicronInfected=[]):
+        if file != None:
             file.write(f'====== TIMESTEP {curtime} ======\n')
             file.write(f'delta: {[i.id for i in self.infected if i.states.get("delta") != None]}\n')
             file.write(f'omicron: {[i.id for i in self.infected if i.states.get("omicron") != None]}\n')
@@ -33,15 +31,11 @@ class InfectionManager:
             i.update_state(curtime)
         
         for i in self.infected:
-            # all_p = []
-            # all_locations = []
             for p in i.location.population:
-                # if p.location not in all_locations:
-                #     all_locations.append(p.location)
-                # if p not in all_p:
-                #     all_p.append(p)
-
                 if i == p or p.states.get("omicron") != None or p.states.get("delta") != None:
+                    continue
+                
+                if p.invisible == True:
                     continue
 
                 new_infections = []
@@ -57,7 +51,7 @@ class InfectionManager:
                     
                     # Repeat the probability the number of timesteps we passed over the interval
                     # for _ in range(num_timesteps):
-                    if (disease == "delta" and CAT(p, True, num_timesteps, 100)) or (disease == "omicron" and CAT(p, True, num_timesteps, 100)):
+                    if (disease == "delta" and CAT(p, True, num_timesteps, 5e4)) or (disease == "omicron" and CAT(p, True, num_timesteps, 5e4)):
                         new_infections.append(disease)
                         p.states[disease] = InfectionState.INFECTED
                         self.infected.append(p)
@@ -75,9 +69,7 @@ class InfectionManager:
                         p.states[disease] = InfectionState.INFECTED
                         self.create_timeline(p, disease, curtime)
                         
-                        if file == None:
-                            print(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}')
-                        else:
+                        if file != None:
                             file.write(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}\n')
                         continue
                     
@@ -101,23 +93,20 @@ class InfectionManager:
         val = {
             disease: {
                 # People are marked infected throughout everything
-                InfectionState.INFECTED: InfectionTimeline(mint, maxt)
+                InfectionState.INFECTED: InfectionTimeline(curtime + mint, curtime + maxt)
             }
         }
         
-        if 'Symptomatic' in tl.keys():
-            val[disease][InfectionState.SYMPTOMATIC] = InfectionTimeline(tl['Symptomatic'], maxt)
+        str_to_state = {
+            'Symptomatic': InfectionState.SYMPTOMATIC,
+            'Infectious': InfectionState.INFECTIOUS,
+            'Hospitalized': InfectionState.HOSPITALIZED,
+            'Recovered': InfectionState.RECOVERED,
+            'Removed': InfectionState.REMOVED
+        }
         
-        if 'Infectious' in tl.keys():
-            val[disease][InfectionState.INFECTIOUS] = InfectionTimeline(tl['Infectious'], maxt)
-            
-        if 'Hospitalized' in tl.keys():
-            val[disease][InfectionState.HOSPITALIZED] = InfectionTimeline(tl['Hospitalized'], maxt)
-
-        if 'Recovered' in tl.keys():
-            val[disease][InfectionState.RECOVERED] = InfectionTimeline(tl['Recovered'], maxt)
-        
-        if 'Removed' in tl.keys():
-            val[disease][InfectionState.REMOVED] = InfectionTimeline(tl['Removed'], maxt)
-
+        for str, state in str_to_state.items():
+            if str in tl.keys():
+                val[disease][state] = InfectionTimeline(curtime + tl[str], curtime + maxt)
+                
         person.timeline = val

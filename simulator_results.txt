@@ -3,493 +3,707 @@ delta: ['160']
 omicron: ['43']
 delta count: 1
 omicron count: 1
-43 infected 44 @ location 16 w/ omicron
 ====== TIMESTEP 60 ======
 delta: ['160']
-omicron: ['43', '44']
+omicron: ['43']
 delta count: 1
-omicron count: 2
-43 infected 1664 @ location 17 w/ omicron
-43 infected 545 @ location 17 w/ omicron
-43 infected 2902 @ location 17 w/ omicron
-43 infected 1712 @ location 17 w/ omicron
-43 infected 967 @ location 17 w/ omicron
-43 infected 3430 @ location 17 w/ omicron
-43 infected 846 @ location 17 w/ omicron
-43 infected 3200 @ location 17 w/ omicron
-43 infected 2564 @ location 17 w/ omicron
-43 infected 1004 @ location 17 w/ omicron
-43 infected 2168 @ location 17 w/ omicron
-43 infected 392 @ location 17 w/ omicron
-43 infected 568 @ location 17 w/ omicron
-43 infected 188 @ location 17 w/ omicron
-43 infected 1136 @ location 17 w/ omicron
-43 infected 1629 @ location 17 w/ omicron
-43 infected 1477 @ location 17 w/ omicron
-43 infected 3313 @ location 17 w/ omicron
+omicron count: 1
 ====== TIMESTEP 120 ======
 delta: ['160']
-omicron: ['43', '44', '1664', '545', '2902', '1712', '967', '3430', '846', '3200', '2564', '1004', '2168', '392', '568', '188', '1136', '1629', '1477', '3313']
+omicron: ['43']
 delta count: 1
-omicron count: 20
-43 infected 983 @ location 31 w/ omicron
-43 infected 1348 @ location 31 w/ omicron
-43 infected 2779 @ location 31 w/ omicron
-43 infected 3242 @ location 31 w/ omicron
-43 infected 3344 @ location 31 w/ omicron
-43 infected 2652 @ location 31 w/ omicron
-43 infected 1173 @ location 31 w/ omicron
-43 infected 1001 @ location 31 w/ omicron
-43 infected 864 @ location 31 w/ omicron
-43 infected 2023 @ location 31 w/ omicron
-43 infected 245 @ location 31 w/ omicron
-43 infected 783 @ location 31 w/ omicron
-43 infected 484 @ location 31 w/ omicron
-43 infected 3300 @ location 31 w/ omicron
-43 infected 834 @ location 31 w/ omicron
-43 infected 996 @ location 31 w/ omicron
-43 infected 3330 @ location 31 w/ omicron
-43 infected 3248 @ location 31 w/ omicron
-43 infected 2420 @ location 31 w/ omicron
-43 infected 1762 @ location 31 w/ omicron
-43 infected 2196 @ location 31 w/ omicron
-43 infected 2039 @ location 31 w/ omicron
-43 infected 2757 @ location 31 w/ omicron
-43 infected 960 @ location 31 w/ omicron
-43 infected 778 @ location 31 w/ omicron
-43 infected 587 @ location 31 w/ omicron
-43 infected 237 @ location 31 w/ omicron
-43 infected 65 @ location 31 w/ omicron
-43 infected 2767 @ location 31 w/ omicron
-43 infected 429 @ location 31 w/ omicron
-43 infected 297 @ location 31 w/ omicron
-43 infected 2549 @ location 31 w/ omicron
-43 infected 2644 @ location 31 w/ omicron
-43 infected 754 @ location 31 w/ omicron
-43 infected 2573 @ location 31 w/ omicron
-43 infected 645 @ location 31 w/ omicron
-43 infected 1711 @ location 31 w/ omicron
-43 infected 450 @ location 31 w/ omicron
-43 infected 756 @ location 31 w/ omicron
-43 infected 3443 @ location 31 w/ omicron
-43 infected 347 @ location 31 w/ omicron
-43 infected 2871 @ location 31 w/ omicron
-43 infected 671 @ location 31 w/ omicron
-43 infected 458 @ location 31 w/ omicron
-43 infected 81 @ location 31 w/ omicron
+omicron count: 1
+43 infected 1478 @ location 31 w/ omicron
 43 infected 3008 @ location 31 w/ omicron
-43 infected 1832 @ location 31 w/ omicron
-43 infected 89 @ location 31 w/ omicron
-43 infected 2803 @ location 31 w/ omicron
-43 infected 795 @ location 31 w/ omicron
-43 infected 1453 @ location 31 w/ omicron
-43 infected 1492 @ location 31 w/ omicron
-43 infected 1101 @ location 31 w/ omicron
-43 infected 2568 @ location 31 w/ omicron
-43 infected 893 @ location 31 w/ omicron
 160 infected 157 @ location 9 w/ delta
-160 infected 2656 @ location 9 w/ delta
-160 infected 2812 @ location 9 w/ delta
-160 infected 2943 @ location 9 w/ delta
-160 infected 229 @ location 9 w/ delta
-160 infected 2915 @ location 9 w/ delta
-160 infected 3 @ location 9 w/ delta
-160 infected 2286 @ location 9 w/ delta
-160 infected 2649 @ location 9 w/ delta
-160 infected 259 @ location 9 w/ delta
-160 infected 1459 @ location 9 w/ delta
-160 infected 1361 @ location 9 w/ delta
-160 infected 803 @ location 9 w/ delta
-160 infected 1119 @ location 9 w/ delta
-160 infected 1608 @ location 9 w/ delta
-160 infected 1082 @ location 9 w/ delta
-160 infected 2773 @ location 9 w/ delta
-160 infected 3211 @ location 9 w/ delta
-160 infected 1128 @ location 9 w/ delta
-160 infected 3090 @ location 9 w/ delta
-160 infected 2229 @ location 9 w/ delta
-160 infected 2988 @ location 9 w/ delta
-160 infected 933 @ location 9 w/ delta
-160 infected 1540 @ location 9 w/ delta
 160 infected 2261 @ location 9 w/ delta
-160 infected 101 @ location 9 w/ delta
-160 infected 3204 @ location 9 w/ delta
-160 infected 1016 @ location 9 w/ delta
-160 infected 488 @ location 9 w/ delta
-160 infected 1043 @ location 9 w/ delta
-160 infected 667 @ location 9 w/ delta
-160 infected 2033 @ location 9 w/ delta
-160 infected 1370 @ location 9 w/ delta
 160 infected 631 @ location 9 w/ delta
-160 infected 2726 @ location 9 w/ delta
-160 infected 900 @ location 9 w/ delta
-160 infected 2414 @ location 9 w/ delta
-160 infected 372 @ location 9 w/ delta
-160 infected 630 @ location 9 w/ delta
-160 infected 765 @ location 9 w/ delta
-160 infected 1804 @ location 9 w/ delta
-160 infected 238 @ location 9 w/ delta
-160 infected 1325 @ location 9 w/ delta
-160 infected 2854 @ location 9 w/ delta
-160 infected 1772 @ location 9 w/ delta
-160 infected 493 @ location 9 w/ delta
-160 infected 456 @ location 9 w/ delta
-160 infected 1308 @ location 9 w/ delta
-160 infected 2175 @ location 9 w/ delta
-160 infected 5 @ location 9 w/ delta
-160 infected 2885 @ location 9 w/ delta
-160 infected 383 @ location 9 w/ delta
-160 infected 1979 @ location 9 w/ delta
-160 infected 2276 @ location 9 w/ delta
-160 infected 1430 @ location 9 w/ delta
-160 infected 3054 @ location 9 w/ delta
-160 infected 1649 @ location 9 w/ delta
 ====== TIMESTEP 180 ======
-delta: ['160', '157', '2656', '2812', '2943', '229', '2915', '3', '2286', '2649', '259', '1459', '1361', '803', '1119', '1608', '1082', '2773', '3211', '1128', '3090', '2229', '2988', '933', '1540', '2261', '101', '3204', '1016', '488', '1043', '667', '2033', '1370', '631', '2726', '900', '2414', '372', '630', '765', '1804', '238', '1325', '2854', '1772', '493', '456', '1308', '2175', '5', '2885', '383', '1979', '2276', '1430', '3054', '1649']
-omicron: ['43', '44', '1664', '545', '2902', '1712', '967', '3430', '846', '3200', '2564', '1004', '2168', '392', '568', '188', '1136', '1629', '1477', '3313', '983', '1348', '2779', '3242', '3344', '2652', '1173', '1001', '864', '2023', '245', '783', '484', '3300', '834', '996', '3330', '3248', '2420', '1762', '2196', '2039', '2757', '960', '778', '587', '237', '65', '2767', '429', '297', '2549', '2644', '754', '2573', '645', '1711', '450', '756', '3443', '347', '2871', '671', '458', '81', '3008', '1832', '89', '2803', '795', '1453', '1492', '1101', '2568', '893']
-delta count: 58
-omicron count: 75
-43 infected 1966 @ location 21 w/ omicron
-43 infected 811 @ location 21 w/ omicron
-43 infected 2683 @ location 21 w/ omicron
-43 infected 2487 @ location 21 w/ omicron
-43 infected 2622 @ location 21 w/ omicron
-43 infected 2810 @ location 21 w/ omicron
-43 infected 1404 @ location 21 w/ omicron
-43 infected 768 @ location 21 w/ omicron
-43 infected 2430 @ location 21 w/ omicron
-43 infected 1178 @ location 21 w/ omicron
-43 infected 2148 @ location 21 w/ omicron
-43 infected 2992 @ location 21 w/ omicron
-43 infected 2124 @ location 21 w/ omicron
-43 infected 3460 @ location 21 w/ omicron
-43 infected 2659 @ location 21 w/ omicron
-43 infected 3366 @ location 21 w/ omicron
-43 infected 1511 @ location 21 w/ omicron
-43 infected 2930 @ location 21 w/ omicron
-43 infected 368 @ location 21 w/ omicron
+delta: ['160', '157', '2261', '631']
+omicron: ['43', '1478', '3008']
+delta count: 4
+omicron count: 3
 43 infected 2453 @ location 21 w/ omicron
-43 infected 129 @ location 21 w/ omicron
-43 infected 1974 @ location 21 w/ omicron
-43 infected 2623 @ location 21 w/ omicron
-43 infected 2600 @ location 21 w/ omicron
-43 infected 2728 @ location 21 w/ omicron
-43 infected 1991 @ location 21 w/ omicron
-43 infected 1487 @ location 21 w/ omicron
-43 infected 1019 @ location 21 w/ omicron
-43 infected 2583 @ location 21 w/ omicron
-43 infected 3019 @ location 21 w/ omicron
-43 infected 2250 @ location 21 w/ omicron
-43 infected 863 @ location 21 w/ omicron
-43 infected 1248 @ location 21 w/ omicron
-43 infected 280 @ location 21 w/ omicron
-43 infected 503 @ location 21 w/ omicron
-43 infected 617 @ location 21 w/ omicron
-43 infected 1333 @ location 21 w/ omicron
-43 infected 316 @ location 21 w/ omicron
-43 infected 2215 @ location 21 w/ omicron
-43 infected 1409 @ location 21 w/ omicron
-43 infected 1193 @ location 21 w/ omicron
-43 infected 2448 @ location 21 w/ omicron
-43 infected 1700 @ location 21 w/ omicron
-43 infected 695 @ location 21 w/ omicron
-43 infected 3421 @ location 21 w/ omicron
-43 infected 258 @ location 21 w/ omicron
-43 infected 1707 @ location 21 w/ omicron
-43 infected 1006 @ location 21 w/ omicron
-43 infected 2426 @ location 21 w/ omicron
-43 infected 1017 @ location 21 w/ omicron
-43 infected 1356 @ location 21 w/ omicron
-160 infected 1378 @ location 24 w/ delta
-160 infected 2916 @ location 24 w/ delta
-160 infected 2243 @ location 24 w/ delta
-160 infected 831 @ location 24 w/ delta
-160 infected 2671 @ location 24 w/ delta
-160 infected 1706 @ location 24 w/ delta
-160 infected 3241 @ location 24 w/ delta
-160 infected 2069 @ location 24 w/ delta
-160 infected 1326 @ location 24 w/ delta
-160 infected 3361 @ location 24 w/ delta
-160 infected 651 @ location 24 w/ delta
-160 infected 1565 @ location 24 w/ delta
-160 infected 1861 @ location 24 w/ delta
-160 infected 2682 @ location 24 w/ delta
-160 infected 1265 @ location 24 w/ delta
-160 infected 2744 @ location 24 w/ delta
-160 infected 598 @ location 24 w/ delta
-160 infected 749 @ location 24 w/ delta
-160 infected 87 @ location 24 w/ delta
-160 infected 2452 @ location 24 w/ delta
-160 infected 320 @ location 24 w/ delta
-160 infected 1171 @ location 24 w/ delta
-160 infected 2289 @ location 24 w/ delta
-160 infected 1414 @ location 24 w/ delta
-160 infected 1170 @ location 24 w/ delta
-160 infected 1575 @ location 24 w/ delta
-160 infected 2804 @ location 24 w/ delta
-160 infected 128 @ location 24 w/ delta
-160 infected 1596 @ location 24 w/ delta
-160 infected 1220 @ location 24 w/ delta
-160 infected 1658 @ location 24 w/ delta
-160 infected 3079 @ location 24 w/ delta
-160 infected 1717 @ location 24 w/ delta
-160 infected 2244 @ location 24 w/ delta
-160 infected 2122 @ location 24 w/ delta
-160 infected 482 @ location 24 w/ delta
-160 infected 3223 @ location 24 w/ delta
 ====== TIMESTEP 240 ======
-delta: ['160', '157', '2656', '2812', '2943', '229', '2915', '3', '2286', '2649', '259', '1459', '1361', '803', '1119', '1608', '1082', '2773', '3211', '1128', '3090', '2229', '2988', '933', '1540', '2261', '101', '3204', '1016', '488', '1043', '667', '2033', '1370', '631', '2726', '900', '2414', '372', '630', '765', '1804', '238', '1325', '2854', '1772', '493', '456', '1308', '2175', '5', '2885', '383', '1979', '2276', '1430', '3054', '1649', '1378', '2916', '2243', '831', '2671', '1706', '3241', '2069', '1326', '3361', '651', '1565', '1861', '2682', '1265', '2744', '598', '749', '87', '2452', '320', '1171', '2289', '1414', '1170', '1575', '2804', '128', '1596', '1220', '1658', '3079', '1717', '2244', '2122', '482', '3223']
-omicron: ['43', '44', '1664', '545', '2902', '1712', '967', '3430', '846', '3200', '2564', '1004', '2168', '392', '568', '188', '1136', '1629', '1477', '3313', '983', '1348', '2779', '3242', '3344', '2652', '1173', '1001', '864', '2023', '245', '783', '484', '3300', '834', '996', '3330', '3248', '2420', '1762', '2196', '2039', '2757', '960', '778', '587', '237', '65', '2767', '429', '297', '2549', '2644', '754', '2573', '645', '1711', '450', '756', '3443', '347', '2871', '671', '458', '81', '3008', '1832', '89', '2803', '795', '1453', '1492', '1101', '2568', '893', '1966', '811', '2683', '2487', '2622', '2810', '1404', '768', '2430', '1178', '2148', '2992', '2124', '3460', '2659', '3366', '1511', '2930', '368', '2453', '129', '1974', '2623', '2600', '2728', '1991', '1487', '1019', '2583', '3019', '2250', '863', '1248', '280', '503', '617', '1333', '316', '2215', '1409', '1193', '2448', '1700', '695', '3421', '258', '1707', '1006', '2426', '1017', '1356']
-delta count: 95
-omicron count: 126
-43 infected 185 @ location 14 w/ omicron
-43 infected 2004 @ location 14 w/ omicron
-43 infected 3341 @ location 14 w/ omicron
-43 infected 1815 @ location 14 w/ omicron
-43 infected 1158 @ location 14 w/ omicron
-43 infected 3427 @ location 14 w/ omicron
-43 infected 1097 @ location 14 w/ omicron
-43 infected 2714 @ location 14 w/ omicron
-43 infected 3139 @ location 14 w/ omicron
-43 infected 100 @ location 14 w/ omicron
-43 infected 2058 @ location 14 w/ omicron
-43 infected 1576 @ location 14 w/ omicron
-43 infected 1865 @ location 14 w/ omicron
-43 infected 3101 @ location 14 w/ omicron
-43 infected 2006 @ location 14 w/ omicron
-160 infected 3096 @ location 29 w/ delta
-160 infected 118 @ location 29 w/ delta
-160 infected 1962 @ location 29 w/ delta
-160 infected 2459 @ location 29 w/ delta
-160 infected 1532 @ location 29 w/ delta
-160 infected 351 @ location 29 w/ delta
-160 infected 2784 @ location 29 w/ delta
-160 infected 1310 @ location 29 w/ delta
-160 infected 2886 @ location 29 w/ delta
-160 infected 2254 @ location 29 w/ delta
-160 infected 2822 @ location 29 w/ delta
-160 infected 3192 @ location 29 w/ delta
-160 infected 2337 @ location 29 w/ delta
-160 infected 584 @ location 29 w/ delta
-160 infected 2212 @ location 29 w/ delta
-160 infected 1094 @ location 29 w/ delta
-160 infected 1251 @ location 29 w/ delta
-160 infected 2390 @ location 29 w/ delta
-160 infected 1903 @ location 29 w/ delta
-160 infected 3116 @ location 29 w/ delta
-160 infected 63 @ location 29 w/ delta
-160 infected 1848 @ location 29 w/ delta
-160 infected 2466 @ location 29 w/ delta
-160 infected 38 @ location 29 w/ delta
-160 infected 2157 @ location 29 w/ delta
-160 infected 2759 @ location 29 w/ delta
-160 infected 1184 @ location 29 w/ delta
-160 infected 890 @ location 29 w/ delta
-160 infected 191 @ location 29 w/ delta
-160 infected 1519 @ location 29 w/ delta
-160 infected 3143 @ location 29 w/ delta
-160 infected 298 @ location 29 w/ delta
-160 infected 2676 @ location 29 w/ delta
-160 infected 1553 @ location 29 w/ delta
-160 infected 473 @ location 29 w/ delta
-160 infected 330 @ location 29 w/ delta
-160 infected 3186 @ location 29 w/ delta
-160 infected 2130 @ location 29 w/ delta
+delta: ['160', '157', '2261', '631']
+omicron: ['43', '1478', '3008', '2453']
+delta count: 4
+omicron count: 4
 160 infected 2464 @ location 29 w/ delta
-160 infected 3120 @ location 29 w/ delta
-160 infected 3359 @ location 29 w/ delta
-160 infected 1526 @ location 29 w/ delta
 ====== TIMESTEP 300 ======
-delta: ['160', '157', '2656', '2812', '2943', '229', '2915', '3', '2286', '2649', '259', '1459', '1361', '803', '1119', '1608', '1082', '2773', '3211', '1128', '3090', '2229', '2988', '933', '1540', '2261', '101', '3204', '1016', '488', '1043', '667', '2033', '1370', '631', '2726', '900', '2414', '372', '630', '765', '1804', '238', '1325', '2854', '1772', '493', '456', '1308', '2175', '5', '2885', '383', '1979', '2276', '1430', '3054', '1649', '1378', '2916', '2243', '831', '2671', '1706', '3241', '2069', '1326', '3361', '651', '1565', '1861', '2682', '1265', '2744', '598', '749', '87', '2452', '320', '1171', '2289', '1414', '1170', '1575', '2804', '128', '1596', '1220', '1658', '3079', '1717', '2244', '2122', '482', '3223', '3096', '118', '1962', '2459', '1532', '351', '2784', '1310', '2886', '2254', '2822', '3192', '2337', '584', '2212', '1094', '1251', '2390', '1903', '3116', '63', '1848', '2466', '38', '2157', '2759', '1184', '890', '191', '1519', '3143', '298', '2676', '1553', '473', '330', '3186', '2130', '2464', '3120', '3359', '1526']
-omicron: ['43', '44', '1664', '545', '2902', '1712', '967', '3430', '846', '3200', '2564', '1004', '2168', '392', '568', '188', '1136', '1629', '1477', '3313', '983', '1348', '2779', '3242', '3344', '2652', '1173', '1001', '864', '2023', '245', '783', '484', '3300', '834', '996', '3330', '3248', '2420', '1762', '2196', '2039', '2757', '960', '778', '587', '237', '65', '2767', '429', '297', '2549', '2644', '754', '2573', '645', '1711', '450', '756', '3443', '347', '2871', '671', '458', '81', '3008', '1832', '89', '2803', '795', '1453', '1492', '1101', '2568', '893', '1966', '811', '2683', '2487', '2622', '2810', '1404', '768', '2430', '1178', '2148', '2992', '2124', '3460', '2659', '3366', '1511', '2930', '368', '2453', '129', '1974', '2623', '2600', '2728', '1991', '1487', '1019', '2583', '3019', '2250', '863', '1248', '280', '503', '617', '1333', '316', '2215', '1409', '1193', '2448', '1700', '695', '3421', '258', '1707', '1006', '2426', '1017', '1356', '185', '2004', '3341', '1815', '1158', '3427', '1097', '2714', '3139', '100', '2058', '1576', '1865', '3101', '2006']
-delta count: 137
-omicron count: 141
-43 infected 3285 @ location 35 w/ omicron
-43 infected 1598 @ location 35 w/ omicron
-43 infected 235 @ location 35 w/ omicron
-43 infected 730 @ location 35 w/ omicron
-43 infected 2515 @ location 35 w/ omicron
-43 infected 2005 @ location 35 w/ omicron
-43 infected 453 @ location 35 w/ omicron
-43 infected 2741 @ location 35 w/ omicron
-43 infected 1275 @ location 35 w/ omicron
-43 infected 626 @ location 35 w/ omicron
-43 infected 1980 @ location 35 w/ omicron
-43 infected 2427 @ location 35 w/ omicron
-43 infected 3259 @ location 35 w/ omicron
-43 infected 3133 @ location 35 w/ omicron
-43 infected 644 @ location 35 w/ omicron
-43 infected 1121 @ location 35 w/ omicron
-43 infected 1858 @ location 35 w/ omicron
-43 infected 3448 @ location 35 w/ omicron
-43 infected 1363 @ location 35 w/ omicron
-43 infected 2413 @ location 35 w/ omicron
-43 infected 508 @ location 35 w/ omicron
-43 infected 1670 @ location 35 w/ omicron
-43 infected 197 @ location 35 w/ omicron
-43 infected 214 @ location 35 w/ omicron
-43 infected 2936 @ location 35 w/ omicron
-43 infected 285 @ location 35 w/ omicron
-43 infected 2774 @ location 35 w/ omicron
-43 infected 1529 @ location 35 w/ omicron
-43 infected 2688 @ location 35 w/ omicron
-43 infected 2017 @ location 35 w/ omicron
-43 infected 777 @ location 35 w/ omicron
-43 infected 1589 @ location 35 w/ omicron
-43 infected 2330 @ location 35 w/ omicron
-43 infected 1110 @ location 35 w/ omicron
-43 infected 3411 @ location 35 w/ omicron
-43 infected 1797 @ location 35 w/ omicron
-43 infected 2841 @ location 35 w/ omicron
-43 infected 2171 @ location 35 w/ omicron
-43 infected 3434 @ location 35 w/ omicron
-43 infected 664 @ location 35 w/ omicron
-43 infected 809 @ location 35 w/ omicron
-43 infected 524 @ location 35 w/ omicron
-43 infected 1452 @ location 35 w/ omicron
-43 infected 1776 @ location 35 w/ omicron
-43 infected 2627 @ location 35 w/ omicron
-43 infected 1828 @ location 35 w/ omicron
-43 infected 2500 @ location 35 w/ omicron
-43 infected 31 @ location 35 w/ omicron
-43 infected 3320 @ location 35 w/ omicron
-43 infected 939 @ location 35 w/ omicron
-43 infected 1759 @ location 35 w/ omicron
-43 infected 1699 @ location 35 w/ omicron
-43 infected 708 @ location 35 w/ omicron
-43 infected 621 @ location 35 w/ omicron
-43 infected 3245 @ location 35 w/ omicron
-43 infected 886 @ location 35 w/ omicron
-43 infected 884 @ location 35 w/ omicron
-43 infected 1547 @ location 35 w/ omicron
-43 infected 37 @ location 35 w/ omicron
-43 infected 661 @ location 35 w/ omicron
-43 infected 1628 @ location 35 w/ omicron
-43 infected 1885 @ location 35 w/ omicron
-43 infected 397 @ location 35 w/ omicron
-43 infected 1355 @ location 35 w/ omicron
-43 infected 420 @ location 35 w/ omicron
-43 infected 2455 @ location 35 w/ omicron
+delta: ['160', '157', '2261', '631', '2464']
+omicron: ['43', '1478', '3008', '2453']
+delta count: 5
+omicron count: 4
+43 infected 1700 @ location 35 w/ omicron
 ====== TIMESTEP 360 ======
-delta: ['160', '157', '2656', '2812', '2943', '229', '2915', '3', '2286', '2649', '259', '1459', '1361', '803', '1119', '1608', '1082', '2773', '3211', '1128', '3090', '2229', '2988', '933', '1540', '2261', '101', '3204', '1016', '488', '1043', '667', '2033', '1370', '631', '2726', '900', '2414', '372', '630', '765', '1804', '238', '1325', '2854', '1772', '493', '456', '1308', '2175', '5', '2885', '383', '1979', '2276', '1430', '3054', '1649', '1378', '2916', '2243', '831', '2671', '1706', '3241', '2069', '1326', '3361', '651', '1565', '1861', '2682', '1265', '2744', '598', '749', '87', '2452', '320', '1171', '2289', '1414', '1170', '1575', '2804', '128', '1596', '1220', '1658', '3079', '1717', '2244', '2122', '482', '3223', '3096', '118', '1962', '2459', '1532', '351', '2784', '1310', '2886', '2254', '2822', '3192', '2337', '584', '2212', '1094', '1251', '2390', '1903', '3116', '63', '1848', '2466', '38', '2157', '2759', '1184', '890', '191', '1519', '3143', '298', '2676', '1553', '473', '330', '3186', '2130', '2464', '3120', '3359', '1526']
-omicron: ['43', '44', '1664', '545', '2902', '1712', '967', '3430', '846', '3200', '2564', '1004', '2168', '392', '568', '188', '1136', '1629', '1477', '3313', '983', '1348', '2779', '3242', '3344', '2652', '1173', '1001', '864', '2023', '245', '783', '484', '3300', '834', '996', '3330', '3248', '2420', '1762', '2196', '2039', '2757', '960', '778', '587', '237', '65', '2767', '429', '297', '2549', '2644', '754', '2573', '645', '1711', '450', '756', '3443', '347', '2871', '671', '458', '81', '3008', '1832', '89', '2803', '795', '1453', '1492', '1101', '2568', '893', '1966', '811', '2683', '2487', '2622', '2810', '1404', '768', '2430', '1178', '2148', '2992', '2124', '3460', '2659', '3366', '1511', '2930', '368', '2453', '129', '1974', '2623', '2600', '2728', '1991', '1487', '1019', '2583', '3019', '2250', '863', '1248', '280', '503', '617', '1333', '316', '2215', '1409', '1193', '2448', '1700', '695', '3421', '258', '1707', '1006', '2426', '1017', '1356', '185', '2004', '3341', '1815', '1158', '3427', '1097', '2714', '3139', '100', '2058', '1576', '1865', '3101', '2006', '3285', '1598', '235', '730', '2515', '2005', '453', '2741', '1275', '626', '1980', '2427', '3259', '3133', '644', '1121', '1858', '3448', '1363', '2413', '508', '1670', '197', '214', '2936', '285', '2774', '1529', '2688', '2017', '777', '1589', '2330', '1110', '3411', '1797', '2841', '2171', '3434', '664', '809', '524', '1452', '1776', '2627', '1828', '2500', '31', '3320', '939', '1759', '1699', '708', '621', '3245', '886', '884', '1547', '37', '661', '1628', '1885', '397', '1355', '420', '2455']
-delta count: 137
-omicron count: 207
-43 infected 3276 @ location 10 w/ omicron
-43 infected 1231 @ location 10 w/ omicron
-43 infected 540 @ location 10 w/ omicron
-43 infected 2725 @ location 10 w/ omicron
-43 infected 847 @ location 10 w/ omicron
-43 infected 2661 @ location 10 w/ omicron
-43 infected 2020 @ location 10 w/ omicron
-43 infected 2149 @ location 10 w/ omicron
-43 infected 3165 @ location 10 w/ omicron
-43 infected 1256 @ location 10 w/ omicron
-43 infected 1674 @ location 10 w/ omicron
-43 infected 957 @ location 10 w/ omicron
-43 infected 323 @ location 10 w/ omicron
-43 infected 3422 @ location 10 w/ omicron
-43 infected 1227 @ location 10 w/ omicron
-43 infected 1527 @ location 10 w/ omicron
-43 infected 3193 @ location 10 w/ omicron
-43 infected 924 @ location 10 w/ omicron
-43 infected 355 @ location 10 w/ omicron
-43 infected 782 @ location 10 w/ omicron
-43 infected 2975 @ location 10 w/ omicron
-43 infected 666 @ location 10 w/ omicron
-43 infected 2135 @ location 10 w/ omicron
-43 infected 1716 @ location 10 w/ omicron
-43 infected 1997 @ location 10 w/ omicron
-43 infected 956 @ location 10 w/ omicron
-43 infected 1005 @ location 10 w/ omicron
-43 infected 428 @ location 10 w/ omicron
-43 infected 1866 @ location 10 w/ omicron
-43 infected 1672 @ location 10 w/ omicron
-43 infected 3066 @ location 10 w/ omicron
-43 infected 3170 @ location 10 w/ omicron
-43 infected 9 @ location 10 w/ omicron
-43 infected 1177 @ location 10 w/ omicron
-43 infected 946 @ location 10 w/ omicron
-43 infected 498 @ location 10 w/ omicron
-43 infected 799 @ location 10 w/ omicron
-43 infected 1643 @ location 10 w/ omicron
-43 infected 1366 @ location 10 w/ omicron
-43 infected 1702 @ location 10 w/ omicron
-43 infected 1466 @ location 10 w/ omicron
-43 infected 1364 @ location 10 w/ omicron
-43 infected 1662 @ location 10 w/ omicron
-43 infected 1033 @ location 10 w/ omicron
-43 infected 1498 @ location 10 w/ omicron
-43 infected 1787 @ location 10 w/ omicron
-43 infected 2633 @ location 10 w/ omicron
-43 infected 2272 @ location 10 w/ omicron
-43 infected 2434 @ location 10 w/ omicron
-43 infected 2292 @ location 10 w/ omicron
-43 infected 1168 @ location 10 w/ omicron
-43 infected 2819 @ location 10 w/ omicron
-43 infected 2488 @ location 10 w/ omicron
-43 infected 331 @ location 10 w/ omicron
-43 infected 1952 @ location 10 w/ omicron
-43 infected 2280 @ location 10 w/ omicron
-43 infected 1677 @ location 10 w/ omicron
-43 infected 3391 @ location 10 w/ omicron
-43 infected 79 @ location 10 w/ omicron
-43 infected 3174 @ location 10 w/ omicron
-43 infected 2608 @ location 10 w/ omicron
-43 infected 1126 @ location 10 w/ omicron
-43 infected 2093 @ location 10 w/ omicron
-43 infected 694 @ location 10 w/ omicron
-43 infected 2439 @ location 10 w/ omicron
-43 infected 1337 @ location 10 w/ omicron
-43 infected 1328 @ location 10 w/ omicron
-43 infected 178 @ location 10 w/ omicron
-43 infected 2630 @ location 10 w/ omicron
-43 infected 3310 @ location 10 w/ omicron
-43 infected 1003 @ location 10 w/ omicron
-43 infected 201 @ location 10 w/ omicron
-43 infected 875 @ location 10 w/ omicron
-43 infected 676 @ location 10 w/ omicron
-43 infected 411 @ location 10 w/ omicron
-43 infected 2410 @ location 10 w/ omicron
-43 infected 736 @ location 10 w/ omicron
-43 infected 1701 @ location 10 w/ omicron
-43 infected 145 @ location 10 w/ omicron
-43 infected 1482 @ location 10 w/ omicron
-43 infected 2348 @ location 10 w/ omicron
+delta: ['160', '157', '2261', '631', '2464']
+omicron: ['43', '1478', '3008', '2453', '1700']
+delta count: 5
+omicron count: 5
+43 infected 3366 @ location 10 w/ omicron
 ====== TIMESTEP 420 ======
-delta: ['160', '157', '2656', '2812', '2943', '229', '2915', '3', '2286', '2649', '259', '1459', '1361', '803', '1119', '1608', '1082', '2773', '3211', '1128', '3090', '2229', '2988', '933', '1540', '2261', '101', '3204', '1016', '488', '1043', '667', '2033', '1370', '631', '2726', '900', '2414', '372', '630', '765', '1804', '238', '1325', '2854', '1772', '493', '456', '1308', '2175', '5', '2885', '383', '1979', '2276', '1430', '3054', '1649', '1378', '2916', '2243', '831', '2671', '1706', '3241', '2069', '1326', '3361', '651', '1565', '1861', '2682', '1265', '2744', '598', '749', '87', '2452', '320', '1171', '2289', '1414', '1170', '1575', '2804', '128', '1596', '1220', '1658', '3079', '1717', '2244', '2122', '482', '3223', '3096', '118', '1962', '2459', '1532', '351', '2784', '1310', '2886', '2254', '2822', '3192', '2337', '584', '2212', '1094', '1251', '2390', '1903', '3116', '63', '1848', '2466', '38', '2157', '2759', '1184', '890', '191', '1519', '3143', '298', '2676', '1553', '473', '330', '3186', '2130', '2464', '3120', '3359', '1526']
-omicron: ['43', '44', '1664', '545', '2902', '1712', '967', '3430', '846', '3200', '2564', '1004', '2168', '392', '568', '188', '1136', '1629', '1477', '3313', '983', '1348', '2779', '3242', '3344', '2652', '1173', '1001', '864', '2023', '245', '783', '484', '3300', '834', '996', '3330', '3248', '2420', '1762', '2196', '2039', '2757', '960', '778', '587', '237', '65', '2767', '429', '297', '2549', '2644', '754', '2573', '645', '1711', '450', '756', '3443', '347', '2871', '671', '458', '81', '3008', '1832', '89', '2803', '795', '1453', '1492', '1101', '2568', '893', '1966', '811', '2683', '2487', '2622', '2810', '1404', '768', '2430', '1178', '2148', '2992', '2124', '3460', '2659', '3366', '1511', '2930', '368', '2453', '129', '1974', '2623', '2600', '2728', '1991', '1487', '1019', '2583', '3019', '2250', '863', '1248', '280', '503', '617', '1333', '316', '2215', '1409', '1193', '2448', '1700', '695', '3421', '258', '1707', '1006', '2426', '1017', '1356', '185', '2004', '3341', '1815', '1158', '3427', '1097', '2714', '3139', '100', '2058', '1576', '1865', '3101', '2006', '3285', '1598', '235', '730', '2515', '2005', '453', '2741', '1275', '626', '1980', '2427', '3259', '3133', '644', '1121', '1858', '3448', '1363', '2413', '508', '1670', '197', '214', '2936', '285', '2774', '1529', '2688', '2017', '777', '1589', '2330', '1110', '3411', '1797', '2841', '2171', '3434', '664', '809', '524', '1452', '1776', '2627', '1828', '2500', '31', '3320', '939', '1759', '1699', '708', '621', '3245', '886', '884', '1547', '37', '661', '1628', '1885', '397', '1355', '420', '2455', '3276', '1231', '540', '2725', '847', '2661', '2020', '2149', '3165', '1256', '1674', '957', '323', '3422', '1227', '1527', '3193', '924', '355', '782', '2975', '666', '2135', '1716', '1997', '956', '1005', '428', '1866', '1672', '3066', '3170', '9', '1177', '946', '498', '799', '1643', '1366', '1702', '1466', '1364', '1662', '1033', '1498', '1787', '2633', '2272', '2434', '2292', '1168', '2819', '2488', '331', '1952', '2280', '1677', '3391', '79', '3174', '2608', '1126', '2093', '694', '2439', '1337', '1328', '178', '2630', '3310', '1003', '201', '875', '676', '411', '2410', '736', '1701', '145', '1482', '2348']
-delta count: 137
-omicron count: 288
-43 infected 2579 @ location 28 w/ omicron
-43 infected 3353 @ location 28 w/ omicron
-43 infected 2086 @ location 28 w/ omicron
-43 infected 1437 @ location 28 w/ omicron
-43 infected 1896 @ location 28 w/ omicron
-43 infected 3175 @ location 28 w/ omicron
-43 infected 2478 @ location 28 w/ omicron
-43 infected 712 @ location 28 w/ omicron
-43 infected 804 @ location 28 w/ omicron
-43 infected 76 @ location 28 w/ omicron
-43 infected 2818 @ location 28 w/ omicron
-43 infected 2686 @ location 28 w/ omicron
-43 infected 2329 @ location 28 w/ omicron
-43 infected 796 @ location 28 w/ omicron
-43 infected 2206 @ location 28 w/ omicron
-43 infected 552 @ location 28 w/ omicron
-43 infected 1886 @ location 28 w/ omicron
-43 infected 1060 @ location 28 w/ omicron
-43 infected 151 @ location 28 w/ omicron
-43 infected 772 @ location 28 w/ omicron
-43 infected 563 @ location 28 w/ omicron
-43 infected 1383 @ location 28 w/ omicron
+delta: ['160', '157', '2261', '631', '2464']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366']
+delta count: 5
+omicron count: 6
 43 infected 2360 @ location 28 w/ omicron
-43 infected 2290 @ location 28 w/ omicron
-43 infected 776 @ location 28 w/ omicron
-43 infected 2765 @ location 28 w/ omicron
-43 infected 3180 @ location 28 w/ omicron
 43 infected 2438 @ location 28 w/ omicron
-43 infected 922 @ location 28 w/ omicron
-43 infected 1902 @ location 28 w/ omicron
 ====== TIMESTEP 480 ======
-delta: ['160', '157', '2656', '2812', '2943', '229', '2915', '3', '2286', '2649', '259', '1459', '1361', '803', '1119', '1608', '1082', '2773', '3211', '1128', '3090', '2229', '2988', '933', '1540', '2261', '101', '3204', '1016', '488', '1043', '667', '2033', '1370', '631', '2726', '900', '2414', '372', '630', '765', '1804', '238', '1325', '2854', '1772', '493', '456', '1308', '2175', '5', '2885', '383', '1979', '2276', '1430', '3054', '1649', '1378', '2916', '2243', '831', '2671', '1706', '3241', '2069', '1326', '3361', '651', '1565', '1861', '2682', '1265', '2744', '598', '749', '87', '2452', '320', '1171', '2289', '1414', '1170', '1575', '2804', '128', '1596', '1220', '1658', '3079', '1717', '2244', '2122', '482', '3223', '3096', '118', '1962', '2459', '1532', '351', '2784', '1310', '2886', '2254', '2822', '3192', '2337', '584', '2212', '1094', '1251', '2390', '1903', '3116', '63', '1848', '2466', '38', '2157', '2759', '1184', '890', '191', '1519', '3143', '298', '2676', '1553', '473', '330', '3186', '2130', '2464', '3120', '3359', '1526']
+delta: ['160', '157', '2261', '631', '2464']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438']
+delta count: 5
+omicron count: 8
+160 infected 3358 @ location 9 w/ delta
+160 infected 309 @ location 9 w/ delta
+160 infected 3477 @ location 9 w/ delta
+====== TIMESTEP 540 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438']
+delta count: 8
+omicron count: 8
+====== TIMESTEP 600 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438']
+delta count: 8
+omicron count: 8
+160 infected 1274 @ location 13 w/ delta
+160 infected 1607 @ location 13 w/ delta
+====== TIMESTEP 660 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438']
+delta count: 10
+omicron count: 8
+====== TIMESTEP 720 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438']
+delta count: 10
+omicron count: 8
+43 infected 3306 @ location 21 w/ omicron
+====== TIMESTEP 780 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306']
+delta count: 10
+omicron count: 9
+160 infected 514 @ location 26 w/ delta
+160 infected 2665 @ location 26 w/ delta
+160 infected 403 @ location 26 w/ delta
+====== TIMESTEP 840 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306']
+delta count: 13
+omicron count: 9
+====== TIMESTEP 900 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306']
+delta count: 13
+omicron count: 9
+====== TIMESTEP 960 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306']
+delta count: 13
+omicron count: 9
+160 infected 1059 @ location 10 w/ delta
+160 infected 219 @ location 10 w/ delta
+====== TIMESTEP 1020 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306']
+delta count: 15
+omicron count: 9
+====== TIMESTEP 1080 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306']
+delta count: 15
+omicron count: 9
+43 infected 680 @ location 31 w/ omicron
+160 infected 2104 @ location 9 w/ delta
+160 infected 551 @ location 9 w/ delta
+====== TIMESTEP 1140 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 17
+omicron count: 10
+====== TIMESTEP 1200 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 17
+omicron count: 10
+160 infected 706 @ location 35 w/ delta
+160 infected 1373 @ location 35 w/ delta
+160 infected 2201 @ location 35 w/ delta
+====== TIMESTEP 1260 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 20
+omicron count: 10
+160 infected 3215 @ location 9 w/ delta
+160 infected 708 @ location 9 w/ delta
+160 infected 3347 @ location 9 w/ delta
+====== TIMESTEP 1320 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 23
+omicron count: 10
+====== TIMESTEP 1380 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 23
+omicron count: 10
+====== TIMESTEP 1440 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 23
+omicron count: 10
+160 infected 2825 @ location 31 w/ delta
+====== TIMESTEP 1500 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 24
+omicron count: 10
+====== TIMESTEP 1560 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 24
+omicron count: 10
+====== TIMESTEP 1620 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 24
+omicron count: 10
+160 infected 578 @ location 35 w/ delta
+====== TIMESTEP 1680 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 25
+omicron count: 10
+====== TIMESTEP 1740 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 25
+omicron count: 10
+====== TIMESTEP 1800 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 25
+omicron count: 10
+160 infected 1533 @ location 30 w/ delta
+160 infected 2684 @ location 30 w/ delta
+====== TIMESTEP 1860 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 27
+omicron count: 10
+====== TIMESTEP 1920 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680']
+delta count: 27
+omicron count: 10
+43 infected 1109 @ location 37 w/ omicron
+====== TIMESTEP 1980 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109']
+delta count: 27
+omicron count: 11
+160 infected 660 @ location 13 w/ delta
+160 infected 3400 @ location 13 w/ delta
+====== TIMESTEP 2040 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109']
+delta count: 29
+omicron count: 11
+====== TIMESTEP 2100 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109']
+delta count: 29
+omicron count: 11
+43 infected 471 @ location 13 w/ omicron
+43 infected 2822 @ location 13 w/ omicron
+====== TIMESTEP 2160 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822']
+delta count: 29
+omicron count: 13
+160 infected 2804 @ location 20 w/ delta
+====== TIMESTEP 2220 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822']
+delta count: 30
+omicron count: 13
+====== TIMESTEP 2280 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822']
+delta count: 30
+omicron count: 13
+====== TIMESTEP 2340 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822']
+delta count: 30
+omicron count: 13
+====== TIMESTEP 2400 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822']
+delta count: 30
+omicron count: 13
+160 infected 2550 @ location 31 w/ delta
+====== TIMESTEP 2460 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822']
+delta count: 31
+omicron count: 13
+43 infected 2494 @ location 10 w/ omicron
+160 infected 2077 @ location 29 w/ delta
+160 infected 2870 @ location 29 w/ delta
+====== TIMESTEP 2520 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494']
+delta count: 33
+omicron count: 14
+43 infected 235 @ location 27 w/ omicron
+43 infected 2602 @ location 27 w/ omicron
+====== TIMESTEP 2580 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602']
+delta count: 33
+omicron count: 16
+43 infected 1032 @ location 25 w/ omicron
+43 infected 1598 @ location 25 w/ omicron
+160 infected 3225 @ location 9 w/ delta
+====== TIMESTEP 2640 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598']
+delta count: 34
+omicron count: 18
+160 infected 1421 @ location 37 w/ delta
+====== TIMESTEP 2700 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598']
+delta count: 35
+omicron count: 18
+====== TIMESTEP 2760 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598']
+delta count: 35
+omicron count: 18
+====== TIMESTEP 2820 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598']
+delta count: 35
+omicron count: 18
+43 infected 1714 @ location 27 w/ omicron
+====== TIMESTEP 2880 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714']
+delta count: 35
+omicron count: 19
+====== TIMESTEP 2940 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714']
+delta count: 35
+omicron count: 19
+====== TIMESTEP 3000 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714']
+delta count: 35
+omicron count: 19
+====== TIMESTEP 3060 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714']
+delta count: 35
+omicron count: 19
+43 infected 2540 @ location 4 w/ omicron
+43 infected 2291 @ location 4 w/ omicron
+160 infected 254 @ location 12 w/ delta
+160 infected 2887 @ location 12 w/ delta
+====== TIMESTEP 3120 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291']
+delta count: 37
+omicron count: 21
+2453 infected 2546 @ location 28 w/ omicron
+====== TIMESTEP 3180 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546']
+delta count: 37
+omicron count: 22
+43 infected 236 @ location 20 w/ omicron
+43 infected 808 @ location 20 w/ omicron
+43 infected 348 @ location 20 w/ omicron
+2453 infected 1391 @ location 21 w/ omicron
+====== TIMESTEP 3240 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391']
+delta count: 37
+omicron count: 26
+43 infected 2330 @ location 30 w/ omicron
+2453 infected 499 @ location 20 w/ omicron
+====== TIMESTEP 3300 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499']
+delta count: 37
+omicron count: 28
+43 infected 3178 @ location 35 w/ omicron
+43 infected 2278 @ location 35 w/ omicron
+43 infected 2234 @ location 35 w/ omicron
+43 infected 358 @ location 35 w/ omicron
+160 infected 1171 @ location 20 w/ delta
+160 infected 2194 @ location 20 w/ delta
+160 infected 288 @ location 20 w/ delta
+160 infected 88 @ location 20 w/ delta
+====== TIMESTEP 3360 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358']
+delta count: 41
+omicron count: 32
+160 infected 234 @ location 27 w/ delta
+160 infected 1775 @ location 27 w/ delta
+====== TIMESTEP 3420 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358']
+delta count: 43
+omicron count: 32
+====== TIMESTEP 3480 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358']
+delta count: 43
+omicron count: 32
+160 infected 2477 @ location 4 w/ delta
+160 infected 1403 @ location 4 w/ delta
+====== TIMESTEP 3540 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358']
+delta count: 45
+omicron count: 32
+43 infected 2231 @ location 20 w/ omicron
+43 infected 2172 @ location 20 w/ omicron
+160 infected 3185 @ location 12 w/ delta
+====== TIMESTEP 3600 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172']
+delta count: 46
+omicron count: 34
+43 infected 2511 @ location 20 w/ omicron
+43 infected 2878 @ location 20 w/ omicron
+2453 infected 130 @ location 11 w/ omicron
+====== TIMESTEP 3660 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130']
+delta count: 46
+omicron count: 37
+43 infected 2964 @ location 20 w/ omicron
+43 infected 3153 @ location 20 w/ omicron
+====== TIMESTEP 3720 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153']
+delta count: 46
+omicron count: 39
+160 infected 3422 @ location 21 w/ delta
+====== TIMESTEP 3780 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153']
+delta count: 47
+omicron count: 39
+====== TIMESTEP 3840 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153']
+delta count: 47
+omicron count: 39
+2453 infected 3035 @ location 27 w/ omicron
+2453 infected 1414 @ location 27 w/ omicron
+====== TIMESTEP 3900 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414']
+delta count: 47
+omicron count: 41
+160 infected 873 @ location 12 w/ delta
+====== TIMESTEP 3960 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414']
+delta count: 48
+omicron count: 41
+43 infected 1543 @ location 18 w/ omicron
+160 infected 1456 @ location 12 w/ delta
+2104 infected 2237 @ location 18 w/ delta
+====== TIMESTEP 4020 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543']
+delta count: 50
+omicron count: 42
+2453 infected 2637 @ location 37 w/ omicron
+====== TIMESTEP 4080 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637']
+delta count: 50
+omicron count: 43
+====== TIMESTEP 4140 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637']
+delta count: 50
+omicron count: 43
+====== TIMESTEP 4200 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637']
+delta count: 50
+omicron count: 43
+2453 infected 3033 @ location 27 w/ omicron
+2453 infected 1936 @ location 27 w/ omicron
+====== TIMESTEP 4260 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936']
+delta count: 50
+omicron count: 45
+2453 infected 2871 @ location 10 w/ omicron
+2453 infected 3108 @ location 10 w/ omicron
+2453 infected 799 @ location 10 w/ omicron
+2104 infected 1033 @ location 31 w/ delta
+====== TIMESTEP 4320 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799']
+delta count: 51
+omicron count: 48
+2453 infected 601 @ location 30 w/ omicron
+====== TIMESTEP 4380 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601']
+delta count: 51
+omicron count: 49
+2825 infected 2150 @ location 30 w/ delta
+====== TIMESTEP 4440 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601']
+delta count: 52
+omicron count: 49
+====== TIMESTEP 4500 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601']
+delta count: 52
+omicron count: 49
+2104 infected 1523 @ location 27 w/ delta
+2104 infected 468 @ location 27 w/ delta
+2104 infected 1404 @ location 27 w/ delta
+2104 infected 467 @ location 27 w/ delta
+2104 infected 448 @ location 27 w/ delta
+2825 infected 59 @ location 4 w/ delta
+2825 infected 2910 @ location 4 w/ delta
+====== TIMESTEP 4560 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601']
+delta count: 59
+omicron count: 49
+====== TIMESTEP 4620 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601']
+delta count: 59
+omicron count: 49
+2261 infected 407 @ location 26 w/ delta
+2104 infected 1634 @ location 18 w/ delta
+2825 infected 1528 @ location 10 w/ delta
+2825 infected 1185 @ location 10 w/ delta
+2825 infected 2787 @ location 10 w/ delta
+====== TIMESTEP 4680 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601']
+delta count: 64
+omicron count: 49
+====== TIMESTEP 4740 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601']
+delta count: 64
+omicron count: 49
+2453 infected 1344 @ location 27 w/ omicron
+2453 infected 1757 @ location 27 w/ omicron
+2453 infected 2279 @ location 27 w/ omicron
+2453 infected 1654 @ location 27 w/ omicron
+2104 infected 3013 @ location 18 w/ delta
+2825 infected 2323 @ location 28 w/ delta
+2825 infected 2673 @ location 28 w/ delta
+====== TIMESTEP 4800 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654']
+delta count: 67
+omicron count: 53
+2261 infected 1693 @ location 26 w/ delta
+====== TIMESTEP 4860 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654']
+delta count: 68
+omicron count: 53
+====== TIMESTEP 4920 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654']
+delta count: 68
+omicron count: 53
+2261 infected 1893 @ location 9 w/ delta
+2261 infected 2890 @ location 9 w/ delta
+2104 infected 1749 @ location 4 w/ delta
+====== TIMESTEP 4980 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654']
+delta count: 71
+omicron count: 53
+2261 infected 1925 @ location 18 w/ delta
+2261 infected 274 @ location 18 w/ delta
+====== TIMESTEP 5040 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654']
+delta count: 73
+omicron count: 53
+2825 infected 1340 @ location 34 w/ delta
+====== TIMESTEP 5100 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654']
+delta count: 74
+omicron count: 53
+2261 infected 757 @ location 13 w/ delta
+2261 infected 2122 @ location 13 w/ delta
+2261 infected 3301 @ location 13 w/ delta
+====== TIMESTEP 5160 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654']
+delta count: 77
+omicron count: 53
+2453 infected 1529 @ location 9 w/ omicron
+2825 infected 2648 @ location 4 w/ delta
+====== TIMESTEP 5220 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529']
+delta count: 78
+omicron count: 54
+====== TIMESTEP 5280 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529']
+delta count: 78
+omicron count: 54
+====== TIMESTEP 5340 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529']
+delta count: 78
+omicron count: 54
+2261 infected 1514 @ location 27 w/ delta
+2261 infected 2105 @ location 27 w/ delta
+2261 infected 2461 @ location 27 w/ delta
+2453 infected 1476 @ location 12 w/ omicron
+2453 infected 502 @ location 12 w/ omicron
+2104 infected 1602 @ location 9 w/ delta
+2104 infected 731 @ location 9 w/ delta
+====== TIMESTEP 5400 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648', '1514', '2105', '2461', '1602', '731']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529', '1476', '502']
+delta count: 83
+omicron count: 56
+1059 infected 869 @ location 35 w/ delta
+1059 infected 967 @ location 35 w/ delta
+1059 infected 2250 @ location 35 w/ delta
+2825 infected 2006 @ location 9 w/ delta
+====== TIMESTEP 5460 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648', '1514', '2105', '2461', '1602', '731', '869', '967', '2250', '2006']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529', '1476', '502']
+delta count: 87
+omicron count: 56
+2261 infected 2819 @ location 10 w/ delta
+2261 infected 2253 @ location 10 w/ delta
+2825 infected 3326 @ location 26 w/ delta
+====== TIMESTEP 5520 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648', '1514', '2105', '2461', '1602', '731', '869', '967', '2250', '2006', '2819', '2253', '3326']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529', '1476', '502']
+delta count: 90
+omicron count: 56
+2453 infected 262 @ location 27 w/ omicron
+2453 infected 2158 @ location 27 w/ omicron
+2453 infected 2911 @ location 27 w/ omicron
+2453 infected 865 @ location 27 w/ omicron
+2104 infected 462 @ location 37 w/ delta
+706 infected 2308 @ location 32 w/ delta
+2550 infected 2643 @ location 4 w/ delta
+====== TIMESTEP 5580 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648', '1514', '2105', '2461', '1602', '731', '869', '967', '2250', '2006', '2819', '2253', '3326', '462', '2308', '2643']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529', '1476', '502', '262', '2158', '2911', '865']
+delta count: 93
+omicron count: 60
+2453 infected 456 @ location 16 w/ omicron
+1059 infected 2062 @ location 34 w/ delta
+1059 infected 2258 @ location 34 w/ delta
+2104 infected 3155 @ location 18 w/ delta
+3215 infected 2481 @ location 10 w/ delta
+3215 infected 1495 @ location 10 w/ delta
+3215 infected 1092 @ location 10 w/ delta
+2825 infected 2953 @ location 27 w/ delta
+2825 infected 947 @ location 27 w/ delta
+2825 infected 3287 @ location 27 w/ delta
+====== TIMESTEP 5640 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648', '1514', '2105', '2461', '1602', '731', '869', '967', '2250', '2006', '2819', '2253', '3326', '462', '2308', '2643', '2062', '2258', '3155', '2481', '1495', '1092', '2953', '947', '3287']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529', '1476', '502', '262', '2158', '2911', '865', '456']
+delta count: 102
+omicron count: 61
+2261 infected 129 @ location 20 w/ delta
+2261 infected 3389 @ location 20 w/ delta
+706 infected 1481 @ location 12 w/ delta
+3215 infected 3149 @ location 27 w/ delta
+3215 infected 3020 @ location 27 w/ delta
+3215 infected 2905 @ location 27 w/ delta
+3215 infected 3474 @ location 27 w/ delta
+708 infected 1892 @ location 25 w/ delta
+2825 infected 260 @ location 31 w/ delta
+====== TIMESTEP 5700 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648', '1514', '2105', '2461', '1602', '731', '869', '967', '2250', '2006', '2819', '2253', '3326', '462', '2308', '2643', '2062', '2258', '3155', '2481', '1495', '1092', '2953', '947', '3287', '129', '3389', '1481', '3149', '3020', '2905', '3474', '1892', '260']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529', '1476', '502', '262', '2158', '2911', '865', '456']
+delta count: 111
+omicron count: 61
+2261 infected 2241 @ location 27 w/ delta
+2104 infected 2336 @ location 26 w/ delta
+2104 infected 1923 @ location 26 w/ delta
+2104 infected 1990 @ location 26 w/ delta
+706 infected 2986 @ location 27 w/ delta
+706 infected 3189 @ location 27 w/ delta
+706 infected 2807 @ location 27 w/ delta
+2825 infected 3390 @ location 27 w/ delta
+2825 infected 1201 @ location 27 w/ delta
+2825 infected 2482 @ location 27 w/ delta
+2825 infected 1613 @ location 27 w/ delta
+2825 infected 2634 @ location 27 w/ delta
+2550 infected 3449 @ location 8 w/ delta
+3225 infected 1184 @ location 27 w/ delta
+3225 infected 1385 @ location 27 w/ delta
+3225 infected 562 @ location 27 w/ delta
+====== TIMESTEP 5760 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648', '1514', '2105', '2461', '1602', '731', '869', '967', '2250', '2006', '2819', '2253', '3326', '462', '2308', '2643', '2062', '2258', '3155', '2481', '1495', '1092', '2953', '947', '3287', '129', '3389', '1481', '3149', '3020', '2905', '3474', '1892', '260', '2241', '2336', '1923', '1990', '2986', '3189', '2807', '3390', '1201', '2482', '1613', '2634', '3449', '1184', '1385', '562']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529', '1476', '502', '262', '2158', '2911', '865', '456']
+delta count: 127
+omicron count: 61
+3215 infected 1181 @ location 13 w/ delta
+3215 infected 199 @ location 13 w/ delta
+3215 infected 33 @ location 13 w/ delta
+3225 infected 978 @ location 12 w/ delta
+3225 infected 721 @ location 12 w/ delta
+3225 infected 179 @ location 12 w/ delta
+====== TIMESTEP 5820 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648', '1514', '2105', '2461', '1602', '731', '869', '967', '2250', '2006', '2819', '2253', '3326', '462', '2308', '2643', '2062', '2258', '3155', '2481', '1495', '1092', '2953', '947', '3287', '129', '3389', '1481', '3149', '3020', '2905', '3474', '1892', '260', '2241', '2336', '1923', '1990', '2986', '3189', '2807', '3390', '1201', '2482', '1613', '2634', '3449', '1184', '1385', '562', '1181', '199', '33', '978', '721', '179']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529', '1476', '502', '262', '2158', '2911', '865', '456']
+delta count: 133
+omicron count: 61
+2261 infected 567 @ location 6 w/ delta
+2261 infected 2680 @ location 6 w/ delta
+2261 infected 1618 @ location 6 w/ delta
+2453 infected 353 @ location 10 w/ omicron
+708 infected 2251 @ location 37 w/ delta
+708 infected 678 @ location 37 w/ delta
+708 infected 1142 @ location 37 w/ delta
+====== TIMESTEP 5880 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648', '1514', '2105', '2461', '1602', '731', '869', '967', '2250', '2006', '2819', '2253', '3326', '462', '2308', '2643', '2062', '2258', '3155', '2481', '1495', '1092', '2953', '947', '3287', '129', '3389', '1481', '3149', '3020', '2905', '3474', '1892', '260', '2241', '2336', '1923', '1990', '2986', '3189', '2807', '3390', '1201', '2482', '1613', '2634', '3449', '1184', '1385', '562', '1181', '199', '33', '978', '721', '179', '567', '2680', '1618', '2251', '678', '1142']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529', '1476', '502', '262', '2158', '2911', '865', '456', '353']
+delta count: 139
+omicron count: 62
+157 infected 1591 @ location 35 w/ delta
+3215 infected 1499 @ location 31 w/ delta
+====== TIMESTEP 5940 ======
+delta: ['160', '157', '2261', '631', '2464', '3358', '309', '3477', '1274', '1607', '514', '2665', '403', '1059', '219', '2104', '551', '706', '1373', '2201', '3215', '708', '3347', '2825', '578', '1533', '2684', '660', '3400', '2804', '2550', '2077', '2870', '3225', '1421', '254', '2887', '1171', '2194', '288', '88', '234', '1775', '2477', '1403', '3185', '3422', '873', '1456', '2237', '1033', '2150', '1523', '468', '1404', '467', '448', '59', '2910', '407', '1634', '1528', '1185', '2787', '3013', '2323', '2673', '1693', '1893', '2890', '1749', '1925', '274', '1340', '757', '2122', '3301', '2648', '1514', '2105', '2461', '1602', '731', '869', '967', '2250', '2006', '2819', '2253', '3326', '462', '2308', '2643', '2062', '2258', '3155', '2481', '1495', '1092', '2953', '947', '3287', '129', '3389', '1481', '3149', '3020', '2905', '3474', '1892', '260', '2241', '2336', '1923', '1990', '2986', '3189', '2807', '3390', '1201', '2482', '1613', '2634', '3449', '1184', '1385', '562', '1181', '199', '33', '978', '721', '179', '567', '2680', '1618', '2251', '678', '1142', '1591', '1499']
+omicron: ['43', '1478', '3008', '2453', '1700', '3366', '2360', '2438', '3306', '680', '1109', '471', '2822', '2494', '235', '2602', '1032', '1598', '1714', '2540', '2291', '2546', '236', '808', '348', '1391', '2330', '499', '3178', '2278', '2234', '358', '2231', '2172', '2511', '2878', '130', '2964', '3153', '3035', '1414', '1543', '2637', '3033', '1936', '2871', '3108', '799', '601', '1344', '1757', '2279', '1654', '1529', '1476', '502', '262', '2158', '2911', '865', '456', '353']
+delta count: 141
+omicron count: 62
+1059 infected 2766 @ location 12 w/ delta
+1059 infected 2236 @ location 12 w/ delta
+1059 infected 1873 @ location 12 w/ delta
+2104 infected 3140 @ location 31 w/ delta
+706 infected 1517 @ location 30 w/ delta
+708 infected 1961 @ location 20 w/ delta
+708 infected 2889 @ location 20 w/ delta
+2550 infected 2181 @ location 12 w/ delta

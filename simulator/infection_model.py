@@ -41,11 +41,14 @@ def calculate_droplets_transport(p, num_time_steps):
                 disease = d
 
         #Iterate over each time step within p's timeline
-        for t in range(num_time_steps):
+        for _ in range(num_time_steps):
             total_infectious_people = 0
 
             # Iterate over each person in the location at time step t
             for person in p.location.population:
+                if person.invisible == True:
+                    continue
+                
                 # Check if the person has an infectious state at time t
                 if person.states.get(disease) != None and InfectionState.INFECTIOUS in person.states.get(disease):
                     # Calculate the total number of infectious people at time t
@@ -57,12 +60,12 @@ def calculate_droplets_transport(p, num_time_steps):
                         total_infectious_people += 1
 
             # Calculate the average fraction at time step t and add it to the list
-            average_fraction = total_infectious_people / p.location.total_count
+            average_fraction = total_infectious_people / (p.location.total_count * num_time_steps)
             average_fraction = math.exp(-average_fraction)
             average_fractions.append(average_fraction)
 
         # Calculate the average fraction over the entire timeline
-        average_frac = sum(average_fractions) / num_time_steps
+        average_frac = sum(average_fractions)
 
         return average_frac
 

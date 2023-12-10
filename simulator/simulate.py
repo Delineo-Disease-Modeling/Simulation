@@ -133,33 +133,32 @@ def run_simulator(matrices, interventions):
     deltaInfected = []
     omicronInfected = []
 
-    with open('simulator_results.txt', 'w') as file:
-        while len(timestamps) > 0:
-            print(f'Running movement simulator for timestep {last_timestep}')
+    while len(timestamps) > 0:
+        print(f'Running movement simulator for timestep {last_timestep}')
+        
+        if last_timestep >= int(timestamps[0]):        
+            data = patterns[timestamps[0]]
             
-            if last_timestep >= int(timestamps[0]):        
-                data = patterns[timestamps[0]]
-                
-                # Move people to homes for this timestep
-                move_people(simulator, data['homes'].items(), True)
-                
-                # Move people to facilities for this timestep
-                move_people(simulator, data['places'].items(), False)
-                
-                timestamps.pop(0)
-                #print(f'Completed movement for timestep {timestamps.pop(0)}')  
+            # Move people to homes for this timestep
+            move_people(simulator, data['homes'].items(), True)
             
-            infectionmgr.run_model(1, file, last_timestep, deltaInfected, omicronInfected)
+            # Move people to facilities for this timestep
+            move_people(simulator, data['places'].items(), False)
             
-            result[last_timestep] = {'delta': list(deltaInfected), 'omicron': list(omicronInfected) }
-            
-            last_timestep += simulator.timestep
+            timestamps.pop(0)
+            #print(f'Completed movement for timestep {timestamps.pop(0)}')  
+        
+        infectionmgr.run_model(1, None, last_timestep, deltaInfected, omicronInfected)
+        result[last_timestep] = {'delta': list(deltaInfected), 'omicron': list(omicronInfected) }
+        last_timestep += simulator.timestep
 
-        print("Delta Infected:")
-        print(deltaInfected)
-        print("Omicron Infected:")
-        print(omicronInfected)
+    print("Delta Infected:")
+    print(deltaInfected)
+    print("Omicron Infected:")
+    print(omicronInfected)
 
+    with open('results.json', 'w') as file:
+        json.dump(result, file, indent=4)
 
     return result
 

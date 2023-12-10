@@ -44,6 +44,7 @@ class Person:
         self.age = age
         self.household = household
         self.location = household
+        self.invisible = False
         self.states = {}
         self.timeline = {}
         self.interventions = {
@@ -76,11 +77,12 @@ class Person:
             for state, timeline in value.items():
                 if timeline.start <= curtime and (state not in self.states[disease]):
                     self.states[disease] = self.states[disease] | state
-                    #print(f'Added {state.value} to {self.id} | {self.states[disease]}')
+                    
+                    if state == InfectionState.REMOVED or state == InfectionState.RECOVERED or state == InfectionState.HOSPITALIZED:
+                        self.invisible = True
                 
                 if timeline.end <= curtime and (state in self.states[disease]):
                     self.states[disease] = self.states[disease] & ~state
-                    #print(f'Removed {state.value} from {self.id} | {self.states[disease]}')
 
             
 
