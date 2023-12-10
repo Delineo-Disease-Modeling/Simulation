@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import csv
-from .simulation_functions import run_simulation, default_initial_state
+from simulation_functions import run_simulation, default_initial_state
 import os
 
 def process_dataframes(df, demographic_info):
