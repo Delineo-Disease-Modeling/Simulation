@@ -7,11 +7,6 @@ import os
 
 curdir = os.path.dirname(os.path.abspath(__file__))
 
-# TODO: A way for users to call for interventions in the population
-#   e.g: mask wearing, limit capacity, lockdowns/shutdowns, vaccinations
-class InterventionManager:
-    pass
-
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
@@ -56,7 +51,8 @@ def move_people(simulator, items, is_household):
             if not is_household:
                 at_capacity = place.total_count >= place.capacity * simulator.iv_weights['capacity'] if place.capacity != -1 else False
                 hit_lockdown = place != person.location and random.random() < simulator.iv_weights['lockdown']
-                if at_capacity or hit_lockdown:
+                self_iso = person.get_state(InfectionState.SYMPTOMATIC) and random.random() < simulator.iv_weights['selfiso']
+                if at_capacity or hit_lockdown or self_iso:
                     person.location.remove_member(person_id)
                     person.household.add_member(person)
                     person.location = person.household
@@ -125,6 +121,9 @@ def run_simulator(matrices, interventions):
 
     with open(curdir + '/pattern_simple.json') as file:
         patterns = json.load(file)
+        
+    with open(curdir + '/patterns_alg.json') as file:
+        patterns = json.load(file)
 
     last_timestep = 0
     timestamps = list(patterns.keys())
@@ -167,5 +166,6 @@ if __name__ == '__main__':
         'mask': 0.4,
         'vaccine': 0.2,
         'capacity': 1.0,
-        'lockdown': 0.5
+        'lockdown': 0.5,
+        'selfiso': 0.5
     })

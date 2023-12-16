@@ -64,6 +64,14 @@ class Person:
     def get_vaccinated(self):
         return self.interventions['vaccine']
     
+    # Returns whether user has a state on ANY disease
+    def get_state(self, state):
+        for val in self.states.values():
+            if state in val:
+                return True
+        
+        return False
+    
     def update_state(self, curtime):
         '''
         Updates the InfectionState of this Person based on the current time

@@ -24,7 +24,8 @@ def run_simulation():
             'mask': request.json['mask'],
             'vaccine': request.json['vaccine'],
             'capacity': request.json['capacity'],
-            'lockdown': request.json['lockdown']
+            'lockdown': request.json['lockdown'],
+            'selfiso': request.json['selfiso'],
         })
 
     except KeyError:
@@ -32,7 +33,8 @@ def run_simulation():
             'mask': 0.4,
             'vaccine': 0.2,
             'capacity': 1.0,
-            'lockdown': 0
+            'lockdown': 0,
+            'selfiso': 0.5
         })
 
 # This is for testing purposes
@@ -43,7 +45,8 @@ def run_main():
         'mask': 0.4,
         'vaccine': 0.2,
         'capacity': 1.0,
-        'lockdown': 0
+        'lockdown': 0,
+        'selfiso': 0.5
     })
 
 if __name__ == '__main__':
