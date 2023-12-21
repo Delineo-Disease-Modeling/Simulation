@@ -1,6 +1,4 @@
 import pandas as pd
-import numpy as np
-import csv
 from .simulation_functions import run_simulation, default_initial_state
 import os
 
