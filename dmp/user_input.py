@@ -17,9 +17,14 @@ def process_dataframes(df, demographic_info):
 
     # Validate transition matrix
     transition_matrix = matrices_dict["Transition Matrix"]
-    distribution_type_matrix = matrices_dict["Distribution Type"]
     validate_transition_matrix(transition_matrix)
-    validate_distribution_type(distribution_type_matrix)
+
+    validate_mean_and_std(matrices_dict["Mean"], matrices_dict["Standard Deviation"])
+
+    validate_distribution_type(matrices_dict["Distribution Type"])
+
+    validate_cutoffs(matrices_dict["Min Cut-Off"])
+    validate_cutoffs(matrices_dict["Max Cut-Off"])
 
     # Print out all the matrices
     # for label, matrix in matrices_dict.items():
@@ -60,15 +65,24 @@ def validate_transition_matrix(matrix):
             raise ValueError("Transition matrix values must be between 0 and 1")
         if abs(sum(row) - 1) > 1e-6:
             raise ValueError("Each row of the transition matrix must sum up to 1")
-        
+
+def validate_mean_and_std(mean_matrix, std_matrix):
+    for row in mean_matrix:
+        if len(row) != 7 or not all(val > 0 for val in row):
+            raise ValueError("Mean values must be a 7x7 matrix with all values greater than 0")
+    for row in std_matrix:
+        if len(row) != 7 or not all(val > 0 for val in row):
+            raise ValueError("Standard deviation values must be a 7x7 matrix with all values greater than 0")
+
+def validate_distribution_type_or_cutoffs(matrix, msg):
+    if not all(len(row) == 7 and all(val.is_integer() and val >= (1 if msg == "Distribution Type" else 0) for val in row) for row in matrix):
+        raise ValueError(f"Invalid {msg} matrix")
+
 def validate_distribution_type(matrix):
-    if len(matrix) != 7:
-        raise ValueError("Distribution Type matrix must be 7x7")
-    for row in matrix:
-        if len(row) != 7:
-            raise ValueError("Distribution Type matrix must be 7x7")
-        if not all(1 <= val and val.is_integer() for val in row):
-            raise ValueError("Distribution Type matrix values must be positive whole values")
+    validate_distribution_type_or_cutoffs(matrix, "Distribution Type")
+
+def validate_cutoffs(matrix):
+    validate_distribution_type_or_cutoffs(matrix, "Cutoffs")
 
 if __name__ == '__main__':
     # Read the entire CSV file into a pandas DataFrame
