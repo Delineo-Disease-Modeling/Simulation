@@ -31,7 +31,7 @@ default_initial_state = "Infected"
 #     [1, 1, 1, 1, 1, 1, 1]
 # ]
 
-def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_interval_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, initial_state, desired_iterations, age, vaccination_status):
+def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_interval_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, initial_state, desired_iterations):
     current_state = states.index(initial_state)
     total_time_steps = 0
     simulation_data = []
@@ -40,49 +40,18 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
 
     def transition():
         nonlocal current_state
-        age_multiplier = 1 + (age / 100)
-
-        # Adjust transition weights based on age and vaccination status
-        if vaccination_status == "Yes":
-            vaccination_multiplier = 0.8
-        else:
-            vaccination_multiplier = 1.0
-
-        original_weights = transition_matrix[current_state]
-        weighted_transition = [weight * age_multiplier * vaccination_multiplier for weight in original_weights]
-        
-        # Normalize the weights to ensure they sum up to 1
-        sum_weights = sum(weighted_transition)
-        normalized_weights = [weight / sum_weights for weight in weighted_transition]
-
-        next_state = random.choices(states, weights=normalized_weights)[0]
-
+        next_state = random.choices(states, weights=transition_matrix[current_state])[0]
         current_state = states.index(next_state)
         return next_state
 
     def sample_time_interval(mean_matrix, std_dev_matrix, min_matrix, max_matrix, distribution_matrix, current_state_index, next_state_index):
-        age_multiplier = 1 + (age / 100)
-
-        # Adjust time interval based on age and vaccination status
-        if vaccination_status == "Yes":
-            vaccination_multiplier = 0.8
-        else:
-            vaccination_multiplier = 1.0
         while True:
             if distribution_matrix[current_state_index][next_state_index] == 1:  # Normal distribution
-                interval = int(random.normalvariate(
-                    mean_matrix[current_state_index][next_state_index] * age_multiplier * vaccination_multiplier,
-                    std_dev_matrix[current_state_index][next_state_index]
-                ))
+                interval = int(random.normalvariate(mean_matrix[current_state_index][next_state_index], std_dev_matrix[current_state_index][next_state_index]))
             elif distribution_matrix[current_state_index][next_state_index] == 2:  # Exponential distribution
-                interval = int(random.expovariate(
-                    1 / (mean_matrix[current_state_index][next_state_index] * age_multiplier * vaccination_multiplier)
-                ))
+                interval = int(random.expovariate(1 / mean_matrix[current_state_index][next_state_index]))
             elif distribution_matrix[current_state_index][next_state_index] == 3:  # Uniform distribution
-                interval = int(random.uniform(
-                    min_matrix[current_state_index][next_state_index] * age_multiplier * vaccination_multiplier,
-                    max_matrix[current_state_index][next_state_index] * age_multiplier * vaccination_multiplier
-                ))
+                interval = int(random.uniform(min_cutoff_matrix[current_state_index][next_state_index], max_cutoff_matrix[current_state_index][next_state_index]))
             else:
                 raise ValueError(f"Unsupported distribution type {distribution_matrix[current_state_index][next_state_index]}")
             
