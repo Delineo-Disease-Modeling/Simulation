@@ -1,5 +1,5 @@
 import pandas as pd
-from .simulation_functions import run_simulation, default_initial_state
+from simulation_functions import run_simulation, default_initial_state
 import os
 
 def process_dataframes(df, demographic_info):
@@ -35,9 +35,7 @@ def process_dataframes(df, demographic_info):
         matrices_dict["Max Cut-Off"],
         matrices_dict["Distribution Type"],
         default_initial_state,
-        20, 
-        demographic_info["Age"], 
-        demographic_info["Is_Vaccinated"]
+        20
     )
 
     output_dict = {}
@@ -50,8 +48,6 @@ if __name__ == '__main__':
     # Read the entire CSV file into a pandas DataFrame
     curdir = os.path.dirname(os.path.abspath(__file__))
     df = pd.read_csv(curdir + '/matrices.csv', header=None)
-    
-    print(df)
 
     # Read the demographic info from the CSV file
     demo_cols = ["Sex", "Age", "Is_Vaccinated"]
