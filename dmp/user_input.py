@@ -17,7 +17,9 @@ def process_dataframes(df, demographic_info):
 
     # Validate transition matrix
     transition_matrix = matrices_dict["Transition Matrix"]
+    distribution_type_matrix = matrices_dict["Distribution Type"]
     validate_transition_matrix(transition_matrix)
+    validate_distribution_type(distribution_type_matrix)
 
     # Print out all the matrices
     # for label, matrix in matrices_dict.items():
@@ -58,6 +60,15 @@ def validate_transition_matrix(matrix):
             raise ValueError("Transition matrix values must be between 0 and 1")
         if abs(sum(row) - 1) > 1e-6:
             raise ValueError("Each row of the transition matrix must sum up to 1")
+        
+def validate_distribution_type(matrix):
+    if len(matrix) != 7:
+        raise ValueError("Distribution Type matrix must be 7x7")
+    for row in matrix:
+        if len(row) != 7:
+            raise ValueError("Distribution Type matrix must be 7x7")
+        if not all(1 <= val and val.is_integer() for val in row):
+            raise ValueError("Distribution Type matrix values must be positive whole values")
 
 if __name__ == '__main__':
     # Read the entire CSV file into a pandas DataFrame
