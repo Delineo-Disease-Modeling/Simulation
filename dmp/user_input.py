@@ -15,6 +15,10 @@ def process_dataframes(df, demographic_info):
     # Assign each matrix to a label in a dictionary
     matrices_dict = {label: matrix.values.tolist() for label, matrix in zip(matrix_labels, matrices)}
 
+    # Validate transition matrix
+    transition_matrix = matrices_dict["Transition Matrix"]
+    validate_transition_matrix(transition_matrix)
+
     # Print out all the matrices
     # for label, matrix in matrices_dict.items():
     #     print(label)
@@ -43,6 +47,17 @@ def process_dataframes(df, demographic_info):
         output_dict[state] = total_time_steps
 
     return output_dict
+
+def validate_transition_matrix(matrix):
+    if len(matrix) != 7:
+        raise ValueError("Transition matrix must be 7x7")
+    for row in matrix:
+        if len(row) != 7:
+            raise ValueError("Transition matrix must be 7x7")
+        if not all(0 <= val <= 1 for val in row):
+            raise ValueError("Transition matrix values must be between 0 and 1")
+        if abs(sum(row) - 1) > 1e-6:
+            raise ValueError("Each row of the transition matrix must sum up to 1")
 
 if __name__ == '__main__':
     # Read the entire CSV file into a pandas DataFrame
