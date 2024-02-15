@@ -20,10 +20,13 @@ and sampling time intervals from distributions.
 
 Assumptions About the Input:
 Transition matrices must be square matrices with dimensions 7x7.
+Each row in the transition matrix must add up to 1 and each value must be between 0 and 1. 
 The distribution type matrix should be a 7x7 matrix where each cell contains a number indicating the distribution type to be used for that transition.
 A value of 1 in a cell indicates a normal distribution should be used for that transition.
 A value of 2 indicates an exponential distribution.
-Other values can represent different distribution types as required.
+A value of 3 indicates a uniform distribution.
+Mean and standard deviation values can be decimals, but cannot be negative.
+Distribution, min-cutoff, and max-cutoff values must be positive whole numbers. 
 Demographic information is assumed to be provided in a CSV file with columns for sex, age, and vaccination status.
 
 Below is a simplified diagram of the transition matrix:
@@ -36,6 +39,8 @@ Hospitalized 0.0        0.0          0.0         0.0       0.7    0.0      0.3
 ICU          0.0        0.0          0.0         0.0       0.0    0.4      0.6
 Removed      0.0        0.0          0.0         0.0       0.0    1.0      0.0
 Recovered    0.0        0.0          0.0         0.0       0.0    0.0      1.0
+
+Each box indicates the probability of going from the row to the column state.
 
 To run the code:
 
