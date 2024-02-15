@@ -7,7 +7,7 @@ How the Code Works:
 user_input.py:
 The process_dataframes function in user_input.py reads input data from CSV files, validates the data, 
 and then calls the run_simulation function from simulation_functions.py to perform the simulation.
-The input data includes transition matrices, mean, standard deviation,and min and max cutoff matrices for time intervals, 
+The input data includes transition matrices, mean, standard deviation, min and max cutoff matrices for time intervals, 
 a distribution type matrix, and demographic information.
 The code validates the input data to ensure it meets certain requirements, such as matrix dimensions and valid values.
 After processing the data, the simulation is run with the provided parameters.
