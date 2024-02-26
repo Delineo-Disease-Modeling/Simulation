@@ -1,8 +1,9 @@
 import pandas as pd
 from simulation_functions import run_simulation, default_initial_state
 import os
+import sys
 
-def process_dataframes(dfs, demographic_info):
+def process_dataframes(dfs, demographic_info, filenames, num_simulations):
     # Define the labels for the matrices
     matrix_labels = ["Transition Matrix", "Distribution Type", "Mean", "Standard Deviation", "Min Cut-Off", "Max Cut-Off"]
 
@@ -11,7 +12,7 @@ def process_dataframes(dfs, demographic_info):
     
     output_dicts = []
 
-    for df in dfs:
+    for df, filename in zip(dfs, filenames):
         # Split the DataFrame into separate matrices
         matrices = [df[i:i + matrix_rows] for i in range(0, df.shape[0], matrix_rows)]
 
@@ -29,22 +30,30 @@ def process_dataframes(dfs, demographic_info):
         validate_cutoffs(matrices_dict["Min Cut-Off"])
         validate_cutoffs(matrices_dict["Max Cut-Off"])
 
-        simulation_data = run_simulation(
-            matrices_dict["Transition Matrix"],
-            matrices_dict["Mean"],
-            matrices_dict["Standard Deviation"],
-            matrices_dict["Min Cut-Off"],
-            matrices_dict["Max Cut-Off"],
-            matrices_dict["Distribution Type"],
-            default_initial_state,
-            20
-        )
+        output_dicts = []
+        for sim_num in range(num_simulations):
+            output_dict = {}
+            simulation_data = run_simulation(
+                matrices_dict["Transition Matrix"],
+                matrices_dict["Mean"],
+                matrices_dict["Standard Deviation"],
+                matrices_dict["Min Cut-Off"],
+                matrices_dict["Max Cut-Off"],
+                matrices_dict["Distribution Type"],
+                default_initial_state,
+                20
+            )
 
-        output_dict = {}
-        for state, total_time_steps in simulation_data:
-            output_dict[state] = total_time_steps
-        
-        output_dicts.append(output_dict)
+            for state, total_time_steps in simulation_data:
+                output_dict[state] = total_time_steps
+            
+            output_dicts.append(output_dict)
+
+            # Output for each simulation
+            print(f"Output for file {filename}:")
+            print(f"Simulation {sim_num + 1}:")
+            print(output_dict)
+            print()
 
     return output_dicts
 
@@ -79,6 +88,12 @@ def validate_cutoffs(matrix):
     validate_distribution_type_or_cutoffs(matrix, "Cutoffs")
 
 if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("Usage: python user_input.py <num_simulations>")
+        sys.exit(1)
+    
+    num_simulations = int(sys.argv[1])
+
     # Read the first CSV file into a pandas DataFrame
     curdir = os.path.dirname(os.path.abspath(__file__))
     df = pd.read_csv(curdir + '/matrices.csv', header=None)
@@ -90,11 +105,21 @@ if __name__ == '__main__':
     demo_cols = ["Sex", "Age", "Is_Vaccinated"]
     demographic_info = pd.read_csv(curdir + '/demographic_info.csv', names=demo_cols)
     
+    # Filenames
+    filenames = ['matrices.csv', 'matrices2.csv']
+
     # Split the dataframes into a list
     dataframes = [df, df2]
 
-    result_dicts = process_dataframes(dataframes, demographic_info)
+    result_dicts = process_dataframes(dataframes, demographic_info, filenames, num_simulations)
 
-    # Print the result dictionaries
-    for result_dict in result_dicts:
-        print(result_dict)
+
+
+
+# 0.0, 0.7, 0.3, 0.0, 0.0, 0.0, 0.0
+# 0.0, 0.0, 0.5, 0.2, 0.1, 0.0, 0.2
+# 0.0, 0.0, 0.0, 0.4, 0.2, 0.0, 0.4
+# 0.0, 0.0, 0.0, 0.0, 0.7, 0.0, 0.3
+# 0.0, 0.0, 0.0, 0.0, 0.0, 0.4, 0.6
+# 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0
+# 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0
