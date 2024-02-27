@@ -15,14 +15,6 @@ Matrices:
 1, 1, 1, 1, 1, 1, 1 
 1, 1, 1, 1, 1, 1, 1 
 
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
-
 5, 5, 5, 5, 5, 5, 5
 5, 5, 5, 5, 5, 5, 5
 5, 5, 5, 5, 5, 5, 5
@@ -39,53 +31,61 @@ Matrices:
 2, 2, 2, 2, 2, 2, 2
 2, 2, 2, 2, 2, 2, 2
 
-20, 20, 20, 20, 20, 20, 20
-20, 20, 20, 20, 20, 20, 20
-20, 20, 20, 20, 20, 20, 20
-20, 20, 20, 20, 20, 20, 20
-20, 20, 20, 20, 20, 20, 20
-20, 20, 20, 20, 20, 20, 20
-20, 20, 20, 20, 20, 20, 20
+1, 1, 1, 1, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1 
+1, 1, 1, 1, 1, 1, 1 
+1, 1, 1, 1, 1, 1, 1 
+1, 1, 1, 1, 1, 1, 1 
+1, 1, 1, 1, 1, 1, 1 
+1, 1, 1, 1, 1, 1, 1
+
+6, 6, 6, 6, 6, 6, 6
+6, 6, 6, 6, 6, 6, 6
+6, 6, 6, 6, 6, 6, 6
+6, 6, 6, 6, 6, 6, 6
+6, 6, 6, 6, 6, 6, 6
+6, 6, 6, 6, 6, 6, 6
+6, 6, 6, 6, 6, 6, 6
 
 Output for file matrices.csv:
 Simulation 1:
-{'Infected': 0, 'Symptomatic': 5760, 'Infectious': 18720, 'Recovered': 37440}
+{'Infected': 0, 'Infectious': 48, 'Recovered': 192}
 
 Output for file matrices.csv:
 Simulation 2:
-{'Infected': 0, 'Symptomatic': 11520, 'Infectious': 33120, 'Hospitalized': 36000, 'Recovered': 53280}
+{'Infected': 0, 'Symptomatic': 72, 'Recovered': 120}
 
 Output for file matrices.csv:
 Simulation 3:
-{'Infected': 0, 'Symptomatic': 18720, 'Recovered': 25920}
+{'Infected': 0, 'Symptomatic': 72, 'Infectious': 144, 'Recovered': 240}
 
 Output for file matrices.csv:
 Simulation 4:
-{'Infected': 0, 'Symptomatic': 8640, 'Infectious': 12960, 'Hospitalized': 25920, 'Recovered': 30240}
+{'Infected': 0, 'Symptomatic': 120, 'Infectious': 240, 'Recovered': 336}
 
 Output for file matrices.csv:
 Simulation 5:
-{'Infected': 0, 'Infectious': 12960, 'Hospitalized': 24480, 'Recovered': 43200}
+{'Infected': 0, 'Symptomatic': 120, 'Infectious': 264, 'Hospitalized': 360, 'ICU': 408, 'Recovered': 504}
 
 Output for file matrices.csv:
 Simulation 6:
-{'Infected': 0, 'Symptomatic': 11520, 'Recovered': 23040}
+{'Infected': 0, 'Infectious': 96, 'Recovered': 144}
 
 Output for file matrices.csv:
 Simulation 7:
-{'Infected': 0, 'Symptomatic': 10080, 'Infectious': 21600, 'Recovered': 33120}
+{'Infected': 0, 'Infectious': 120, 'Hospitalized': 168, 'Recovered': 312}
 
 Output for file matrices.csv:
 Simulation 8:
-{'Infected': 0, 'Symptomatic': 4320, 'Infectious': 18720, 'Hospitalized': 37440, 'ICU': 43200, 'Recovered': 56160}
+{'Infected': 0, 'Symptomatic': 96, 'Infectious': 216, 'Hospitalized': 312, 'Recovered': 384}
 
 Output for file matrices.csv:
 Simulation 9:
-{'Infected': 0, 'Infectious': 8640, 'Hospitalized': 17280, 'Recovered': 40320}
+{'Infected': 0, 'Infectious': 120, 'Recovered': 240}
 
 Output for file matrices.csv:
 Simulation 10:
-{'Infected': 0, 'Infectious': 14400, 'Recovered': 31680}
+{'Infected': 0, 'Symptomatic': 96, 'Recovered': 216}
 
 Matrices run 2: 
 0.0, 0.5, 0.2, 0.1, 0.0, 0.1, 0.1
@@ -104,13 +104,13 @@ Matrices run 2:
 1, 1, 1, 1, 1, 1, 1 
 1, 1, 1, 1, 1, 1, 1 
 
-7, 7, 7, 7, 7, 7, 7
-7, 7, 7, 7, 7, 7, 7
-7, 7, 7, 7, 7, 7, 7
-7, 7, 7, 7, 7, 7, 7
-7, 7, 7, 7, 7, 7, 7
-7, 7, 7, 7, 7, 7, 7
-7, 7, 7, 7, 7, 7, 7
+3, 3, 3, 3, 3, 3, 3
+3, 3, 3, 3, 3, 3, 3
+3, 3, 3, 3, 3, 3, 3
+3, 3, 3, 3, 3, 3, 3
+3, 3, 3, 3, 3, 3, 3
+3, 3, 3, 3, 3, 3, 3
+3, 3, 3, 3, 3, 3, 3
 
 2, 2, 2, 2, 2, 2, 2
 2, 2, 2, 2, 2, 2, 2
@@ -128,55 +128,54 @@ Matrices run 2:
 1, 1, 1, 1, 1, 1, 1
 1, 1, 1, 1, 1, 1, 1
 
-
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
-10, 10, 10, 10, 10, 10, 10
+4, 4, 4, 4, 4, 4, 4
+4, 4, 4, 4, 4, 4, 4
+4, 4, 4, 4, 4, 4, 4
+4, 4, 4, 4, 4, 4, 4
+4, 4, 4, 4, 4, 4, 4
+4, 4, 4, 4, 4, 4, 4
+4, 4, 4, 4, 4, 4, 4
 
 
 Output for file matrices2.csv:
 Simulation 1:
-{'Infected': 0, 'Symptomatic': 4320, 'ICU': 17280, 'Removed': 30240}
+{'Infected': 0, 'Symptomatic': 48, 'ICU': 120, 'Recovered': 144}
 
 Output for file matrices2.csv:
 Simulation 2:
-{'Infected': 0, 'Removed': 5760}
+{'Infected': 0, 'Symptomatic': 24, 'ICU': 120, 'Recovered': 216}
 
 Output for file matrices2.csv:
 Simulation 3:
-{'Infected': 0, 'Symptomatic': 11520, 'Infectious': 24480, 'Hospitalized': 36000, 'Removed': 46080}
+{'Infected': 0, 'Symptomatic': 24, 'Removed': 96}
 
 Output for file matrices2.csv:
 Simulation 4:
-{'Infected': 0, 'Symptomatic': 7200, 'Removed': 15840}
+{'Infected': 0, 'Infectious': 96, 'Recovered': 168}
 
 Output for file matrices2.csv:
 Simulation 5:
-{'Infected': 0, 'Hospitalized': 7200, 'Removed': 15840}
+{'Infected': 0, 'Recovered': 72}
 
 Output for file matrices2.csv:
 Simulation 6:
-{'Infected': 0, 'Infectious': 11520, 'Recovered': 20160}
+{'Infected': 0, 'Infectious': 48, 'Removed': 120}
 
 Output for file matrices2.csv:
 Simulation 7:
-{'Infected': 0, 'Recovered': 12960}
+{'Infected': 0, 'Infectious': 96, 'Hospitalized': 120, 'Recovered': 216}
 
 Output for file matrices2.csv:
 Simulation 8:
-{'Infected': 0, 'Hospitalized': 11520, 'ICU': 20160, 'Recovered': 30240}
+{'Infected': 0, 'Recovered': 48}
 
 Output for file matrices2.csv:
 Simulation 9:
-{'Infected': 0, 'Symptomatic': 5760, 'Hospitalized': 18720, 'ICU': 31680, 'Removed': 37440}
+{'Infected': 0, 'Symptomatic': 24, 'Recovered': 96}
 
 Output for file matrices2.csv:
 Simulation 10:
-{'Infected': 0, 'Recovered': 7200}
+{'Infected': 0, 'Infectious': 48, 'Hospitalized': 72, 'ICU': 120, 'Removed': 144}
 
 Matrices run 3: 
 0.0, 0.6, 0.2, 0.0, 0.0, 0.1, 0.1
@@ -195,76 +194,75 @@ Matrices run 3:
 1, 1, 1, 1, 1, 1, 1 
 1, 1, 1, 1, 1, 1, 1 
 
-8, 8, 8, 8, 8, 8, 8
-8, 8, 8, 8, 8, 8, 8
-8, 8, 8, 8, 8, 8, 8
-8, 8, 8, 8, 8, 8, 8
-8, 8, 8, 8, 8, 8, 8
-8, 8, 8, 8, 8, 8, 8
-8, 8, 8, 8, 8, 8, 8
-
-
-3, 3, 3, 3, 3, 3, 3
-3, 3, 3, 3, 3, 3, 3
-3, 3, 3, 3, 3, 3, 3
-3, 3, 3, 3, 3, 3, 3
-3, 3, 3, 3, 3, 3, 3
-3, 3, 3, 3, 3, 3, 3
-3, 3, 3, 3, 3, 3, 3
-
-
 1, 1, 1, 1, 1, 1, 1
-1, 1, 1, 1, 1, 1, 1
-1, 1, 1, 1, 1, 1, 1
-1, 1, 1, 1, 1, 1, 1
-1, 1, 1, 1, 1, 1, 1
-1, 1, 1, 1, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1 
+1, 1, 1, 1, 1, 1, 1 
+1, 1, 1, 1, 1, 1, 1 
+1, 1, 1, 1, 1, 1, 1 
+1, 1, 1, 1, 1, 1, 1 
 1, 1, 1, 1, 1, 1, 1
 
-15, 15, 15, 15, 15, 15, 15
-15, 15, 15, 15, 15, 15, 15
-15, 15, 15, 15, 15, 15, 15
-15, 15, 15, 15, 15, 15, 15
-15, 15, 15, 15, 15, 15, 15
-15, 15, 15, 15, 15, 15, 15
-15, 15, 15, 15, 15, 15, 15
+
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
+
+1, 1, 1, 1, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1
+
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
+2, 2, 2, 2, 2, 2, 2
 
 Output for file matrices.csv:
 Simulation 1:
-{'Infected': 0, 'Removed': 15840}
+{'Infected': 0, 'Symptomatic': 48, 'Infectious': 72, 'Recovered': 96}
 
 Output for file matrices.csv:
 Simulation 2:
-{'Infected': 0, 'Symptomatic': 15840, 'Recovered': 20160}
+{'Infected': 0, 'Symptomatic': 24, 'ICU': 48, 'Removed': 96}
 
 Output for file matrices.csv:
 Simulation 3:
-{'Infected': 0, 'Symptomatic': 7200, 'Recovered': 20160}
+{'Infected': 0, 'Symptomatic': 24, 'ICU': 72, 'Removed': 120}
 
 Output for file matrices.csv:
 Simulation 4:
-{'Infected': 0, 'Removed': 17280}
+{'Infected': 0, 'Symptomatic': 24, 'Recovered': 48}
 
 Output for file matrices.csv:
 Simulation 5:
-{'Infected': 0, 'Removed': 7200}
+{'Infected': 0, 'Symptomatic': 24, 'ICU': 48, 'Removed': 96}
 
 Output for file matrices.csv:
 Simulation 6:
-{'Infected': 0, 'Infectious': 8640, 'Hospitalized': 15840, 'Recovered': 24480}
+{'Infected': 0, 'Infectious': 24, 'Hospitalized': 72, 'ICU': 96, 'Recovered': 144}
 
 Output for file matrices.csv:
 Simulation 7:
-{'Infected': 0, 'Infectious': 5760, 'Recovered': 23040}
+{'Infected': 0, 'Infectious': 24, 'Hospitalized': 72, 'Recovered': 120}
 
 Output for file matrices.csv:
 Simulation 8:
-{'Infected': 0, 'Infectious': 10080, 'Hospitalized': 21600, 'Removed': 27360}
+{'Infected': 0, 'Infectious': 24, 'Removed': 72}
 
 Output for file matrices.csv:
 Simulation 9:
-{'Infected': 0, 'Symptomatic': 11520, 'Recovered': 21600}
+{'Infected': 0, 'Recovered': 24}
 
 Output for file matrices.csv:
 Simulation 10:
-{'Infected': 0, 'Symptomatic': 11520, 'Removed': 17280}
+{'Infected': 0, 'Symptomatic': 48, 'Infectious': 96, 'Hospitalized': 144, 'Recovered': 168}
