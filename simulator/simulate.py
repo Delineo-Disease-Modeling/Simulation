@@ -129,8 +129,8 @@ def run_simulator(matrices, interventions):
     timestamps = list(patterns.keys())
     
     result = {}
-    deltaInfected = []
-    omicronInfected = []
+    deltaInfected = {}
+    omicronInfected = {}
 
     while len(timestamps) > 0:
         print(f'Running movement simulator for timestep {last_timestep}')
@@ -148,7 +148,7 @@ def run_simulator(matrices, interventions):
             #print(f'Completed movement for timestep {timestamps.pop(0)}')  
         
         infectionmgr.run_model(1, None, last_timestep, deltaInfected, omicronInfected)
-        result[last_timestep] = {'delta': list(deltaInfected), 'omicron': list(omicronInfected) }
+        result[last_timestep] = {'delta': dict(deltaInfected), 'omicron': dict(omicronInfected) }
         last_timestep += simulator.timestep
 
     print("Delta Infected:")
