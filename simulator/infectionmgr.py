@@ -24,18 +24,21 @@ class InfectionManager:
             file.write(f"omicron count: {len([i.id for i in self.infected if i.states.get('omicron') != None])}\n")
 
         # keep an array of number of people infected at each time step
-        deltaInfected[:] = [i.id for i in self.infected if i.states.get('delta') != None]
-        omicronInfected[:] = [i.id for i in self.infected if i.states.get('omicron') != None]
+        for i in self.infected:
+            if i.states.get('delta') != None and i.states['delta'] != InfectionState.SUSCEPTIBLE:
+                deltaInfected[i.id] = int(i.states['delta'].value)
+            elif i.states.get('omicron') != None and i.states['omicron'] != InfectionState.SUSCEPTIBLE:
+                omicronInfected[i.id] = int(i.states['omicron'].value)
         
         for i in self.infected:
             i.update_state(curtime)
         
         for i in self.infected:
+            if i.invisible == True:
+                continue
+
             for p in i.location.population:
-                if i == p or p.states.get("omicron") != None or p.states.get("delta") != None:
-                    continue
-                
-                if p.invisible == True:
+                if i == p or p.invisible == True:
                     continue
 
                 new_infections = []
@@ -53,8 +56,6 @@ class InfectionManager:
                     # for _ in range(num_timesteps):
                     if (disease == "delta" and CAT(p, True, num_timesteps, 7e4)) or (disease == "omicron" and CAT(p, True, num_timesteps, 7e4)):
                         new_infections.append(disease)
-                        p.states[disease] = InfectionState.INFECTED
-                        self.infected.append(p)
                         break
                 
                 for disease in new_infections:
@@ -62,7 +63,7 @@ class InfectionManager:
                     # and the model does not support being infected with multiple diseases,
                     # this loop is used to remedy that case
                     
-                    # self.infected.append(p) # add to list of infected regardless
+                    self.infected.append(p) # add to list of infected regardless
                     
                     # Set infection state if they were only infected once, or if multidisease is True
                     if len(new_infections) == 1 or self.multidisease == True:
@@ -74,7 +75,7 @@ class InfectionManager:
                         continue
                     
                     # TODO: Handle case where a person is infected by multiple diseases at once
-                    p.state = InfectionState.INFECTED
+                    #p.state = InfectionState.INFECTED
                     print(f'{i.id} infected {p.id} @ location {p.location.id}')
             
             # print(len(all_p))
@@ -82,10 +83,7 @@ class InfectionManager:
 
     # When will this person turn from infected to infectious? And later symptomatic? Hospitalized?
     def create_timeline(self, person, disease, curtime):
-        tl = process_dataframes(self.matrices, {
-            "Age": person.age,
-            "Is_Vaccinated": "Yes" if person.get_vaccinated() != None else "No"
-        })
+        tl = process_dataframes([self.matrices], {})[0]
         
         mint = tl[min(tl, key=tl.get)]
         maxt = tl[max(tl, key=tl.get)]

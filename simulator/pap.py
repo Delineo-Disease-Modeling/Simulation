@@ -78,19 +78,17 @@ class Person:
         self.timeline is a dict where the keys are the InfectionStates and values are
             the times at which this person will become that state
         '''
-        for disease, value in self.timeline.items():
-            if self.states.get(disease) == None:
-                self.states[disease] = InfectionState.SUSCEPTIBLE
+        self.states['delta'] = InfectionState.SUSCEPTIBLE
+        self.states['omicron'] = InfectionState.SUSCEPTIBLE
 
+        for disease, value in self.timeline.items():
             for state, timeline in value.items():
-                if timeline.start <= curtime and (state not in self.states[disease]):
+                if timeline.end <= curtime:
+                    self.states[disease] = self.states[disease] & ~state
+                elif timeline.start <= curtime:
                     self.states[disease] = self.states[disease] | state
-                    
                     if state == InfectionState.REMOVED or state == InfectionState.RECOVERED or state == InfectionState.HOSPITALIZED:
                         self.invisible = True
-                
-                if timeline.end <= curtime and (state in self.states[disease]):
-                    self.states[disease] = self.states[disease] & ~state
 
             
 
