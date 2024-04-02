@@ -31,10 +31,10 @@ Demographic information is assumed to be provided in a CSV file with columns for
 
 Below is a simplified diagram of the transition matrix:
 
-          Infected  Symptomatic  Infectious  Hospitalized  ICU  Removed  Recovered
+          Infected      IS             IA      Hospitalized  ICU  Removed  Recovered
 Infected     0.0        0.7          0.3         0.0       0.0    0.0      0.0
-Symptomatic  0.0        0.0          0.5         0.2       0.1    0.0      0.2
-Infectious   0.0        0.0          0.0         0.4       0.2    0.0      0.4
+IS           0.0        0.0          0.5         0.2       0.1    0.0      0.2
+IA           0.0        0.0          0.0         0.4       0.2    0.0      0.4
 Hospitalized 0.0        0.0          0.0         0.0       0.7    0.0      0.3
 ICU          0.0        0.0          0.0         0.0       0.0    0.4      0.6
 Removed      0.0        0.0          0.0         0.0       0.0    1.0      0.0

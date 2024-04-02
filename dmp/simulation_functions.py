@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 # Define the states variable at the top level
-states = ["Infected", "Symptomatic", "Infectious", "Hospitalized", "ICU", "Removed", "Recovered"]
+states = ["Infected", "Infectious Symptomatic", "Infectious Asymptomatic", "Hospitalized", "ICU", "Removed", "Recovered"]
 
 # # Define other default values and transition matrix
 # default_mean_time_interval = 5
