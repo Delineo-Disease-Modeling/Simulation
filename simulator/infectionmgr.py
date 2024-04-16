@@ -4,8 +4,8 @@ from dmp.user_input import process_dataframes
 import random
 
 class InfectionManager:
-    def __init__(self, matrices, timestep=15, people=[]):
-        self.matrices = matrices
+    def __init__(self, matrices_dict, timestep=15, people=[]):
+        self.matrices_dict = matrices_dict  # This should now be a dictionary
         self.timestep = timestep
         self.multidisease = True
         self.infected = []
@@ -83,7 +83,11 @@ class InfectionManager:
 
     # When will this person turn from infected to infectious? And later symptomatic? Hospitalized?
     def create_timeline(self, person, disease, curtime):
-        tl = process_dataframes([self.matrices], {})[0]
+        #tl = process_dataframes([self.matrices], {})[0]
+        # Select the correct matrix based on the disease variant
+        #print(f"Creating timeline with variant: {disease}")  # Indicate which variant's matrix is used
+        matrices = self.matrices_dict[disease]
+        tl = process_dataframes([matrices], {})[0]
         
         mint = tl[min(tl, key=tl.get)]
         maxt = tl[max(tl, key=tl.get)]

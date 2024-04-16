@@ -113,8 +113,17 @@ def run_simulator(matrices, interventions):
     #for house in simulator.households:
     #    print(house.id, house.total_count)
     
-    matrices = (curdir + '/matrices.csv') if matrices is None else StringIO(matrices)
-    infectionmgr = InfectionManager(pd.read_csv(matrices, header=None), people=simulator.people)
+    #matrices = (curdir + '/matrices.csv') if matrices is None else StringIO(matrices)
+    #infectionmgr = InfectionManager(pd.read_csv(matrices, header=None), people=simulator.people)
+
+    # Instead of a single matrix, prepare a dictionary of matrices
+    matrices_dict = {
+        'delta': pd.read_csv(curdir + '/matrices.csv', header=None),
+        'omicron': pd.read_csv(curdir + '/matrices2.csv', header=None)
+    }
+    
+    # Pass the dictionary to InfectionManager
+    infectionmgr = InfectionManager(matrices_dict, people=simulator.people)
     
     # with open(curdir + '/patterns.json') as file:
     #     patterns = json.load(file)
