@@ -62,7 +62,7 @@ def move_people(simulator, items, is_household):
             place.add_member(person)
             person.location = place
 
-def run_simulator(matrices, interventions):
+def run_simulator(matrices_dict, interventions):
     with open(curdir + '/papdata.json') as file:
         pap = json.load(file)
     
@@ -116,14 +116,22 @@ def run_simulator(matrices, interventions):
     #matrices = (curdir + '/matrices.csv') if matrices is None else StringIO(matrices)
     #infectionmgr = InfectionManager(pd.read_csv(matrices, header=None), people=simulator.people)
 
-    # Instead of a single matrix, prepare a dictionary of matrices
-    matrices_dict = {
+        # Instead of a single matrix, prepare a dictionary of matrices
+    default_matrices_dict = {
         'delta': pd.read_csv(curdir + '/matrices.csv', header=None),
         'omicron': pd.read_csv(curdir + '/matrices2.csv', header=None)
     }
+
+    if not matrices_dict:
+        matrices_dict = default_matrices_dict
+
+    for variant, matrices in matrices_dict.items():
+        print(f"Running simulation for {variant} with provided matrices.")
+        infectionmgr = InfectionManager(matrices, people=simulator.people)
+
     
     # Pass the dictionary to InfectionManager
-    infectionmgr = InfectionManager(matrices_dict, people=simulator.people)
+    #infectionmgr = InfectionManager(matrices_dict, people=simulator.people)
     
     # with open(curdir + '/patterns.json') as file:
     #     patterns = json.load(file)
