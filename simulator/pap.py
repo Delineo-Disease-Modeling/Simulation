@@ -72,14 +72,15 @@ class Person:
         
         return False
     
-    def update_state(self, curtime):
+    def update_state(self, curtime, variants):
         '''
         Updates the InfectionState of this Person based on the current time
         self.timeline is a dict where the keys are the InfectionStates and values are
             the times at which this person will become that state
         '''
-        self.states['delta'] = InfectionState.SUSCEPTIBLE
-        self.states['omicron'] = InfectionState.SUSCEPTIBLE
+        for variant in variants: 
+            self.states[variant] = InfectionState.SUSCEPTIBLE
+        
 
         for disease, value in self.timeline.items():
             for state, timeline in value.items():
