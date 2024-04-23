@@ -77,12 +77,14 @@ def run_simulator(matrices_dict, interventions):
     default_infected = ['160', '43', '47', '4', '36', '9', '14', '19', '27', '22']
 
     default_matrices_dict = {
-        'alpha': pd.read_csv(curdir + '/matrices.csv', header=None),
+        'delta': pd.read_csv(curdir + '/matrices.csv', header=None),
         'omicron': pd.read_csv(curdir + '/matrices2.csv', header=None)
     }
 
     if not matrices_dict:
         matrices_dict = default_matrices_dict
+    else:
+        matrices_dict = {i:pd.read_csv(StringIO(j), header=None) for i,j in matrices_dict.items()}
 
     # Ensure no more variants than infected individuals
     if len(matrices_dict) > len(default_infected):
