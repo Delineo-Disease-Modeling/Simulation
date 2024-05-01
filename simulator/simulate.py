@@ -62,8 +62,8 @@ def move_people(simulator, items, is_household):
             place.add_member(person)
             person.location = place
 
-def run_simulator(matrices_dict, interventions):
-    with open(curdir + '/papdata.json') as file:
+def run_simulator(matrices_dict, location, interventions):
+    with open(curdir + f'/{location}/papdata.json') as file:
         pap = json.load(file)
     
     simulator = DiseaseSimulator(intervention_weights=interventions);
@@ -158,11 +158,11 @@ def run_simulator(matrices_dict, interventions):
     # with open(curdir + '/patterns.json') as file:
     #     patterns = json.load(file)
 
-    with open(curdir + '/pattern_simple.json') as file:
+    with open(curdir + f'/{location}/patterns.json') as file:
         patterns = json.load(file)
         
-    with open(curdir + '/patterns_alg.json') as file:
-        patterns = json.load(file)
+    # with open(curdir + '/patterns_alg.json') as file:
+    #     patterns = json.load(file)
 
     last_timestep = 0
     timestamps = list(patterns.keys())
@@ -204,7 +204,8 @@ def run_simulator(matrices_dict, interventions):
     variantInfected = {variant: {} for variant in matrices_dict.keys()}
 
     while len(timestamps) > 0:
-        print(f'Running movement simulator for timestep {last_timestep}')
+        if last_timestep % 6000 == 0:
+            print(f'Running movement simulator for timestep {last_timestep}')
         
         if last_timestep >= int(timestamps[0]):        
             data = patterns[timestamps[0]]
