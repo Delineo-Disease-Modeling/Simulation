@@ -37,7 +37,7 @@ class DiseaseSimulator:
 
 def move_people(simulator, items, is_household):
     for id, people in items:
-        place = simulator.get_household(id) if is_household else simulator.get_facility(id)
+        place = simulator.get_household(str(id)) if is_household else simulator.get_facility(str(id))
         if place is None:
             raise Exception(f"Place {id} was not found in the simulator data ({is_household})")
 
@@ -95,7 +95,7 @@ def run_simulator(matrices_dict, location, interventions):
     variant_assignments = dict(zip(default_infected, matrices_dict.keys()))
 
     for id, data in pap['people'].items():
-        household = simulator.get_household(data['home'])
+        household = simulator.get_household(str(data['home']))
         if household is None:
             raise Exception(f"Person {id} is assigned to a house that does not exist ({data['home']})")
         person = Person(id, data['sex'], data['age'], household)
