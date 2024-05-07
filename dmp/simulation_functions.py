@@ -52,6 +52,14 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
                 interval = int(random.expovariate(1 / mean_matrix[current_state_index][next_state_index]))
             elif distribution_matrix[current_state_index][next_state_index] == 3:  # Uniform distribution
                 interval = int(random.uniform(min_cutoff_matrix[current_state_index][next_state_index], max_cutoff_matrix[current_state_index][next_state_index]))
+            elif distribution_matrix[current_state_index][next_state_index] == 4:  # Gamma distribution
+                shape = mean_matrix[current_state_index][next_state_index] ** 2 / std_dev_matrix[current_state_index][next_state_index] ** 2
+                scale = std_dev_matrix[current_state_index][next_state_index] ** 2 / mean_matrix[current_state_index][next_state_index]
+                interval = int(np.random.gamma(shape, scale))
+            elif distribution_matrix[current_state_index][next_state_index] == 5:  # Beta distribution
+                alpha = (mean_matrix[current_state_index][next_state_index] * (mean_matrix[current_state_index][next_state_index] * (1 - mean_matrix[current_state_index][next_state_index]) / (std_dev_matrix[current_state_index][next_state_index] ** 2)) - 1)
+                beta = alpha * (1 - mean_matrix[current_state_index][next_state_index]) / mean_matrix[current_state_index][next_state_index]
+                interval = int(np.random.beta(alpha, beta) * (max_matrix[current_state_index][next_state_index] - min_matrix[current_state_index][next_state_index]) + min_matrix[current_state_index][next_state_index])
             else:
                 raise ValueError(f"Unsupported distribution type {distribution_matrix[current_state_index][next_state_index]}")
             
