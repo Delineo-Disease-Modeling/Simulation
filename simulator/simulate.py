@@ -5,6 +5,8 @@ import pandas as pd
 import json
 import os
 
+import random
+
 curdir = os.path.dirname(os.path.abspath(__file__))
 
 # Putting it all together, simulates each timestep
@@ -63,6 +65,8 @@ def move_people(simulator, items, is_household):
             person.location = place
 
 def run_simulator(matrices_dict, location, interventions):
+    random.seed(0)
+    
     with open(curdir + f'/{location}/papdata.json') as file:
         pap = json.load(file)
     
@@ -202,6 +206,9 @@ def run_simulator(matrices_dict, location, interventions):
 
     result = {}
     variantInfected = {variant: {} for variant in matrices_dict.keys()}
+    
+    movement_json = {}
+    infectivity_json = {}
 
     while len(timestamps) > 0:
         if last_timestep % 6000 == 0:
@@ -213,7 +220,16 @@ def run_simulator(matrices_dict, location, interventions):
             move_people(simulator, data['places'].items(), False)
             timestamps.pop(0)
         
-        infectionmgr.run_model(1, None, last_timestep, variantInfected)
+        movement_json[last_timestep] = {  \
+            "homes": { str(h.id):[p.id for p in h.population] for h in simulator.households }, 
+            "places": { str(h.id):[p.id for p in h.population] for h in simulator.facilities } }
+        
+        newlyInfected = {}
+        
+        infectionmgr.run_model(1, None, last_timestep, variantInfected, newlyInfected)
+        
+        infectivity_json[last_timestep] = {i:j for i,j in newlyInfected.items()}
+        
         result[last_timestep] = {variant: dict(infected) for variant, infected in variantInfected.items()}
         last_timestep += simulator.timestep
 
@@ -224,6 +240,12 @@ def run_simulator(matrices_dict, location, interventions):
 
     with open('results.json', 'w') as file:
         json.dump(result, file, indent=4)
+        
+    with open('results_movement.json', 'w') as file:
+        json.dump(movement_json, file, indent=4)
+        
+    with open('results_infections.json', 'w') as file:
+        json.dump(infectivity_json, file, indent=4)
 
     return result
 if __name__ == '__main__':

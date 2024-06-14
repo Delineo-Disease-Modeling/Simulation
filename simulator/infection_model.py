@@ -1,6 +1,8 @@
 from .pap import InfectionState
-import random
 import math
+
+import random
+random.seed(1)
 
 def set_droplets_num(p, Rh):
     #droplets per timestamp if speaking

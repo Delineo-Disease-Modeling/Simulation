@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
-import random
 import yaml
 import json
+
+import random
+random.seed(2)
 
 from enum import Flag, Enum
 
