@@ -1,7 +1,6 @@
 from .pap import InfectionState, InfectionTimeline
 from .infection_model import CAT
 from dmp.user_input import process_dataframes
-import random
 
 class InfectionManager:
     def __init__(self, matrices_dict, timestep=15, people=[]):
@@ -80,7 +79,7 @@ class InfectionManager:
             
     #         # print(len(all_p))
 
-    def run_model(self, num_timesteps=4, file=None, curtime=0, variantInfected={}):
+    def run_model(self, num_timesteps=4, file=None, curtime=0, variantInfected={}, newlyInfected={}):
         if file is not None:
             file.write(f'====== TIMESTEP {curtime} ======\n')
             for variant in variantInfected.keys():
@@ -118,6 +117,10 @@ class InfectionManager:
                     # Assuming CAT function can h andle the matrix without needing to specify a disease
                     if CAT(p, True, num_timesteps, 7e4):
                         new_infections.append(disease)
+                        
+                        if newlyInfected.get(disease) == None:
+                            newlyInfected[disease] = {}
+                        newlyInfected[disease][str(i.id)] = [ *newlyInfected.get(str(i.id), []), str(p.id) ]
                         break
 
                 for disease in new_infections:
