@@ -9,28 +9,6 @@ states = ["Infected", "Infectious Symptomatic", "Infectious Asymptomatic", "Hosp
 # default_std_dev_time_interval = 2
 default_initial_state = "Infected"
 
-# # Define the transition matrix
-# transition_matrix = [
-#     [0.0, 0.7, 0.3, 0.0, 0.0, 0.0, 0],  # Transition from "Infected" to "Symptomatic"
-#     [0.0, 0.0, 0.5, 0.2, 0.1, 0.0, 0.2],
-#     [0.0, 0.0, 0.0, 0.4, 0.2, 0.0, 0.4],
-#     [0.0, 0.0, 0.0, 0.0, 0.7, 0.0, 0.3],
-#     [0.0, 0.0, 0.0, 0.0, 0.0, 0.4, 0.6],
-#     [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0], 
-#     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-# ]
-
-# # Define the distribution type matrix
-# distribution_type_matrix = [
-#     [1, 2, 1, 1, 1, 1, 1],  # Distribution types for transitions from "Infected"
-#     [1, 1, 2, 1, 1, 1, 1],
-#     [1, 1, 1, 2, 1, 1, 1],
-#     [1, 1, 1, 1, 2, 1, 1],
-#     [1, 1, 1, 1, 1, 2, 1],
-#     [1, 1, 1, 1, 1, 1, 2], 
-#     [1, 1, 1, 1, 1, 1, 1]
-# ]
-
 def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_interval_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, initial_state, desired_iterations):
     current_state = states.index(initial_state)
     total_time_steps = 0
@@ -51,18 +29,22 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
             elif distribution_matrix[current_state_index][next_state_index] == 2:  # Exponential distribution
                 interval = int(random.expovariate(1 / mean_matrix[current_state_index][next_state_index]))
             elif distribution_matrix[current_state_index][next_state_index] == 3:  # Uniform distribution
-                interval = int(random.uniform(min_cutoff_matrix[current_state_index][next_state_index], max_cutoff_matrix[current_state_index][next_state_index]))
+                interval = int(random.uniform(min_matrix[current_state_index][next_state_index], max_matrix[current_state_index][next_state_index]))
             elif distribution_matrix[current_state_index][next_state_index] == 4:  # Gamma distribution
-                shape = mean_matrix[current_state_index][next_state_index] ** 2 / std_dev_matrix[current_state_index][next_state_index] ** 2
+                shape = (mean_matrix[current_state_index][next_state_index] / std_dev_matrix[current_state_index][next_state_index]) ** 2
                 scale = std_dev_matrix[current_state_index][next_state_index] ** 2 / mean_matrix[current_state_index][next_state_index]
                 interval = int(np.random.gamma(shape, scale))
             elif distribution_matrix[current_state_index][next_state_index] == 5:  # Beta distribution
-                alpha = (mean_matrix[current_state_index][next_state_index] * (mean_matrix[current_state_index][next_state_index] * (1 - mean_matrix[current_state_index][next_state_index]) / (std_dev_matrix[current_state_index][next_state_index] ** 2)) - 1)
-                beta = alpha * (1 - mean_matrix[current_state_index][next_state_index]) / mean_matrix[current_state_index][next_state_index]
+                # Alpha and beta parameters derived from the mean and std dev
+                mean = mean_matrix[current_state_index][next_state_index]
+                std_dev = std_dev_matrix[current_state_index][next_state_index]
+                alpha = (mean * (mean * (1 - mean) / (std_dev ** 2)) - 1)
+                beta = alpha * (1 - mean) / mean
                 interval = int(np.random.beta(alpha, beta) * (max_matrix[current_state_index][next_state_index] - min_matrix[current_state_index][next_state_index]) + min_matrix[current_state_index][next_state_index])
             else:
                 raise ValueError(f"Unsupported distribution type {distribution_matrix[current_state_index][next_state_index]}")
             
+            # Ensure the sampled interval is within the specified min and max cutoffs
             if min_matrix[current_state_index][next_state_index] <= interval <= max_matrix[current_state_index][next_state_index]:
                 return interval
 
