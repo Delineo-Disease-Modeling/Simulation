@@ -1,1 +1,3 @@
-Female, 18, No
+Sex,Age,Is_Vaccinated,Matrix_Set
+M,45,Yes,1
+F,30,No,2
