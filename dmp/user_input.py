@@ -124,10 +124,10 @@ def process_dataframes(demographic_info, combined_matrix_df):
 if __name__ == '__main__':
     # Read the combined matrix file into a pandas DataFrame
     curdir = os.path.dirname(os.path.abspath(__file__))
-    combined_matrix_df = pd.read_csv(curdir + '/combined_matrices.csv', header=None)
+    combined_matrix_df = pd.read_csv(curdir + '/use_case.csv', header=None)
 
     # Read the demographic info from the CSV file
-    demographic_info = pd.read_csv(curdir + '/demographic_info.csv')
+    demographic_info = pd.read_csv(curdir + '/demographic_use_case.csv')
 
     # Process the dataframes with demographic info and the combined matrix file
     result_dicts = process_dataframes(demographic_info, combined_matrix_df)
