@@ -1,3 +1,2 @@
-Sex,Age,Is_Vaccinated,Matrix_Set,Infected,Infectious Symptomatic,Hospitalized,Recovered
-M,45,Yes,1,0,2880,5760.0,7200
-F,30,No,2,0,5760,,10080
+Sex,Age,Is_Vaccinated,Matrix_Set,Infected,Infectious Symptomatic,Infectious Asymptomatic,Recovered
+M,65,No,1,0,4320,12960,31680
