@@ -78,10 +78,10 @@ Demographic data must be provided in a CSV file. The file should have columns fo
 
 Below is a simplified diagram of the transition matrix:
 
-          Infected      IS             IA      Hospitalized  ICU  Removed  Recovered
+          Infected      IA             IS      Hospitalized  ICU  Removed  Recovered
 Infected     0.0        0.7          0.3         0.0       0.0    0.0      0.0
-IS           0.0        0.0          0.5         0.2       0.1    0.0      0.2
-IA           0.0        0.0          0.0         0.4       0.2    0.0      0.4
+IA           0.0        0.0          0.5         0.2       0.1    0.0      0.2
+IS           0.0        0.0          0.0         0.3       0.1    0.0      0.6
 Hospitalized 0.0        0.0          0.0         0.0       0.7    0.0      0.3
 ICU          0.0        0.0          0.0         0.0       0.0    0.4      0.6
 Removed      0.0        0.0          0.0         0.0       0.0    1.0      0.0
