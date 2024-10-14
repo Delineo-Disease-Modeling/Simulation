@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from simulation_functions import run_simulation, default_initial_state
+from simulation_functions import run_simulation, default_initial_state, visualize_state_timeline
 import os
 
 def validate_matrix_shape(matrix, expected_shape=(7, 7), matrix_name="Matrix"):
@@ -65,31 +65,20 @@ def validate_matrices(transition_matrix, mean_matrix, std_dev_matrix, min_cutoff
 def process_dataframes(demographic_info, combined_matrix_df):
     # Define the labels for the matrices
     matrix_labels = ["Transition Matrix", "Distribution Type", "Mean", "Standard Deviation", "Min Cut-Off", "Max Cut-Off"]
-
-    # Define the number of rows for each matrix and the total number of rows for one matrix set
     matrix_rows = 7
-    total_matrix_rows = matrix_rows * len(matrix_labels)  # 6 matrices, each 7x7
+    total_matrix_rows = matrix_rows * len(matrix_labels)
 
     output_dicts = []
 
     for _, individual in demographic_info.iterrows():
-        # Get the matrix set for this individual
-        matrix_set_index = int(individual['Matrix_Set']) - 1  # Assuming matrix sets are numbered starting from 1
-
-        # Calculate the starting and ending row indices for this individual's matrix set
+        matrix_set_index = int(individual['Matrix_Set']) - 1
         start_row = matrix_set_index * total_matrix_rows
         end_row = start_row + total_matrix_rows
 
-        # Extract the rows corresponding to the individual's matrix set
         matrix_set_df = combined_matrix_df[start_row:end_row]
-
-        # Split the combined matrix set into individual 7x7 matrices and convert them to NumPy arrays
         matrices = [matrix_set_df[i:i + matrix_rows].to_numpy() for i in range(0, matrix_set_df.shape[0], matrix_rows)]
-
-        # Assign each matrix to a label in a dictionary (keep them as NumPy arrays for validation)
         matrices_dict = {label: matrix for label, matrix in zip(matrix_labels, matrices)}
 
-        # Validate matrices
         validate_matrices(
             transition_matrix=matrices_dict["Transition Matrix"],
             mean_matrix=matrices_dict["Mean"],
@@ -99,7 +88,7 @@ def process_dataframes(demographic_info, combined_matrix_df):
             distribution_matrix=matrices_dict["Distribution Type"]
         )
 
-        # Run the simulation for this individual using their specific matrix set
+        # Run the simulation and get the timeline
         simulation_data = run_simulation(
             matrices_dict["Transition Matrix"],
             matrices_dict["Mean"],
@@ -108,15 +97,18 @@ def process_dataframes(demographic_info, combined_matrix_df):
             matrices_dict["Max Cut-Off"],
             matrices_dict["Distribution Type"],
             default_initial_state,
-            20
+            desired_iterations=20
         )
 
-        # Add demographic info and simulation results
-        output_dict = individual.to_dict()  # Convert individual demographic data to a dict
+        # Store the simulation result in a dictionary
+        output_dict = individual.to_dict()
         for state, total_time_steps in simulation_data:
             output_dict[state] = total_time_steps
 
         output_dicts.append(output_dict)
+
+        # Visualize the timeline of states after running the simulation
+        visualize_state_timeline(simulation_data)
 
     return output_dicts
 
