@@ -42,11 +42,11 @@ def run_simulation():
 @cross_origin()
 def run_main():
     return simulate.run_simulator(None, 'barnsdall', {
-        'mask': 0.4,
-        'vaccine': 0.2,
+        'mask': 0.0,
+        'vaccine': 0.0,
         'capacity': 1.0,
         'lockdown': 0,
-        'selfiso': 0.5
+        'selfiso': 0.0
     })
 
 if __name__ == '__main__':

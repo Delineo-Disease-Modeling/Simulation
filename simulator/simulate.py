@@ -127,7 +127,8 @@ def run_simulator(matrices_dict, location, interventions):
             person.states[variant] = InfectionState.INFECTED | InfectionState.INFECTIOUS
             person.timeline = {
                 variant: {
-                    InfectionState.INFECTIOUS: InfectionTimeline(0, 4000)  # Customize duration as needed
+                    InfectionState.INFECTED: InfectionTimeline(0, 10800),
+                    InfectionState.INFECTIOUS: InfectionTimeline(0, 10800)  # Customize duration as needed
                 }
             }
         
@@ -221,8 +222,8 @@ def run_simulator(matrices_dict, location, interventions):
             timestamps.pop(0)
         
         movement_json[last_timestep] = {  \
-            "homes": { str(h.id):[p.id for p in h.population] for h in simulator.households }, 
-            "places": { str(h.id):[p.id for p in h.population] for h in simulator.facilities } }
+            "homes": { str(h.id):[p.id for p in h.population] for h in simulator.households if len(h.population) > 0 }, 
+            "places": { str(f.id):[p.id for p in f.population] for f in simulator.facilities if len(f.population) > 0 } }
         
         newlyInfected = {}
         
