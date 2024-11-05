@@ -17,53 +17,80 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
     
     # Keep track of the timeline for the line graph
     simulation_data.append([initial_state, total_time_steps])
+    print(f"Starting simulation with initial state: {initial_state}")
 
     def transition():
         nonlocal current_state
-        next_state = random.choices(states, weights=transition_matrix[current_state])[0]
-        current_state = states.index(next_state)
+        # Terminal states: End the simulation if current state is "Recovered" or "Removed"
+        if states[current_state] in ["Recovered", "Removed"]:
+            print(f"Reached terminal state: {states[current_state]}")
+            return states[current_state]
+        
+        # Filter out zero-probability transitions
+        non_zero_states = [s for s, prob in zip(states, transition_matrix[current_state]) if prob > 0]
+        non_zero_weights = [prob for prob in transition_matrix[current_state] if prob > 0]
+
+        # Debugging output to show current state, probabilities, and next state options
+        print(f"Transitioning from {states[current_state]}. Available states and probabilities: {dict(zip(non_zero_states, non_zero_weights))}")
+        
+        # Select the next state based on non-zero probabilities
+        next_state = random.choices(non_zero_states, weights=non_zero_weights)[0]
+        next_state_index = states.index(next_state)
+
+        # Debugging output for selected transition
+        print(f"Transitioned to {next_state}")
+
         return next_state
 
     def sample_time_interval(mean_matrix, std_dev_matrix, min_matrix, max_matrix, distribution_matrix, current_state_index, next_state_index):
-        while True:
-            if distribution_matrix[current_state_index][next_state_index] == 0:  # No transition
-                return 0  # No time interval for this transition
-            elif distribution_matrix[current_state_index][next_state_index] == 1:  # Normal distribution
-                interval = int(random.normalvariate(mean_matrix[current_state_index][next_state_index], std_dev_matrix[current_state_index][next_state_index]))
-            elif distribution_matrix[current_state_index][next_state_index] == 2:  # Exponential distribution
-                interval = int(random.expovariate(1 / mean_matrix[current_state_index][next_state_index]))
-            elif distribution_matrix[current_state_index][next_state_index] == 3:  # Uniform distribution
-                interval = int(random.uniform(min_matrix[current_state_index][next_state_index], max_matrix[current_state_index][next_state_index]))
-            elif distribution_matrix[current_state_index][next_state_index] == 4:  # Gamma distribution
-                shape = (mean_matrix[current_state_index][next_state_index] / std_dev_matrix[current_state_index][next_state_index]) ** 2
-                scale = std_dev_matrix[current_state_index][next_state_index] ** 2 / mean_matrix[current_state_index][next_state_index]
-                interval = int(np.random.gamma(shape, scale))
-            elif distribution_matrix[current_state_index][next_state_index] == 5:  # Beta distribution
-                mean = mean_matrix[current_state_index][next_state_index]
-                std_dev = std_dev_matrix[current_state_index][next_state_index]
-                alpha = (mean * (mean * (1 - mean) / (std_dev ** 2)) - 1)
-                beta = alpha * (1 - mean) / mean
-                interval = int(np.random.beta(alpha, beta) * (max_matrix[current_state_index][next_state_index] - min_matrix[current_state_index][next_state_index]) + min_matrix[current_state_index][next_state_index])
-            else:
-                raise ValueError(f"Unsupported distribution type {distribution_matrix[current_state_index][next_state_index]}")
-            
-            if min_matrix[current_state_index][next_state_index] <= interval <= max_matrix[current_state_index][next_state_index]:
-                return interval
+
+        # Sample time interval based on the specified distribution type
+        dist_type = distribution_matrix[current_state_index][next_state_index]
+
+        if dist_type == 1:  # Normal distribution
+            interval = int(random.normalvariate(mean_matrix[current_state_index][next_state_index], std_dev_matrix[current_state_index][next_state_index]))
+        elif dist_type == 2:  # Exponential distribution
+            interval = int(random.expovariate(1 / mean_matrix[current_state_index][next_state_index]))
+        elif dist_type == 3:  # Uniform distribution
+            interval = int(random.uniform(min_matrix[current_state_index][next_state_index], max_matrix[current_state_index][next_state_index]))
+        elif dist_type == 4:  # Gamma distribution
+            shape = (mean_matrix[current_state_index][next_state_index] / std_dev_matrix[current_state_index][next_state_index]) ** 2
+            scale = std_dev_matrix[current_state_index][next_state_index] ** 2 / mean_matrix[current_state_index][next_state_index]
+            interval = int(np.random.gamma(shape, scale))
+        elif dist_type == 5:  # Beta distribution
+            mean = mean_matrix[current_state_index][next_state_index]
+            std_dev = std_dev_matrix[current_state_index][next_state_index]
+            alpha = (mean * (mean * (1 - mean) / (std_dev ** 2)) - 1)
+            beta = alpha * (1 - mean) / mean
+            interval = int(np.random.beta(alpha, beta) * (max_matrix[current_state_index][next_state_index] - min_matrix[current_state_index][next_state_index]) + min_matrix[current_state_index][next_state_index])
+        else:
+            raise ValueError(f"Unsupported distribution type {dist_type}")
+        
+        # Ensure the interval falls within the min and max bounds; otherwise, resample
+        if min_matrix[current_state_index][next_state_index] <= interval <= max_matrix[current_state_index][next_state_index]:
+            print(f"Sampled interval: {interval} for transition from {states[current_state_index]} to {states[next_state_index]} using distribution type {dist_type}")
+            return interval
+        else:
+            print(f"Resampling interval for out-of-bounds value: {interval} for transition from {states[current_state_index]} to {states[next_state_index]}")
+            return sample_time_interval(mean_matrix, std_dev_matrix, min_matrix, max_matrix, distribution_matrix, current_state_index, next_state_index)
 
     iterations = 0
     while iterations < desired_iterations:
         next_state = transition()
         next_state_index = states.index(next_state)
         
-        if states[next_state_index] in ["Removed", "Recovered"]:
-            simulation_data.append([states[next_state_index], total_time_steps])
-            break  # Stop the simulation when reaching Recovered or Removed
+        # Stop if reaching a terminal state
+        if next_state in ["Removed", "Recovered"]:
+            simulation_data.append([next_state, total_time_steps])
+            print(f"Ending simulation at terminal state: {states[next_state_index]}")
+            break
 
         time_interval = sample_time_interval(mean_time_interval_matrix, std_dev_time_interval_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, current_state, next_state_index) * 60 * 24
         total_time_steps += time_interval
-        current_state_str = states[current_state]
 
-        simulation_data.append([current_state_str, total_time_steps])
+        simulation_data.append([states[next_state_index], total_time_steps])
+
+        print(f"Current timeline: {simulation_data}")
 
         current_state = next_state_index
         iterations += 1
