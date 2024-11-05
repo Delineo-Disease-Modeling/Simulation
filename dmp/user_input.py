@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from simulation_functions import run_simulation, default_initial_state, visualize_state_timeline
+from simulation_functions import run_simulation, default_initial_state, visualize_state_timeline, states
 import os
 
 def validate_matrix_shape(matrix, expected_shape=(7, 7), matrix_name="Matrix"):
@@ -27,9 +27,9 @@ def validate_row_sums(matrix, expected_sum=1, matrix_name="Transition Matrix"):
 
 def validate_distribution_type(matrix):
     """
-    Validates that the distribution type matrix contains only valid integer types (1: Normal, 2: Exponential, 3: Uniform).
+    Validates that the distribution type matrix contains only valid integer types (1: Normal, 2: Exponential, 3: Uniform, 4: Gamma, 5: Beta).
     """
-    valid_types = [1, 2, 3]
+    valid_types = [0, 1, 2, 3, 4, 5]
     if not np.isin(matrix, valid_types).all():
         raise ValueError(f"Distribution Type matrix must contain only the values {valid_types}.")
 
@@ -41,6 +41,7 @@ def validate_matrices(transition_matrix, mean_matrix, std_dev_matrix, min_cutoff
     validate_matrix_shape(transition_matrix, matrix_name="Transition Matrix")
     validate_values_in_range(transition_matrix, 0, 1, matrix_name="Transition Matrix")
     validate_row_sums(transition_matrix)
+
 
     # Validate mean and standard deviation matrices
     validate_matrix_shape(mean_matrix, matrix_name="Mean Matrix")
@@ -61,6 +62,17 @@ def validate_matrices(transition_matrix, mean_matrix, std_dev_matrix, min_cutoff
     # Validate distribution type matrix
     validate_matrix_shape(distribution_matrix, matrix_name="Distribution Type Matrix")
     validate_distribution_type(distribution_matrix)
+
+    # Consistency check for active transitions
+    for i, row in enumerate(transition_matrix):
+        for j, prob in enumerate(row):
+            if prob > 0 and states[j] not in ["Removed", "Recovered"]:
+                # Ensure that all required matrices have non-zero values for active transitions
+                if (mean_matrix[i][j] == 0 or std_dev_matrix[i][j] == 0 or
+                    min_cutoff_matrix[i][j] == 0 or max_cutoff_matrix[i][j] == 0 or
+                    distribution_matrix[i][j] == 0):
+                    raise ValueError(f"Inconsistent values in matrices for transition from {states[i]} to {states[j]}: "
+                                     "Expected non-zero values in mean, std_dev, min, max, and distribution matrices.")
 
 def process_dataframes(demographic_info, combined_matrix_df):
     # Define the labels for the matrices
