@@ -63,6 +63,7 @@ def validate_matrices(transition_matrix, mean_matrix, std_dev_matrix, min_cutoff
     validate_matrix_shape(distribution_matrix, matrix_name="Distribution Type Matrix")
     validate_distribution_type(distribution_matrix)
 
+    
     # Consistency check for active transitions
     for i, row in enumerate(transition_matrix):
         for j, prob in enumerate(row):
@@ -108,8 +109,7 @@ def process_dataframes(demographic_info, combined_matrix_df):
             matrices_dict["Min Cut-Off"],
             matrices_dict["Max Cut-Off"],
             matrices_dict["Distribution Type"],
-            default_initial_state,
-            desired_iterations=20
+            default_initial_state
         )
 
         # Store the simulation result in a dictionary
