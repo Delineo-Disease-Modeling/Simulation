@@ -10,7 +10,7 @@ default_initial_state = "Infected"
 
 def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_interval_matrix, 
                    min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, 
-                   initial_state, desired_iterations):
+                   initial_state):
     current_state = states.index(initial_state)
     total_time_steps = 0
     simulation_data = []
@@ -43,7 +43,6 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
         return next_state
 
     def sample_time_interval(mean_matrix, std_dev_matrix, min_matrix, max_matrix, distribution_matrix, current_state_index, next_state_index):
-
         # Sample time interval based on the specified distribution type
         dist_type = distribution_matrix[current_state_index][next_state_index]
 
@@ -74,8 +73,8 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
             print(f"Resampling interval for out-of-bounds value: {interval} for transition from {states[current_state_index]} to {states[next_state_index]}")
             return sample_time_interval(mean_matrix, std_dev_matrix, min_matrix, max_matrix, distribution_matrix, current_state_index, next_state_index)
 
-    iterations = 0
-    while iterations < desired_iterations:
+    # Simulation loop continues until reaching a terminal state
+    while True:
         next_state = transition()
         next_state_index = states.index(next_state)
         
@@ -85,15 +84,16 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
             print(f"Ending simulation at terminal state: {states[next_state_index]}")
             break
 
-        time_interval = sample_time_interval(mean_time_interval_matrix, std_dev_time_interval_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, current_state, next_state_index) * 60 * 24
+        # Calculate time interval for transition
+        time_interval = sample_time_interval(mean_time_interval_matrix, std_dev_time_interval_matrix, 
+                                             min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, 
+                                             current_state, next_state_index) * 60 * 24
         total_time_steps += time_interval
-
         simulation_data.append([states[next_state_index], total_time_steps])
 
         print(f"Current timeline: {simulation_data}")
 
         current_state = next_state_index
-        iterations += 1
 
     return simulation_data  # Return timeline of states and time
 
@@ -103,11 +103,13 @@ def visualize_state_timeline(simulation_data):
     timeline_times = [entry[1] for entry in simulation_data]
 
     # Create the line graph
-    plt.figure(figsize=(10, 6))
-    plt.plot(timeline_times, timeline_states, marker='o', color='skyblue', linestyle='-', linewidth=2)
-    plt.xlabel('Time (minutes)')
-    plt.ylabel('Disease States')
-    plt.title('Timeline of Disease Progression')
-    plt.grid(True)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(timeline_times, timeline_states, marker='o', linestyle='-', linewidth=2)
+    ax.set_xlabel('Time (minutes)')
+    ax.set_ylabel('Disease States')
+    ax.set_title('Timeline of Disease Progression')
+    ax.grid(True)
     plt.tight_layout()
-    plt.show()
+
+    # Return the figure to be displayed in Streamlit
+    return fig
