@@ -20,10 +20,14 @@ def validate_values_in_range(matrix, min_value, max_value, matrix_name="Matrix")
 def validate_row_sums(matrix, expected_sum=1, matrix_name="Transition Matrix"):
     """
     Validates that each row in the matrix sums to the expected value (default is 1).
+    Rows that sum to 0 are allowed for terminal states.
     """
     row_sums = matrix.sum(axis=1)
-    if not np.allclose(row_sums, expected_sum, atol=1e-6):
-        raise ValueError(f"Each row in the {matrix_name} must sum to {expected_sum}. Row sums: {row_sums}")
+    # Check that each row either sums to 1 or is entirely zero
+    for i, row_sum in enumerate(row_sums):
+        if not (np.isclose(row_sum, expected_sum, atol=1e-6) or np.isclose(row_sum, 0, atol=1e-6)):
+            raise ValueError(f"Each row in the {matrix_name} must sum to {expected_sum} or be 0 for terminal states. Row sums: {row_sums}")
+
 
 def validate_distribution_type(matrix):
     """
