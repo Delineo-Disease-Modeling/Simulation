@@ -1,6 +1,8 @@
-from .pap import InfectionState, InfectionTimeline
+from .pap import InfectionState, InfectionTimeline, VaccinationState
 from .infection_model import CAT
 from dmp.user_input import process_dataframes
+import pandas as pd
+from io import StringIO
 
 class InfectionManager:
     def __init__(self, matrices_dict, timestep=15, people=[]):
@@ -121,12 +123,12 @@ class InfectionManager:
                         if newlyInfected.get(disease) == None:
                             newlyInfected[disease] = {}
                         newlyInfected[disease][str(i.id)] = [ *newlyInfected.get(str(i.id), []), str(p.id) ]
+                        
                         break
 
                 for disease in new_infections:
                     self.infected.append(p)  # Add to list of infected regardless
                     if len(new_infections) == 1 or self.multidisease:
-                        p.states[disease] = InfectionState.INFECTED
                         self.create_timeline(p, disease, curtime)
                         
                         if file is not None:
@@ -137,30 +139,42 @@ class InfectionManager:
     # When will this person turn from infected to infectious? And later symptomatic? Hospitalized?
     def create_timeline(self, person, disease, curtime):
         # tl = process_dataframes([self.matrices], {})[0]
+        
+        demographic_info = pd.read_csv(StringIO(f'Sex,Age,Is_Vaccinated,Matrix_Set\n{"M" if person.sex == 0 else "F"},{person.age},{person.interventions["vaccine"] != VaccinationState.NONE},1'))
 
         matrices = self.matrices_dict[disease]
-        tl = process_dataframes([matrices], {})[0]
+        tl = process_dataframes(demographic_info, matrices)[0]
         
+        tl.pop('Sex', None)
+        tl.pop('Age', None)
+        tl.pop('Is_Vaccinated', None)
+        tl.pop('Matrix_Set', None)
+                        
         mint = tl[min(tl, key=tl.get)]
-        maxt = tl[max(tl, key=tl.get)]
+        maxt = 10080 #tl[max(tl, key=tl.get)]
         
-        val = {
-            disease: {
-                # People are marked infected throughout everything
-                InfectionState.INFECTED: InfectionTimeline(curtime + mint, curtime + maxt)
-            }
+        val = {}
+        val[disease] = {
+            InfectionState.INFECTED: InfectionTimeline(curtime, curtime + maxt)
         }
-        
+                
         str_to_state = {
             'Symptomatic': InfectionState.SYMPTOMATIC,
-            'Infectious': InfectionState.INFECTIOUS,
+            'Infectious Asymptomatic': InfectionState.INFECTIOUS,
+            'Infectious Symptomatic': InfectionState.INFECTIOUS,
+            'Infectious Symptomatic': InfectionState.SYMPTOMATIC,
             'Hospitalized': InfectionState.HOSPITALIZED,
+            'ICU': InfectionState.HOSPITALIZED,
             'Recovered': InfectionState.RECOVERED,
             'Removed': InfectionState.REMOVED
         }
         
         for str, state in str_to_state.items():
             if str in tl.keys():
-                val[disease][state] = InfectionTimeline(curtime + tl[str], curtime + maxt)
+                if state in val[disease].keys():
+                    curmin = val[disease][state].start
+                    val[disease][state] = InfectionTimeline(min(curmin, curtime + tl[str]), curtime + maxt)
+                else:
+                    val[disease][state] = InfectionTimeline(curtime + tl[str], curtime + maxt)
                 
         person.timeline = val
