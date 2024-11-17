@@ -80,9 +80,10 @@ class Person:
         self.timeline is a dict where the keys are the InfectionStates and values are
             the times at which this person will become that state
         '''
+        self.invisible = False
+        
         for variant in variants: 
             self.states[variant] = InfectionState.SUSCEPTIBLE
-        
 
         for disease, value in self.timeline.items():
             for state, timeline in value.items():

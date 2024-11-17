@@ -19,8 +19,14 @@ def run_simulation():
     if not request.json:
         return 'Nothing Sent'
     
+    # Simulation length in minutes
     try:
-        return simulate.run_simulator(request.json['matrices'], request.json['location'], {
+        length = request.json['length']
+    except KeyError:
+        length = 10080
+    
+    try:
+        return simulate.run_simulator(request.json['matrices'], request.json['location'], length, {
             'mask': request.json['mask'],
             'vaccine': request.json['vaccine'],
             'capacity': request.json['capacity'],
@@ -29,7 +35,7 @@ def run_simulation():
         })
 
     except KeyError:
-        return simulate.run_simulator(None, 'barnsdall', {
+        return simulate.run_simulator(None, 'barnsdall', 10080, {
             'mask': 0.4,
             'vaccine': 0.2,
             'capacity': 1.0,
@@ -41,7 +47,7 @@ def run_simulation():
 @app.route("/", methods=['GET'])
 @cross_origin()
 def run_main():
-    return simulate.run_simulator(None, 'barnsdall', {
+    return simulate.run_simulator(None, 'barnsdall', 10080, {
         'mask': 0.0,
         'vaccine': 0.0,
         'capacity': 1.0,
