@@ -64,8 +64,8 @@ def move_people(simulator, items, is_household):
             place.add_member(person)
             person.location = place
 
-def run_simulator(matrices_dict, location, interventions):
-    random.seed(0)
+def run_simulator(matrices_dict, location, max_length, interventions):
+    #random.seed(0)
     
     with open(curdir + f'/{location}/papdata.json') as file:
         pap = json.load(file)
@@ -212,6 +212,9 @@ def run_simulator(matrices_dict, location, interventions):
     infectivity_json = {}
 
     while len(timestamps) > 0:
+        if (last_timestep > max_length):
+            break
+        
         if last_timestep % 6000 == 0:
             print(f'Running movement simulator for timestep {last_timestep}')
         
