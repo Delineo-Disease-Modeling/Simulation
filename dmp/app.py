@@ -186,7 +186,7 @@ if demographic_file:
     demographic_info = demographic_df.to_dict(orient="records")
 
 # Main interface
-st.title("Disease Modeling Simulation")
+st.title("Disease Modeling Platform")
 
 if st.button("Run Simulation"):
     if validation_failed:
