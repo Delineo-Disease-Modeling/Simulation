@@ -1,3 +1,4 @@
-Age Range,Vaccination Status,Matrix_Set
-0-18,Unvaccinated,Matrix_Set_1
-19-65,Vaccinated,Matrix_Set_2
+Age Range, Vaccination Status, Region,Matrix_Set
+0-18, Vaccinated, Urban, Matrix_Set_1
+19-65, Unvaccinated, Suburban, Matrix_Set_2
+0-18, Unvaccinated, *, Matrix_Set_3
