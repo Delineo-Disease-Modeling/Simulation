@@ -10,10 +10,11 @@ default_initial_state = "Infected"
 
 def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_interval_matrix, 
                    min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, 
-                   initial_state):
+                   initial_state, max_iterations=1000):
     current_state = states.index(initial_state)
     total_time_steps = 0
     simulation_data = []
+    iteration_count = 0  # Track the number of iterations
     
     # Keep track of the timeline for the line graph
     simulation_data.append([initial_state, total_time_steps])
@@ -73,8 +74,8 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
             print(f"Resampling interval for out-of-bounds value: {interval} for transition from {states[current_state_index]} to {states[next_state_index]}")
             return sample_time_interval(mean_matrix, std_dev_matrix, min_matrix, max_matrix, distribution_matrix, current_state_index, next_state_index)
 
-    # Simulation loop continues until reaching a terminal state
-    while True:
+    # Simulation loop continues until reaching a terminal state or hitting the max iteration limit
+    while iteration_count < max_iterations:
         next_state = transition()
         next_state_index = states.index(next_state)
         
@@ -94,6 +95,12 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
         print(f"Current timeline: {simulation_data}")
 
         current_state = next_state_index
+        iteration_count += 1
+
+    # Handle max iteration limit reached
+    if iteration_count >= max_iterations:
+        print(f"Max iterations ({max_iterations}) reached. Forcing transition to Recovered.")
+        simulation_data.append(["Recovered", total_time_steps])
 
     return simulation_data  # Return timeline of states and time
 
