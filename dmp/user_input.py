@@ -41,6 +41,10 @@ def validate_matrices(transition_matrix, mean_matrix, std_dev_matrix, min_cutoff
 
 def parse_mapping_file(mapping_file):
     mapping_df = pd.read_csv(mapping_file)
+
+    # Debugging: Print the column names to ensure they are read correctly
+    print("Columns in Mapping File:", mapping_df.columns.tolist())
+
     if "Matrix_Set" not in mapping_df.columns:
         raise ValueError("The mapping file must include a 'Matrix_Set' column.")
     demographic_categories = [col for col in mapping_df.columns if col != "Matrix_Set"]
