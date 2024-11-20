@@ -19,6 +19,35 @@ demographic_file = st.sidebar.file_uploader("Upload Demographic Mapping CSV", ty
 # Main application title
 st.title("Disease Modeling Platform")
 
+# Add "Rules" section
+with st.expander("Rules for Matrices"):
+    st.markdown("""
+    ### Validation Rules:
+    - **General Rules:**
+      - All matrices must be 7x7.
+      - No values in any matrix can be negative.
+      - Rows in the Transition Matrix can sum to 0 only for terminal states (e.g., "Removed" or "Recovered").
+      - For active transitions (transition probability > 0):
+        - Mean must fall within the Min-Max range.
+        - Distribution Type must be non-zero.
+      - For inactive transitions (transition probability = 0):
+        - Values in other matrices (Mean, Std Dev, Min, Max, and Distribution Type) can remain zero but are not required to be.
+    - **Transition Matrix:**
+      - Values must be between 0 and 1.
+      - Each row must sum to 1 or 0 (for terminal states).
+    - **Distribution Type Matrix:**
+      - Values must be one of [0, 1, 2, 3, 4, 5].
+    - **Mean and Standard Deviation Matrices:**
+      - Mean values must fall within the range defined by the Min and Max Cut-Off matrices (inclusive).
+      - Standard Deviation can be 0 but cannot be negative.
+    - **Min and Max Cut-Off Matrices:**
+      - Min values must be less than or equal to Max values.
+    - **Error Handling:**
+      - For out-of-bounds or invalid values in any matrix, the simulation will fail validation and prompt corrections.
+    """)
+
+
+
 # Process uploaded files
 transition_matrix, distribution_type_matrix = [], []
 mean_time_interval_matrix, std_dev_time_interval_matrix = [], []
@@ -79,7 +108,6 @@ if demographic_file:
     for category in demographic_categories:
         input_value = st.sidebar.text_input(f"Enter value for {category} (Leave blank for wildcard)")
         input_demographics[category] = input_value.strip() if input_value.strip() else "*"  # Treat blanks as wildcards
-
 
 # Main interface
 if st.button("Run Simulation"):
