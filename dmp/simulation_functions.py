@@ -22,11 +22,6 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
 
     def transition():
         nonlocal current_state
-        # Terminal states: End the simulation if current state is "Recovered" or "Removed"
-        if states[current_state] in ["Recovered", "Removed"]:
-            print(f"Reached terminal state: {states[current_state]}")
-            return states[current_state]
-        
         # Filter out zero-probability transitions
         non_zero_states = [s for s, prob in zip(states, transition_matrix[current_state]) if prob > 0]
         non_zero_weights = [prob for prob in transition_matrix[current_state] if prob > 0]
@@ -78,12 +73,6 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
     while iteration_count < max_iterations:
         next_state = transition()
         next_state_index = states.index(next_state)
-        
-        # Stop if reaching a terminal state
-        if next_state in ["Removed", "Recovered"]:
-            simulation_data.append([next_state, total_time_steps])
-            print(f"Ending simulation at terminal state: {states[next_state_index]}")
-            break
 
         # Calculate time interval for transition
         time_interval = sample_time_interval(mean_time_interval_matrix, std_dev_time_interval_matrix, 
@@ -96,6 +85,11 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
 
         current_state = next_state_index
         iteration_count += 1
+
+        # Stop if reaching a terminal state after spending time in the last state
+        if states[current_state] in ["Removed", "Recovered"]:
+            print(f"Ending simulation at terminal state: {states[current_state]}")
+            break
 
     # Handle max iteration limit reached
     if iteration_count >= max_iterations:
