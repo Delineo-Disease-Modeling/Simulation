@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from simulation_functions import run_simulation, default_initial_state, visualize_state_timeline, states
+from dmp.simulation_functions import run_simulation, default_initial_state, visualize_state_timeline, states
 import os
 
 def validate_matrix_shape(matrix, expected_shape=(7, 7), matrix_name="Matrix"):
