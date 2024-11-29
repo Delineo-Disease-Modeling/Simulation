@@ -102,32 +102,67 @@ def extract_matrices(matrix_set, combined_matrix_df):
     return matrices
 
 def find_matching_matrix(demographics, mapping_df, demographic_categories):
+    """
+    Find the matrix set corresponding to the given demographics, supporting wildcards,
+    range-based matching, and optional categories.
+    """
     print("\nInput Demographics:")
     for key, value in demographics.items():
         print(f"  {key}: {value}")
+
     for idx, row in mapping_df.iterrows():
         match = True
         print(f"\nChecking Row {idx}:")
         print(row.to_string(index=False))
+
         for category in demographic_categories:
             mapping_value = str(row[category]).strip()
             input_value = str(demographics.get(category, "")).strip()
-            if mapping_value in ("*", "") or input_value in ("*", ""):
+
+            # Handle wildcard or blank cells in the mapping file
+            if mapping_value in ("*", ""):
                 continue
+
+            # Handle wildcard or blank cells in the user input
+            if input_value in ("*", ""):
+                continue
+
+            # Handle range-based matching
             if "-" in mapping_value and category == "Age Range":
                 try:
                     range_start, range_end = map(int, mapping_value.split("-"))
                     if not (range_start <= int(input_value) <= range_end):
+                        print(f"  Mismatch in {category}: {input_value} not in range {mapping_value}")
                         match = False
                         break
                 except ValueError:
                     raise ValueError(f"Invalid range format in mapping file: {mapping_value}")
+
+            # Handle "61+" or similar conditions
+            elif mapping_value.endswith("+") and category == "Age Range":
+                try:
+                    min_value = int(mapping_value[:-1])  # Extract the numeric part
+                    if int(input_value) < min_value:
+                        print(f"  Mismatch in {category}: {input_value} is less than {mapping_value}")
+                        match = False
+                        break
+                except ValueError:
+                    raise ValueError(f"Invalid format for '61+' in mapping file: {mapping_value}")
+
+            # Handle exact matches
             elif mapping_value != input_value:
+                print(f"  Mismatch in {category}: {input_value} != {mapping_value}")
                 match = False
                 break
+
         if match:
+            print("\nMatched Demographic Set:")
+            print(row.to_string(index=False))
             return row["Matrix_Set"]
+
+    # If no match, raise an error
     raise ValueError("No matching matrix set found for the given demographics.")
+
 
 def get_user_input(demographic_categories):
     print("\nEnter demographic parameters. Use '*' for any value (wildcard).")
@@ -161,20 +196,38 @@ def process_demographic_input(demographics, mapping_df, combined_matrix_df, demo
     return simulation_data, fig
 
 if __name__ == '__main__':
+    import os
+
     curdir = os.path.dirname(os.path.abspath(__file__))
     mapping_file = input("Enter the path to the demographic mapping CSV file: ").strip()
     combined_matrix_file = input("Enter the path to the combined matrices CSV file: ").strip()
+
+    # Parse mapping and combined matrix files
     mapping_df, demographic_categories = parse_mapping_file(mapping_file)
     combined_matrix_df = pd.read_csv(combined_matrix_file, header=None)
 
-    input_demographics = get_user_input(demographic_categories)
-    try:
-        simulation_results, timeline_fig = process_demographic_input(
-            input_demographics, mapping_df, combined_matrix_df, demographic_categories
-        )
-        print("\nSimulation Results:")
-        for state, time in simulation_results:
-            print(f"  {state}: {time}")
-        timeline_fig.show()
-    except ValueError as e:
-        print(f"Error: {e}")
+    print("\nPress Ctrl+C to exit the simulation at any time.")
+
+    # Loop for repeated demographic input
+    while True:
+        try:
+            # Prompt for demographic input
+            input_demographics = get_user_input(demographic_categories)
+
+            # Run the simulation
+            simulation_results, timeline_fig = process_demographic_input(
+                input_demographics, mapping_df, combined_matrix_df, demographic_categories
+            )
+
+            # Display simulation results
+            print("\nSimulation Results:")
+            for state, time in simulation_results:
+                print(f"  {state}: {time}")
+            timeline_fig.show()
+
+        except ValueError as e:
+            print(f"Error: {e}")
+        except KeyboardInterrupt:
+            print("\nExiting the simulation.")
+            break
+

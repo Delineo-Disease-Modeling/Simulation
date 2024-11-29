@@ -4,6 +4,8 @@ from werkzeug.exceptions import BadRequest
 from dmp.simulation_functions import run_simulation, states, default_initial_state
 from dmp.user_input import validate_matrices, find_matching_matrix, extract_matrices, parse_mapping_file
 import pandas as pd
+from io import StringIO
+import numpy as np
 
 app = Flask(__name__)
 
@@ -43,6 +45,7 @@ def run_dmp_simulation():
     Endpoint to run Disease Modeling Platform (DMP) simulation.
     """
     try:
+        # Force JSON parsing
         request.get_json(force=True)
     except BadRequest:
         return jsonify({"error": "Bad Request"}), 400
@@ -57,13 +60,16 @@ def run_dmp_simulation():
         demographics = request.json.get('demographics', {})
         initial_state = request.json.get('initial_state', default_initial_state)
 
-        # Validate input file paths
-        if not demographic_mapping or not combined_matrices:
-            return jsonify({"error": "Both 'demographic_mapping' and 'combined_matrices' must be provided."}), 400
+        # Convert string CSVs to pandas DataFrame
+        mapping_df = pd.read_csv(StringIO(demographic_mapping))
+        combined_matrix_df = pd.read_csv(StringIO(combined_matrices), header=None)
 
-        # Load mapping and matrices files
-        mapping_df, demographic_categories = parse_mapping_file(demographic_mapping)
-        combined_matrix_df = pd.read_csv(combined_matrices, header=None)
+        # Ensure 'Matrix_Set' column exists in the demographic mapping file
+        if "Matrix_Set" not in mapping_df.columns:
+            return jsonify({"error": "'Matrix_Set' column missing in demographic mapping"}), 400
+
+        # Extract demographic categories
+        demographic_categories = [col for col in mapping_df.columns if col != "Matrix_Set"]
 
         # Find matching matrix set and extract matrices
         matrix_set = find_matching_matrix(demographics, mapping_df, demographic_categories)
@@ -79,22 +85,23 @@ def run_dmp_simulation():
             distribution_matrix=matrices["Distribution Type"]
         )
 
-        # Run the simulation
+        # Run the simulation using positional arguments
         simulation_data = run_simulation(
-            matrices["Transition Matrix"],
-            matrices["Mean"],
-            matrices["Standard Deviation"],
-            matrices["Min Cut-Off"],
-            matrices["Max Cut-Off"],
-            matrices["Distribution Type"],
-            initial_state
+            matrices["Transition Matrix"],  # Positional argument 1
+            matrices["Mean"],               # Positional argument 2
+            matrices["Standard Deviation"], # Positional argument 3
+            matrices["Min Cut-Off"],        # Positional argument 4
+            matrices["Max Cut-Off"],        # Positional argument 5
+            matrices["Distribution Type"],  # Positional argument 6
+            initial_state                   # Positional argument 7
         )
 
         # Return the simulation results as JSON
         return jsonify({"status": "success", "simulation_data": simulation_data})
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": f"Error during DMP simulation: {e}"}), 400
+
 
 
 @app.route("/", methods=['GET'])
@@ -113,4 +120,4 @@ def run_main():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=6000)
