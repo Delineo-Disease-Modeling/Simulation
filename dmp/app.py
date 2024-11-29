@@ -46,8 +46,6 @@ with st.expander("Rules for Matrices"):
       - For out-of-bounds or invalid values in any matrix, the simulation will fail validation and prompt corrections.
     """)
 
-
-
 # Process uploaded files
 transition_matrix, distribution_type_matrix = [], []
 mean_time_interval_matrix, std_dev_time_interval_matrix = [], []
@@ -153,7 +151,11 @@ if st.button("Run Simulation"):
         st.subheader("Simulation Results")
         st.write("Matched Matrix Set:", matrix_set)
         st.write("Input Demographics:", input_demographics)
-        st.write(simulation_data)
+
+        # Display simulation data in table format
+        st.subheader("State Timeline")
+        simulation_df = pd.DataFrame(simulation_data, columns=["State", "Time Step (minutes)"])
+        st.table(simulation_df)
 
         # Visualize timeline
         fig = visualize_state_timeline(simulation_data)
