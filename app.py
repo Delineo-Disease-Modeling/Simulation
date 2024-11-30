@@ -14,7 +14,7 @@ CORS(app)
 
 @app.route("/simulation/", methods=['POST', 'GET'])
 @cross_origin()
-def run_simulation():
+def run_simulation_endpoint():
     try:
         request.get_json(force=True)
     except BadRequest:
@@ -40,7 +40,7 @@ def run_simulation():
 
 @app.route("/dmp/", methods=['POST'])
 @cross_origin()
-def run_dmp_simulation():
+def run_dmp_simulation_endpoint():
     """
     Endpoint to run Disease Modeling Platform (DMP) simulation.
     """
