@@ -18,7 +18,7 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
     
     # Keep track of the timeline for the line graph
     simulation_data.append([initial_state, total_time_steps])
-    print(f"Starting simulation with initial state: {initial_state}")
+    #print(f"Starting simulation with initial state: {initial_state}")
 
     def transition():
         nonlocal current_state
@@ -27,14 +27,14 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
         non_zero_weights = [prob for prob in transition_matrix[current_state] if prob > 0]
 
         # Debugging output to show current state, probabilities, and next state options
-        print(f"Transitioning from {states[current_state]}. Available states and probabilities: {dict(zip(non_zero_states, non_zero_weights))}")
+        #print(f"Transitioning from {states[current_state]}. Available states and probabilities: {dict(zip(non_zero_states, non_zero_weights))}")
         
         # Select the next state based on non-zero probabilities
         next_state = random.choices(non_zero_states, weights=non_zero_weights)[0]
         next_state_index = states.index(next_state)
 
         # Debugging output for selected transition
-        print(f"Transitioned to {next_state}")
+        #print(f"Transitioned to {next_state}")
 
         return next_state
 
@@ -63,10 +63,10 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
         
         # Ensure the interval falls within the min and max bounds; otherwise, resample
         if min_matrix[current_state_index][next_state_index] <= interval <= max_matrix[current_state_index][next_state_index]:
-            print(f"Sampled interval: {interval} for transition from {states[current_state_index]} to {states[next_state_index]} using distribution type {dist_type}")
+            #print(f"Sampled interval: {interval} for transition from {states[current_state_index]} to {states[next_state_index]} using distribution type {dist_type}")
             return interval
         else:
-            print(f"Resampling interval for out-of-bounds value: {interval} for transition from {states[current_state_index]} to {states[next_state_index]}")
+            #print(f"Resampling interval for out-of-bounds value: {interval} for transition from {states[current_state_index]} to {states[next_state_index]}")
             return sample_time_interval(mean_matrix, std_dev_matrix, min_matrix, max_matrix, distribution_matrix, current_state_index, next_state_index)
 
     # Simulation loop continues until reaching a terminal state or hitting the max iteration limit
@@ -81,19 +81,19 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
         total_time_steps += time_interval
         simulation_data.append([states[next_state_index], total_time_steps])
 
-        print(f"Current timeline: {simulation_data}")
+        #print(f"Current timeline: {simulation_data}")
 
         current_state = next_state_index
         iteration_count += 1
 
         # Stop if reaching a terminal state after spending time in the last state
         if states[current_state] in ["Removed", "Recovered"]:
-            print(f"Ending simulation at terminal state: {states[current_state]}")
+            #print(f"Ending simulation at terminal state: {states[current_state]}")
             break
 
     # Handle max iteration limit reached
     if iteration_count >= max_iterations:
-        print(f"Max iterations ({max_iterations}) reached. Forcing transition to Recovered.")
+        #print(f"Max iterations ({max_iterations}) reached. Forcing transition to Recovered.")
         simulation_data.append(["Recovered", total_time_steps])
 
     return simulation_data  # Return timeline of states and time
