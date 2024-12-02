@@ -77,7 +77,7 @@ def validate_matrices(transition_matrix, mean_matrix, std_dev_matrix, min_cutoff
 
 def parse_mapping_file(mapping_file):
     mapping_df = pd.read_csv(mapping_file)
-    print("Columns in Mapping File:", mapping_df.columns.tolist())
+    #print("Columns in Mapping File:", mapping_df.columns.tolist())
 
     if "Matrix_Set" not in mapping_df.columns:
         raise ValueError("The mapping file must include a 'Matrix_Set' column.")
@@ -106,14 +106,14 @@ def find_matching_matrix(demographics, mapping_df, demographic_categories):
     Find the matrix set corresponding to the given demographics, supporting wildcards,
     range-based matching, and optional categories.
     """
-    print("\nInput Demographics:")
-    for key, value in demographics.items():
-        print(f"  {key}: {value}")
+    #print("\nInput Demographics:")
+    #for key, value in demographics.items():
+    #    print(f"  {key}: {value}")
 
     for idx, row in mapping_df.iterrows():
         match = True
-        print(f"\nChecking Row {idx}:")
-        print(row.to_string(index=False))
+        #print(f"\nChecking Row {idx}:")
+        #print(row.to_string(index=False))
 
         for category in demographic_categories:
             mapping_value = str(row[category]).strip()
@@ -132,7 +132,7 @@ def find_matching_matrix(demographics, mapping_df, demographic_categories):
                 try:
                     range_start, range_end = map(int, mapping_value.split("-"))
                     if not (range_start <= int(input_value) <= range_end):
-                        print(f"  Mismatch in {category}: {input_value} not in range {mapping_value}")
+                        #print(f"  Mismatch in {category}: {input_value} not in range {mapping_value}")
                         match = False
                         break
                 except ValueError:
@@ -143,7 +143,7 @@ def find_matching_matrix(demographics, mapping_df, demographic_categories):
                 try:
                     min_value = int(mapping_value[:-1])  # Extract the numeric part
                     if int(input_value) < min_value:
-                        print(f"  Mismatch in {category}: {input_value} is less than {mapping_value}")
+                        #print(f"  Mismatch in {category}: {input_value} is less than {mapping_value}")
                         match = False
                         break
                 except ValueError:
@@ -151,13 +151,13 @@ def find_matching_matrix(demographics, mapping_df, demographic_categories):
 
             # Handle exact matches
             elif mapping_value != input_value:
-                print(f"  Mismatch in {category}: {input_value} != {mapping_value}")
+                #print(f"  Mismatch in {category}: {input_value} != {mapping_value}")
                 match = False
                 break
 
         if match:
-            print("\nMatched Demographic Set:")
-            print(row.to_string(index=False))
+            #print("\nMatched Demographic Set:")
+            #print(row.to_string(index=False))
             return row["Matrix_Set"]
 
     # If no match, raise an error

@@ -6,6 +6,7 @@ from dmp.user_input import validate_matrices, find_matching_matrix, extract_matr
 import pandas as pd
 from io import StringIO
 import numpy as np
+from simulator import simulate
 
 app = Flask(__name__)
 
@@ -120,4 +121,4 @@ def run_main():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=6000)
+    app.run(host='0.0.0.0', port=1880)

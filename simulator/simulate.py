@@ -64,7 +64,7 @@ def move_people(simulator, items, is_household):
             place.add_member(person)
             person.location = place
 
-def run_simulator(matrices_dict, location, max_length, interventions):
+def run_simulator(matrices_dict, location, max_length, interventions, save_file=False):
     #random.seed(0)
     
     with open(curdir + f'/{location}/papdata.json') as file:
@@ -237,26 +237,24 @@ def run_simulator(matrices_dict, location, max_length, interventions):
         result[last_timestep] = {variant: dict(infected) for variant, infected in variantInfected.items()}
         last_timestep += simulator.timestep
 
-    # Print results for each variant
-    for variant in variantInfected.keys():
-        print(f"{variant} Infected:")
-        print(variantInfected[variant])
-
-    with open('results.json', 'w') as file:
-        json.dump(result, file, indent=4)
-        
-    with open('results_movement.json', 'w') as file:
-        json.dump(movement_json, file, indent=4)
-        
-    with open('results_infections.json', 'w') as file:
-        json.dump(infectivity_json, file, indent=4)
+    if save_file:
+        #Print results for each variant
+        for variant in variantInfected.keys():
+           print(f"{variant} Infected:")
+           print(variantInfected[variant])
+    
+        with open('results.json', 'w') as file:
+            json.dump(result, file, indent=4)
+            
+        with open('results_movement.json', 'w') as file:
+            json.dump(movement_json, file, indent=4)
+            
+        with open('results_infections.json', 'w') as file:
+            json.dump(infectivity_json, file, indent=4)
+    else:
+        return {
+            'result': result,
+            'movement': movement_json
+        }
 
     return result
-if __name__ == '__main__':
-    run_simulator({
-        'mask': 0.4,
-        'vaccine': 0.2,
-        'capacity': 1.0,
-        'lockdown': 0.5,
-        'selfiso': 0.5
-    })
