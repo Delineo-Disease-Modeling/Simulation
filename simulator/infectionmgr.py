@@ -117,7 +117,7 @@ class InfectionManager:
                         continue
                     
                     # Assuming CAT function can h andle the matrix without needing to specify a disease
-                    if CAT(p, True, num_timesteps, 7e2):
+                    if CAT(p, True, num_timesteps, 7e3):
                         new_infections.append(disease)
                         
                         if newlyInfected.get(disease) == None:
