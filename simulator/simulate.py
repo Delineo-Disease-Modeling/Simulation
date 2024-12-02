@@ -253,8 +253,8 @@ def run_simulator(matrices_dict, location, max_length, interventions, save_file=
             json.dump(infectivity_json, file, indent=4)
     else:
         return {
-            'result': result,
-            'movement': movement_json
+            'result': {i:j for i,j in result.items() if i != 0},
+            'movement': {i:j for i,j in movement_json.items() if i != 0}
         }
 
     return result
