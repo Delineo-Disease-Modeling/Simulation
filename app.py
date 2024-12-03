@@ -34,6 +34,7 @@ def run_simulation_endpoint():
             'capacity': request.json.get('capacity', 1.0),
             'lockdown': request.json.get('lockdown', 0),
             'selfiso': request.json.get('selfiso', 0.5),
+            'randseed': request.json.get('randseed', True)
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -116,7 +117,8 @@ def run_main():
         'vaccine': 0.0,
         'capacity': 1.0,
         'lockdown': 0,
-        'selfiso': 0.0
+        'selfiso': 0.0,
+        'randseed': False
     })
 
 

@@ -65,7 +65,9 @@ def move_people(simulator, items, is_household):
             person.location = place
 
 def run_simulator(matrices_dict, location, max_length, interventions, save_file=False):
-    #random.seed(0)
+    # Set random seed if user specifies
+    if not interventions['randseed']:
+        random.seed(0)
     
     with open(curdir + f'/{location}/papdata.json') as file:
         pap = json.load(file)
