@@ -1,4 +1,5 @@
-Age Range, Vaccination Status, Region,Matrix_Set
-0-18, Vaccinated, Urban, Matrix_Set_1
-19-65, Unvaccinated, Suburban, Matrix_Set_2
-0-18, Unvaccinated, *, Matrix_Set_3
+Matrix_Set,Age Range,Health Status,Pre-existing Conditions,Vaccination Status,Region
+Matrix_Set_1,18-35,Healthy,*,Vaccinated,Urban
+Matrix_Set_2,36-60,Moderate,Mild,Vaccinated,Suburban
+Matrix_Set_3,61+,At-Risk,Severe,Unvaccinated,Rural
+Matrix_Set_4,61+,Healthy,None,Vaccinated,Urban
