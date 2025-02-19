@@ -3,7 +3,10 @@ import numpy as np
 from simulation_functions import run_simulation, default_initial_state, visualize_state_timeline, states
 import os
 
-def validate_matrix_shape(matrix, expected_shape=(7, 7), matrix_name="Matrix"):
+def validate_matrix_shape(matrix, expected_shape=None, matrix_name="Matrix"):
+    """Validates matrix shape against number of states"""
+    if expected_shape is None:
+        return  # Skip validation if no shape specified
     if matrix.shape != expected_shape:
         raise ValueError(f"{matrix_name} must be of shape {expected_shape}. Current shape is {matrix.shape}.")
 
@@ -84,21 +87,48 @@ def parse_mapping_file(mapping_file):
     demographic_categories = [col for col in mapping_df.columns if col != "Matrix_Set"]
     return mapping_df, demographic_categories
 
-def extract_matrices(matrix_set, combined_matrix_df):
-    matrix_set_index = int(matrix_set.split("_")[-1]) - 1
-    matrix_rows = 7
-    total_matrix_rows = matrix_rows * 6
-    start_row = matrix_set_index * total_matrix_rows
-    end_row = start_row + total_matrix_rows
-    matrix_block = combined_matrix_df.iloc[start_row:end_row].to_numpy()
-    matrices = {
-        "Transition Matrix": matrix_block[:matrix_rows],
-        "Distribution Type": matrix_block[matrix_rows:matrix_rows*2],
-        "Mean": matrix_block[matrix_rows*2:matrix_rows*3],
-        "Standard Deviation": matrix_block[matrix_rows*3:matrix_rows*4],
-        "Min Cut-Off": matrix_block[matrix_rows*4:matrix_rows*5],
-        "Max Cut-Off": matrix_block[matrix_rows*5:matrix_rows*6],
-    }
+def extract_matrices(matrix_set_id, combined_matrix_df):
+    """
+    Extract matrices for a given set ID from the combined matrix dataframe
+    
+    Args:
+        matrix_set_id: int, the ID of the matrix set
+        combined_matrix_df: pandas DataFrame containing all matrices
+    """
+    num_states = 7  # Fixed number of states
+    matrix_size = num_states * num_states
+    matrices = {}
+    matrix_types = [
+        "Transition Matrix",
+        "Distribution Type",
+        "Mean",
+        "Standard Deviation",
+        "Min Cut-Off",
+        "Max Cut-Off"
+    ]
+    
+    # Each matrix set contains 6 matrices of size 7x7
+    # Each matrix takes up 7 rows in the CSV
+    start_row = (matrix_set_id - 1) * (num_states * 6)
+    
+    for i, matrix_type in enumerate(matrix_types):
+        # Get the rows for this matrix
+        matrix_start = start_row + (i * num_states)
+        matrix_end = matrix_start + num_states
+        
+        # Extract and convert to numpy array
+        matrix_data = combined_matrix_df.iloc[matrix_start:matrix_end].values
+        
+        # Clean and convert the data
+        if isinstance(matrix_data[0][0], str):
+            # If data is string, clean and convert to float
+            matrix_data = np.array([[float(val.strip()) for val in row] for row in matrix_data])
+        else:
+            # If already numeric, just convert to float
+            matrix_data = matrix_data.astype(float)
+        
+        matrices[matrix_type] = matrix_data
+    
     return matrices
 
 def find_matching_matrix(demographics, mapping_df, demographic_categories):
@@ -175,6 +205,7 @@ def get_user_input(demographic_categories):
 def process_demographic_input(demographics, mapping_df, combined_matrix_df, demographic_categories):
     matrix_set = find_matching_matrix(demographics, mapping_df, demographic_categories)
     matrices = extract_matrices(matrix_set, combined_matrix_df)
+    
     validate_matrices(
         transition_matrix=matrices["Transition Matrix"],
         mean_matrix=matrices["Mean"],
@@ -183,6 +214,7 @@ def process_demographic_input(demographics, mapping_df, combined_matrix_df, demo
         max_cutoff_matrix=matrices["Max Cut-Off"],
         distribution_matrix=matrices["Distribution Type"]
     )
+    
     simulation_data = run_simulation(
         matrices["Transition Matrix"],
         matrices["Mean"],
@@ -195,17 +227,48 @@ def process_demographic_input(demographics, mapping_df, combined_matrix_df, demo
     fig = visualize_state_timeline(simulation_data)
     return simulation_data, fig
 
-if __name__ == '__main__':
-    import os
+def validate_states_format(states):
+    """Validates the format of user-defined states"""
+    if not isinstance(states, list):
+        raise ValueError("States must be provided as a list")
+    if len(states) < 2:
+        raise ValueError("At least 2 states are required")
+    if len(set(states)) != len(states):
+        raise ValueError("State names must be unique")
+    if not all(isinstance(s, str) for s in states):
+        raise ValueError("All states must be strings")
 
+def process_states_input(states_file=None):
+    """Process user-defined states from file or use defaults"""
+    if states_file:
+        try:
+            with open(states_file, 'r') as f:
+                states = [line.strip() for line in f if line.strip()]
+            validate_states_format(states)
+            return states
+        except FileNotFoundError:
+            raise ValueError(f"States file not found: {states_file}")
+    return default_states  # Fall back to default states if no file provided
+
+if __name__ == '__main__':
     curdir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Add states file input
+    states_file = input("Enter path to states definition file (or press Enter for defaults): ").strip()
+    states = process_states_input(states_file if states_file else None)
+    num_states = len(states)
+    
     mapping_file = input("Enter the path to the demographic mapping CSV file: ").strip()
     combined_matrix_file = input("Enter the path to the combined matrices CSV file: ").strip()
 
-    # Parse mapping and combined matrix files
+    # Update matrix validation to use dynamic state count
     mapping_df, demographic_categories = parse_mapping_file(mapping_file)
     combined_matrix_df = pd.read_csv(combined_matrix_file, header=None)
-
+    
+    # Validate matrix dimensions match state count
+    expected_shape = (num_states, num_states)
+    
+    print(f"\nUsing states: {states}")
     print("\nPress Ctrl+C to exit the simulation at any time.")
 
     # Loop for repeated demographic input

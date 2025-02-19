@@ -3,6 +3,8 @@ from .infection_model import CAT
 from dmp.user_input import process_dataframes
 import pandas as pd
 from io import StringIO
+import requests
+from typing import Dict, Any
 
 class InfectionManager:
     def __init__(self, matrices_dict, timestep=15, people=[]):
@@ -178,3 +180,56 @@ class InfectionManager:
                     val[disease][state] = InfectionTimeline(curtime + tl[str], curtime + maxt)
                 
         person.timeline = val
+
+    def get_disease_progression(self, person: Person, disease: str, curtime: int) -> Dict[str, Any]:
+        """Get disease progression from DMP for a person."""
+        demographics = {
+            "age": str(person.age),
+            "sex": person.sex,
+            "vaccination_status": "Vaccinated" if person.is_vaccinated else "Unvaccinated"
+        }
+        
+        # Optional: include matrices configuration
+        config = {
+            "demographic_mapping": self.matrices_dict.get("mapping"),
+            "combined_matrices": self.matrices_dict.get(disease)
+        } if self.matrices_dict.get("mapping") else None
+
+        payload = {"demographics": demographics}
+        if config:
+            payload["config"] = config
+
+        response = requests.post(self.dmp_url, json=payload)
+        if response.status_code != 200:
+            raise Exception(f"DMP API call failed: {response.text}")
+            
+        return response.json()
+
+    def process_infection(self, person: Person, disease: str, curtime: int) -> None:
+        """Process infection state changes using DMP progression."""
+        try:
+            progression = self.get_disease_progression(person, disease, curtime)
+            
+            # Map DMP states to simulator states
+            state_mapping = {
+                "Infectious Asymptomatic": InfectionState.INFECTIOUS,
+                "Infectious Symptomatic": InfectionState.INFECTIOUS | InfectionState.SYMPTOMATIC,
+                "Hospitalized": InfectionState.HOSPITALIZED,
+                "ICU": InfectionState.HOSPITALIZED,
+                "Recovered": InfectionState.RECOVERED,
+                "Removed": InfectionState.REMOVED
+            }
+            
+            # Create timeline based on DMP progression
+            timeline = {}
+            for state, timestamp in progression["progression"]:
+                if state in state_mapping:
+                    timeline[state_mapping[state]] = InfectionTimeline(
+                        curtime + int(timestamp), 
+                        curtime + int(timestamp) + 10080  # Default max duration
+                    )
+            
+            person.timeline[disease] = timeline
+            
+        except Exception as e:
+            print(f"Error processing infection for person {person.id}: {e}")

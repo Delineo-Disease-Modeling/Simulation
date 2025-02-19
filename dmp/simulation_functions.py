@@ -8,17 +8,25 @@ states = ["Infected", "Infectious Asymptomatic", "Infectious Symptomatic", "Hosp
 # Default initial state
 default_initial_state = "Infected"
 
-def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_interval_matrix, 
-                   min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, 
-                   initial_state, max_iterations=1000):
-    current_state = states.index(initial_state)
-    total_time_steps = 0
-    simulation_data = []
-    iteration_count = 0  # Track the number of iterations
+def run_simulation(transition_matrix, mean_matrix, std_matrix, min_cutoff, max_cutoff, dist_type_matrix, initial_state_idx):
+    """
+    Run the simulation with the given parameters
+    
+    Args:
+        transition_matrix: numpy array of transition probabilities
+        mean_matrix: numpy array of mean times
+        std_matrix: numpy array of standard deviations
+        min_cutoff: numpy array of minimum cutoff times
+        max_cutoff: numpy array of maximum cutoff times
+        dist_type_matrix: numpy array of distribution types
+        initial_state_idx: integer index of the initial state
+    """
+    current_state = initial_state_idx
+    current_time = 0
+    timeline = [(current_state, current_time)]
     
     # Keep track of the timeline for the line graph
-    simulation_data.append([initial_state, total_time_steps])
-    print(f"Starting simulation with initial state: {initial_state}")
+    print(f"Starting simulation with initial state: {states[current_state]}")
 
     def transition():
         nonlocal current_state
@@ -70,38 +78,31 @@ def run_simulation(transition_matrix, mean_time_interval_matrix, std_dev_time_in
             return sample_time_interval(mean_matrix, std_dev_matrix, min_matrix, max_matrix, distribution_matrix, current_state_index, next_state_index)
 
     # Simulation loop continues until reaching a terminal state or hitting the max iteration limit
-    while iteration_count < max_iterations:
+    while True:
         next_state = transition()
         next_state_index = states.index(next_state)
 
         # Calculate time interval for transition
-        time_interval = sample_time_interval(mean_time_interval_matrix, std_dev_time_interval_matrix, 
-                                             min_cutoff_matrix, max_cutoff_matrix, distribution_type_matrix, 
+        time_interval = sample_time_interval(mean_matrix, std_matrix, min_cutoff, max_cutoff, dist_type_matrix, 
                                              current_state, next_state_index) * 60 * 24
-        total_time_steps += time_interval
-        simulation_data.append([states[next_state_index], total_time_steps])
+        current_time += time_interval
+        timeline.append((next_state_index, current_time))
 
-        print(f"Current timeline: {simulation_data}")
+        print(f"Current timeline: {timeline}")
 
         current_state = next_state_index
-        iteration_count += 1
 
         # Stop if reaching a terminal state after spending time in the last state
         if states[current_state] in ["Removed", "Recovered"]:
             print(f"Ending simulation at terminal state: {states[current_state]}")
             break
 
-    # Handle max iteration limit reached
-    if iteration_count >= max_iterations:
-        print(f"Max iterations ({max_iterations}) reached. Forcing transition to Recovered.")
-        simulation_data.append(["Recovered", total_time_steps])
-
-    return simulation_data  # Return timeline of states and time
+    return timeline  # Return timeline of states and time
 
 def visualize_state_timeline(simulation_data):
     # Extract the states and times from the simulation data
-    timeline_states = [entry[0] for entry in simulation_data]
-    timeline_times = [entry[1] for entry in simulation_data]
+    timeline_states = [states[state_idx] for state_idx, _ in simulation_data]
+    timeline_times = [time for _, time in simulation_data]
 
     # Create the line graph
     fig, ax = plt.subplots(figsize=(10, 6))

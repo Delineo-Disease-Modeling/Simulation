@@ -1,167 +1,413 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from simulation_functions import run_simulation, visualize_state_timeline, states, default_initial_state
-from user_input import validate_matrices, find_matching_matrix, extract_matrices, parse_mapping_file
+from simulation_functions import run_simulation, visualize_state_timeline
+from user_input import validate_matrices, find_matching_matrix, extract_matrices, parse_mapping_file, validate_states_format
+import json
+from state_management import initialize_states, handle_states_management
+from demographic_management import (
+    initialize_demographics, 
+    collect_demographic_options, 
+    get_valid_ages,
+    validate_demographic_value
+)
+from simulation_management import handle_simulation
 
-# Reserve space at the top for potential error messages
+def create_initial_state_vector(num_states, initial_state_name, states_list):
+    """Create initial state vector with 1 in the initial state and 0 elsewhere"""
+    initial_vector = np.zeros(num_states)
+    initial_vector[states_list.index(initial_state_name)] = 1
+    return initial_vector
+
+# Reserve space for errors
 error_placeholder = st.empty()
-validation_failed = False  # Flag to check if validation failed
 
-# Set parameters for initial state
-initial_state = st.sidebar.selectbox("Select Initial State", states)
+# Initialize session state for matrix sets if not exists
+if 'matrix_sets' not in st.session_state:
+    st.session_state.matrix_sets = {}
 
-# File upload options for matrices and demographics
-st.sidebar.subheader("Upload Files")
-uploaded_file = st.sidebar.file_uploader("Upload Combined Matrix CSV", type="csv")
-demographic_file = st.sidebar.file_uploader("Upload Demographic Mapping CSV", type="csv")
+# Initialize session state for default demographics if not exists
+if 'default_demographics' not in st.session_state:
+    st.session_state.default_demographics = {
+        "Age Range": "*",
+        "Sex": "*",
+        "Vaccination Status": "*"
+    }
 
-# Main application title
+# Initialize session state for states if not exists
+if 'states' not in st.session_state:
+    st.session_state.states = [
+        "Infected", 
+        "Infectious Asymptomatic", 
+        "Infectious Symptomatic", 
+        "Hospitalized", 
+        "ICU", 
+        "Removed", 
+        "Recovered"
+    ]
+
+# Main title
 st.title("Disease Modeling Platform")
 
-# Add "Rules" section
-with st.expander("Rules for Matrices"):
-    st.markdown("""
-    ### Validation Rules:
-    - **General Rules:**
-      - All matrices must be 7x7.
-      - No values in any matrix can be negative.
-      - Rows in the Transition Matrix can sum to 0 only for terminal states (e.g., "Removed" or "Recovered").
-      - For active transitions (transition probability > 0):
-        - Mean must fall within the Min-Max range.
-        - Distribution Type must be non-zero.
-      - For inactive transitions (transition probability = 0):
-        - Values in other matrices (Mean, Std Dev, Min, Max, and Distribution Type) can remain zero but are not required to be.
-    - **Transition Matrix:**
-      - Values must be between 0 and 1.
-      - Each row must sum to 1 or 0 (for terminal states).
-    - **Distribution Type Matrix:**
-      - Values must be one of [0, 1, 2, 3, 4, 5].
-    - **Mean and Standard Deviation Matrices:**
-      - Mean values must fall within the range defined by the Min and Max Cut-Off matrices (inclusive).
-      - Standard Deviation can be 0 but cannot be negative.
-    - **Min and Max Cut-Off Matrices:**
-      - Min values must be less than or equal to Max values.
-    - **Error Handling:**
-      - For out-of-bounds or invalid values in any matrix, the simulation will fail validation and prompt corrections.
-    """)
+# Sidebar for input method selection
+st.sidebar.title("Input Method")
+input_method = st.sidebar.radio(
+    "Choose input method:",
+    ["File Upload", "Manual Input"]
+)
 
-# Process uploaded files
-transition_matrix, distribution_type_matrix = [], []
-mean_time_interval_matrix, std_dev_time_interval_matrix = [], []
-min_cutoff_matrix, max_cutoff_matrix = [], []
+# Handle states management
+handle_states_management()
 
-# Process combined matrix file
-if uploaded_file:
-    try:
-        combined_df = pd.read_csv(uploaded_file, header=None)
+# File upload section - ONLY ONCE
+if input_method == "File Upload":
+    # File upload logic
+    st.sidebar.subheader("Upload Files")
+    uploaded_file = st.sidebar.file_uploader("Upload Combined Matrix CSV", type="csv")
+    demographic_file = st.sidebar.file_uploader("Upload Demographic Mapping CSV", type="csv")
+    states_file = st.sidebar.file_uploader("Upload States (optional)", type="txt")
 
-        def parse_combined_file(combined_df):
-            matrix_rows = 7
-            num_matrices = 6  # Transition, Distribution Type, Mean, Std Dev, Min, Max
-            num_rows = combined_df.shape[0]
+    # Process uploaded files
+    if uploaded_file is not None and demographic_file is not None:
+        try:
+            # Process states file if provided
+            if states_file is not None:
+                states_content = states_file.getvalue().decode()
+                new_states = [s.strip() for s in states_content.split('\n') if s.strip()]
+                validate_states_format(new_states)
+                st.session_state.states = new_states
 
-            if num_rows % (matrix_rows * num_matrices) != 0:
-                raise ValueError(
-                    "The combined matrix file does not have the correct number of rows. Ensure it contains sets of 6 matrices, each 7x7."
+            # Process demographic mapping and matrices
+            mapping_df, demographic_categories = parse_mapping_file(demographic_file)
+            combined_matrix_df = pd.read_csv(uploaded_file)
+            
+            # Create matrix sets from uploaded files
+            for idx, row in mapping_df.iterrows():
+                set_name = f"Set_{idx + 1}"  # Use index instead of SetID
+                demographics = {col: row[col] for col in demographic_categories}
+                
+                # Extract matrices for this set using the index + 1 as ID
+                matrices = extract_matrices(idx + 1, combined_matrix_df)
+                
+                # Store in session state
+                st.session_state.matrix_sets[set_name] = {
+                    "matrices": matrices,
+                    "demographics": demographics
+                }
+            
+            st.success(f"Successfully loaded {len(mapping_df)} matrix sets!")
+            
+        except Exception as e:
+            st.error(f"Error processing files: {str(e)}")
+            st.exception(e)
+
+else:  # Manual Input
+    st.header("Matrix Set Management")
+    
+    # Matrix set creation with custom demographics
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        new_set_name = st.text_input("New Matrix Set Name")
+    with col2:
+        if st.button("Add Matrix Set") and new_set_name:
+            if new_set_name not in st.session_state.matrix_sets:
+                num_states = len(st.session_state.states)
+                st.session_state.matrix_sets[new_set_name] = {
+                    "matrices": {
+                        "Transition Matrix": np.zeros((num_states, num_states)),
+                        "Distribution Type": np.ones((num_states, num_states)),
+                        "Mean": np.full((num_states, num_states), 5.0),
+                        "Standard Deviation": np.ones((num_states, num_states)),
+                        "Min Cut-Off": np.ones((num_states, num_states)),
+                        "Max Cut-Off": np.full((num_states, num_states), 10.0)
+                    },
+                    "demographics": dict(st.session_state.default_demographics)
+                }
+
+    # Demographic Management Section
+    st.header("Demographic Management")
+    demo_tab1, demo_tab2 = st.tabs(["Default Demographics", "Add New Demographic"])
+    
+    with demo_tab1:
+        st.subheader("Edit Default Demographics")
+        default_demo_cols = st.columns(3)
+        with default_demo_cols[0]:
+            if st.button("Reset to Original Defaults"):
+                st.session_state.default_demographics = {
+                    "Age Range": "*",
+                    "Sex": "*",
+                    "Vaccination Status": "*"
+                }
+        
+        # Edit default demographics
+        new_defaults = {}
+        for demo_name in st.session_state.default_demographics.keys():
+            if demo_name == "Sex":
+                new_defaults[demo_name] = st.selectbox(
+                    f"Default {demo_name}",
+                    options=["*", "M", "F"],
+                    index=["*", "M", "F"].index(st.session_state.default_demographics[demo_name])
                 )
+            elif demo_name == "Vaccination Status":
+                new_defaults[demo_name] = st.selectbox(
+                    f"Default {demo_name}",
+                    options=["*", "Vaccinated", "Unvaccinated"],
+                    index=["*", "Vaccinated", "Unvaccinated"].index(st.session_state.default_demographics[demo_name])
+                )
+            else:
+                value = st.text_input(
+                    f"Default {demo_name}",
+                    value=st.session_state.default_demographics[demo_name],
+                    help="Use * for any value"
+                )
+                if validate_demographic_value(demo_name, value):
+                    new_defaults[demo_name] = value
+                else:
+                    st.error(f"Invalid value for {demo_name}")
+                    new_defaults[demo_name] = st.session_state.default_demographics[demo_name]
+        
+        st.session_state.default_demographics = new_defaults
 
-            matrices = []
-            for i in range(0, num_rows, matrix_rows):
-                matrices.append(combined_df.iloc[i:i + matrix_rows].to_numpy())
+    with demo_tab2:
+        st.subheader("Add New Demographic Category")
+        new_demo_cols = st.columns(2)
+        with new_demo_cols[0]:
+            new_demo_name = st.text_input("New Demographic Name")
+        with new_demo_cols[1]:
+            new_demo_default = st.text_input("Default Value", value="*", help="Use * for any value")
+            if st.button("Add Demographic") and new_demo_name:
+                if new_demo_name in ["Sex", "Vaccination Status", "Age Range"]:
+                    st.error("Cannot add reserved demographic names")
+                elif new_demo_name in st.session_state.default_demographics:
+                    st.error("Demographic already exists")
+                elif not new_demo_name.strip():
+                    st.error("Demographic name cannot be empty")
+                else:
+                    st.session_state.default_demographics[new_demo_name] = new_demo_default or "*"
+                    # Add to existing matrix sets
+                    for matrix_set in st.session_state.matrix_sets.values():
+                        matrix_set["demographics"][new_demo_name] = new_demo_default or "*"
 
-            return [
-                np.array(matrices[j::num_matrices])  # Extract matrices by type
-                for j in range(num_matrices)
-            ]
+    # Matrix Sets Overview
+    if st.session_state.matrix_sets:
+        st.header("Matrix Sets Overview")
+        
+        overview_tab, edit_tab = st.tabs(["Overview", "Edit Matrix Set"])
+        
+        with overview_tab:
+            for set_name, matrix_set in st.session_state.matrix_sets.items():
+                with st.expander(f"Matrix Set: {set_name}"):
+                    # Display demographics
+                    st.subheader("Demographics")
+                    demo_df = pd.DataFrame([matrix_set["demographics"]])
+                    st.dataframe(demo_df)
+                    
+                    # Display matrices in a neat grid
+                    st.subheader("Matrices")
+                    cols = st.columns(3)
+                    for idx, (matrix_name, matrix) in enumerate(matrix_set["matrices"].items()):
+                        with cols[idx % 3]:
+                            st.write(f"**{matrix_name}**")
+                            # Format matrix values to 2 decimal places
+                            formatted_matrix = np.round(matrix, 2)
+                            df = pd.DataFrame(
+                                formatted_matrix,
+                                index=st.session_state.states,
+                                columns=st.session_state.states
+                            )
+                            st.dataframe(df)
+        
+        # Edit tab
+        with edit_tab:
+            selected_set = st.selectbox(
+                "Select Matrix Set to Edit",
+                list(st.session_state.matrix_sets.keys())
+            )
+            
+            if selected_set:
+                st.subheader(f"Editing Matrix Set: {selected_set}")
+                matrix_set = st.session_state.matrix_sets[selected_set]
+                
+                # Demographics editing
+                st.write("### Demographics")
+                updated_demographics = {}
+                demo_cols = st.columns(min(3, len(matrix_set["demographics"])))
+                
+                for idx, (demo_name, demo_value) in enumerate(matrix_set["demographics"].items()):
+                    with demo_cols[idx % len(demo_cols)]:
+                        if demo_name == "Sex":
+                            updated_demographics[demo_name] = st.selectbox(
+                                demo_name,
+                                options=["*", "M", "F"],
+                                index=["*", "M", "F"].index(demo_value),
+                                key=f"{selected_set}_{demo_name}"
+                            )
+                        elif demo_name == "Vaccination Status":
+                            updated_demographics[demo_name] = st.selectbox(
+                                demo_name,
+                                options=["*", "Vaccinated", "Unvaccinated"],
+                                index=["*", "Vaccinated", "Unvaccinated"].index(demo_value),
+                                key=f"{selected_set}_{demo_name}"
+                            )
+                        else:
+                            value = st.text_input(
+                                demo_name,
+                                value=demo_value,
+                                help="Use * for any value",
+                                key=f"{selected_set}_{demo_name}"
+                            )
+                            if validate_demographic_value(demo_name, value):
+                                updated_demographics[demo_name] = value
+                            else:
+                                st.error(f"Invalid value for {demo_name}")
+                                updated_demographics[demo_name] = demo_value
+                
+                matrix_set["demographics"] = updated_demographics
+                
+                # Matrix editing
+                st.write("### Matrices")
+                matrix_type = st.selectbox(
+                    "Select Matrix to Edit",
+                    list(matrix_set["matrices"].keys())
+                )
+                
+                if matrix_type:
+                    st.write(f"Editing {matrix_type}")
+                    matrix = matrix_set["matrices"][matrix_type]
+                    updated_matrix = []
+                    
+                    # Create matrix editor
+                    for i in range(len(st.session_state.states)):
+                        row = []
+                        cols = st.columns(len(st.session_state.states))
+                        for j in range(len(st.session_state.states)):
+                            with cols[j]:
+                                val = st.number_input(
+                                    f"{st.session_state.states[i]} → {st.session_state.states[j]}",
+                                    value=float(matrix[i][j]),
+                                    format="%.2f",
+                                    key=f"{selected_set}_{matrix_type}_{i}_{j}"
+                                )
+                                row.append(val)
+                        updated_matrix.append(row)
+                    
+                    matrix_set["matrices"][matrix_type] = np.array(updated_matrix)
 
-        (
-            transition_matrix,
-            distribution_type_matrix,
-            mean_time_interval_matrix,
-            std_dev_time_interval_matrix,
-            min_cutoff_matrix,
-            max_cutoff_matrix,
-        ) = parse_combined_file(combined_df)
+    # Add export/import functionality
+    if st.session_state.matrix_sets:
+        st.header("Export/Import Matrix Sets")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("Export Matrix Sets"):
+                # Convert matrix sets to JSON-compatible format
+                export_data = {
+                    name: {
+                        "matrices": {k: v.tolist() for k, v in set_data["matrices"].items()},
+                        "demographics": set_data["demographics"]
+                    }
+                    for name, set_data in st.session_state.matrix_sets.items()
+                }
+                st.download_button(
+                    "Download Matrix Sets",
+                    data=json.dumps(export_data, indent=2),
+                    file_name="matrix_sets.json",
+                    mime="application/json"
+                )
+        
+        with col2:
+            uploaded_file = st.file_uploader("Import Matrix Sets", type="json")
+            if uploaded_file is not None:
+                try:
+                    import_data = json.load(uploaded_file)
+                    for name, set_data in import_data.items():
+                        st.session_state.matrix_sets[name] = {
+                            "matrices": {k: np.array(v) for k, v in set_data["matrices"].items()},
+                            "demographics": set_data["demographics"]
+                        }
+                    st.success("Matrix sets imported successfully!")
+                except Exception as e:
+                    st.error(f"Error importing matrix sets: {str(e)}")
 
-        st.sidebar.success("Combined matrix file uploaded successfully.")
+    # Matrix Sets Overview section ends here
 
-    except Exception as e:
-        error_placeholder.error(f"Error reading combined matrix file: {e}")
-        st.stop()
+# Move Simulation Input Section outside of input method conditions
+st.markdown("---")  # Add a visual separator
+st.header("Run Simulation")
 
-# Process demographic mapping file
-if demographic_file:
-    try:
-        mapping_df, demographic_categories = parse_mapping_file(demographic_file)
-        st.sidebar.success("Demographic mapping file uploaded successfully.")
-    except Exception as e:
-        error_placeholder.error(f"Error parsing demographic mapping file: {e}")
-        st.stop()
+# Collect all unique demographics and their possible values
+demographic_options = collect_demographic_options()
 
-# Input demographics
-input_demographics = {}
-if demographic_file:
-    st.sidebar.subheader("Input Demographics")
-    for category in demographic_categories:
-        input_value = st.sidebar.text_input(f"Enter value for {category} (Leave blank for wildcard)")
-        input_demographics[category] = input_value.strip() if input_value.strip() else "*"  # Treat blanks as wildcards
+st.subheader("Enter Demographics for Simulation")
+simulation_demographics = {}
 
-# Main interface
-if st.button("Run Simulation"):
-    if not uploaded_file or not demographic_file:
-        error_placeholder.error("Please upload both the combined matrix and demographic mapping files.")
-        st.stop()
+if demographic_options or get_valid_ages():  # Show if there are demographics or valid ages
+    num_columns = min(3, max(1, len(demographic_options) + 1))  # +1 for age
+    demo_cols = st.columns(num_columns)
+    
+    # Handle age input first
+    with demo_cols[0]:
+        valid_ages = get_valid_ages()
+        if valid_ages:
+            age_options = ["*"] + valid_ages  # Add wildcard option
+            age_selection = st.selectbox(
+                "Select Age",
+                options=age_options,
+                key="sim_age"
+            )
+            if age_selection != "*":
+                simulation_demographics["Age"] = int(age_selection)
+    
+    # Handle other demographics
+    col_idx = 1
+    for demo_name, possible_values in demographic_options.items():
+        if demo_name != "Age Range":  # Skip age range as we handle it separately
+            with demo_cols[col_idx % num_columns]:
+                valid_options = sorted([v for v in possible_values if v])
+                
+                if demo_name == "Sex":
+                    sex_options = ["*"] + [opt for opt in ["M", "F"] if opt in valid_options]
+                    selection = st.selectbox(
+                        f"Select {demo_name}",
+                        options=sex_options,
+                        key=f"sim_{demo_name}"
+                    )
+                    if selection != "*":
+                        simulation_demographics[demo_name] = selection
+                
+                elif demo_name == "Vaccination Status":
+                    vax_options = ["*"] + [opt for opt in ["Vaccinated", "Unvaccinated"] if opt in valid_options]
+                    selection = st.selectbox(
+                        f"Select {demo_name}",
+                        options=vax_options,
+                        key=f"sim_{demo_name}"
+                    )
+                    if selection != "*":
+                        simulation_demographics[demo_name] = selection
+                
+                elif valid_options:
+                    options = ["*"] + valid_options
+                    selection = st.selectbox(
+                        f"Select {demo_name}",
+                        options=options,
+                        key=f"sim_{demo_name}"
+                    )
+                    if selection != "*":
+                        simulation_demographics[demo_name] = selection
+            col_idx += 1
 
-    if validation_failed:
-        error_placeholder.error("Cannot run simulation due to validation errors. Please correct them and try again.")
-        st.stop()
+# Initial state selection - after states are defined/updated
+if "Infected" in st.session_state.states:
+    default_initial = "Infected"
+else:
+    default_initial = st.session_state.states[0]
 
-    if not input_demographics:
-        error_placeholder.error("Please provide input demographics.")
-        st.stop()
+initial_state = st.selectbox(
+    "Select Initial State",
+    options=st.session_state.states,
+    index=st.session_state.states.index(default_initial),
+    help="Select the initial state for the simulation. Default is 'Infected' for standard states or the first state for custom states."
+)
 
-    try:
-        # Match input demographics to a matrix set
-        matrix_set = find_matching_matrix(input_demographics, mapping_df, demographic_categories)
-        matrices = extract_matrices(matrix_set, combined_df)
-
-        # Validate matrices
-        validate_matrices(
-            matrices["Transition Matrix"],
-            matrices["Mean"],
-            matrices["Standard Deviation"],
-            matrices["Min Cut-Off"],
-            matrices["Max Cut-Off"],
-            matrices["Distribution Type"],
-        )
-
-        # Run the simulation
-        simulation_data = run_simulation(
-            matrices["Transition Matrix"],
-            matrices["Mean"],
-            matrices["Standard Deviation"],
-            matrices["Min Cut-Off"],
-            matrices["Max Cut-Off"],
-            matrices["Distribution Type"],
-            initial_state,
-        )
-
-        # Display simulation results
-        st.subheader("Simulation Results")
-        st.write("Matched Matrix Set:", matrix_set)
-        st.write("Input Demographics:", input_demographics)
-
-        # Display simulation data in table format
-        st.subheader("State Timeline")
-        simulation_df = pd.DataFrame(simulation_data, columns=["State", "Time Step (minutes)"])
-        st.table(simulation_df)
-
-        # Visualize timeline
-        fig = visualize_state_timeline(simulation_data)
-        st.pyplot(fig)
-
-    except ValueError as e:
-        error_placeholder.error(f"Validation Error: {e}")
-    except Exception as e:
-        error_placeholder.error(f"Unexpected Error: {e}")
+# Handle simulation
+handle_simulation(initial_state)
