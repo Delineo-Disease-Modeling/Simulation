@@ -1,8 +1,67 @@
+import sys
+import os
+import argparse
 import pandas as pd
 import numpy as np
-from Simulation.dmp.core.simulation_functions import run_simulation, default_initial_state, visualize_state_timeline, states
-import os
-import streamlit as st
+from datetime import datetime
+
+# Add the parent directory to the Python path more explicitly
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
+# Import using the correct path
+from core.simulation_functions import run_simulation, generate_transition_time, validate_matrices
+
+# Define default states
+default_states = ["Infected", "Infectious", "Symptomatic", "Severe", "Critical", "Deceased", "Recovered"]
+default_initial_state = "Infected"
+
+def parse_states_file(file_path):
+    """Parse custom states from file"""
+    try:
+        with open(file_path, 'r') as f:
+            states = [line.strip() for line in f if line.strip()]
+        return states
+    except Exception as e:
+        print(f"Error reading states file: {str(e)}")
+        return default_states
+
+def parse_args():
+    """Parse command line arguments dynamically based on mapping file"""
+    parser = argparse.ArgumentParser(description="Disease Modeling Platform")
+    parser.add_argument("--matrices", required=True, help="Path to matrices CSV file")
+    parser.add_argument("--mapping", required=True, help="Path to mapping CSV file")
+    parser.add_argument("--states", help="Optional path to states file")
+    parser.add_argument("--output", help="Optional path for output CSV file (default: results_TIMESTAMP.csv)")
+    
+    # First parse just the mapping file to get demographic categories
+    initial_args, _ = parser.parse_known_args()
+    mapping_df = pd.read_csv(initial_args.mapping, skipinitialspace=True)  # Add skipinitialspace=True
+    demographic_categories = [col.strip() for col in mapping_df.columns if col.strip() != "Matrix_Set"]
+    
+    # Add arguments dynamically based on mapping file
+    for category in demographic_categories:
+        if category == "Age Range":
+            parser.add_argument("--age", type=int, required=True, 
+                              help="Age of person")
+        else:
+            # Convert category name to argument name
+            arg_name = category.lower().replace(' ', '_')
+            unique_values = mapping_df[category].unique()
+            valid_values = [str(v).strip() for v in unique_values if v != "*" and pd.notna(v)]
+            parser.add_argument(f"--{arg_name}", 
+                              required=True, 
+                              choices=valid_values,
+                              help=f"{category} value ({', '.join(valid_values)})")
+    
+    return parser.parse_args()
+
+def visualize_state_timeline(timeline):
+    """Visualize the state timeline"""
+    print("\nDisease Progression Timeline:")
+    for state, time in timeline:
+        print(f"{time:>6.1f} minutes: {state}")
 
 def validate_matrix_shape(matrix, expected_shape=None, matrix_name="Matrix"):
     """Validates matrix shape against number of states"""
@@ -298,64 +357,143 @@ def process_input(matrix_file_path, mapping_file_path, states_file_path=None, is
     except Exception as e:
         error_msg = f"Error processing input files: {str(e)}"
         if is_web:
-            st.error(error_msg)
+            print(error_msg)
             return None, None, None
         else:
             print(f"Error: {error_msg}")
             return None, None, None
 
-def run_cli():
-    """Command-line interface for DMP"""
-    import argparse
+def save_results(timeline, demographics, output_path=None):
+    """Save simulation results to CSV file"""
+    # Create results directory if it doesn't exist
+    results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+    os.makedirs(results_dir, exist_ok=True)
     
-    parser = argparse.ArgumentParser(description="Disease Modeling Platform")
-    parser.add_argument("--matrices", required=True, help="Path to matrices CSV file")
-    parser.add_argument("--mapping", required=True, help="Path to mapping CSV file")
-    parser.add_argument("--states", help="Optional path to states file")
-    parser.add_argument("--age", type=int, required=True, help="Age of person")
-    parser.add_argument("--sex", required=True, choices=["M", "F"], help="Sex of person")
-    parser.add_argument("--vaccination", required=True, choices=["Vaccinated", "Unvaccinated"], 
-                       help="Vaccination status")
-    parser.add_argument("--variant", required=True, help="Virus variant")
+    # Generate default filename with timestamp if none provided
+    if output_path is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = os.path.join(results_dir, f"results_{timestamp}.csv")
     
-    args = parser.parse_args()
+    # Convert timeline to DataFrame
+    results_df = pd.DataFrame(timeline, columns=['State', 'Time'])
     
-    # Process input files
-    matrix_df, mapping_df, states = process_input(
-        args.matrices, 
-        args.mapping, 
-        args.states,
-        is_web=False
-    )
+    # Add demographics to results
+    for key, value in demographics.items():
+        results_df[key] = value
     
-    if matrix_df is None:
-        return
+    # Save to CSV
+    results_df.to_csv(output_path, index=False)
+    print(f"\nResults saved to: {output_path}")
+
+def main():
+    args = parse_args()
     
-    # Create demographics dictionary
-    demographics = {
-        "Age": args.age,
-        "Sex": args.sex,
-        "Vaccination Status": args.vaccination,
-        "Variant": args.variant
-    }
-    
-    # Initialize DMP and run simulation
     try:
-        dmp = DiseaseModelingPlatform(
-            matrix_file_path=args.matrices,
-            mapping_file_path=args.mapping,
-            states_file_path=args.states
+        # Process input files
+        print("\nLoading input files...")
+        matrix_df = pd.read_csv(args.matrices, header=None)
+        mapping_df = pd.read_csv(args.mapping, skipinitialspace=True)
+        
+        # Load states from file
+        if args.states:
+            with open(args.states, 'r') as f:
+                states = [line.strip() for line in f if line.strip()]
+        else:
+            states = ["Infected", "Infectious_Asymptomatic", "Infectious_Symptomatic", 
+                     "Hospitalized", "ICU", "Recovered", "Deceased"]
+        
+        print(f"Using states: {states}")
+        num_states = len(states)
+        
+        # Create demographics dictionary dynamically
+        demographics = {}
+        demographic_categories = [col.strip() for col in mapping_df.columns if col.strip() != "Matrix_Set"]
+        for category in demographic_categories:
+            if category == "Age Range":
+                demographics["Age"] = args.age
+            else:
+                arg_name = category.lower().replace(' ', '_')
+                demographics[category] = getattr(args, arg_name)
+        
+        print(f"Demographics: {demographics}")
+        
+        # Find matching matrix set
+        matching_set = None
+        for _, row in mapping_df.iterrows():
+            matches = True
+            for category, value in demographics.items():
+                if category == "Age":
+                    age_range = row.get("Age Range")
+                    if age_range and age_range != "*":
+                        try:
+                            if age_range.endswith('+'):
+                                min_age = int(age_range[:-1])
+                                if value < min_age:
+                                    matches = False
+                                    break
+                            else:
+                                start, end = map(int, age_range.split('-'))
+                                if not (start <= value <= end):
+                                    matches = False
+                                    break
+                        except ValueError:
+                            matches = False
+                            break
+                else:
+                    if row[category] != "*" and str(row[category]) != str(value):
+                        matches = False
+                        break
+            
+            if matches:
+                matching_set = row["Matrix_Set"]
+                break
+        
+        if matching_set is None:
+            raise ValueError("No matching matrix set found for these demographics")
+        print(f"Using matrix set: {matching_set}")
+        
+        # Extract matrices in correct order:
+        # 1. Transition Matrix
+        # 2. Distribution Type
+        # 3. Mean
+        # 4. Standard Deviation
+        # 5. Min Cut-off
+        # 6. Max Cut-off
+        transition_matrix = matrix_df.iloc[0:num_states, 0:num_states].values
+        distribution_matrix = matrix_df.iloc[num_states:2*num_states, 0:num_states].values
+        mean_matrix = matrix_df.iloc[2*num_states:3*num_states, 0:num_states].values
+        std_dev_matrix = matrix_df.iloc[3*num_states:4*num_states, 0:num_states].values
+        min_cutoff_matrix = matrix_df.iloc[4*num_states:5*num_states, 0:num_states].values
+        max_cutoff_matrix = matrix_df.iloc[5*num_states:6*num_states, 0:num_states].values
+        
+        # Validate matrices
+        validate_matrices(transition_matrix, mean_matrix, std_dev_matrix,
+                        min_cutoff_matrix, max_cutoff_matrix, distribution_matrix)
+        
+        # Run simulation
+        print("\nRunning simulation...")
+        initial_state_idx = states.index(default_initial_state)
+        timeline = run_simulation(
+            transition_matrix,
+            mean_matrix,
+            std_dev_matrix,
+            min_cutoff_matrix,
+            max_cutoff_matrix,
+            distribution_matrix,
+            initial_state_idx,
+            states
         )
         
-        timeline = dmp.get_disease_timeline(demographics)
+        # Print results to console
+        visualize_state_timeline(timeline)
         
-        print("\nDisease Progression Timeline:")
-        for state, time in timeline:
-            print(f"{time:>6.1f} minutes: {state}")
-            
+        # Save results to file
+        save_results(timeline, demographics, args.output)
+        
     except Exception as e:
-        print(f"Error running simulation: {str(e)}")
+        print(f"Error: {str(e)}")
+        raise  # Show full error traceback
 
 if __name__ == "__main__":
-    run_cli()
+    main()
 

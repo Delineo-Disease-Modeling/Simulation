@@ -28,7 +28,27 @@ Time Intervals: Sampled from statistical distributions (Normal, Exponential, Uni
 Demographic Factors: Assign specific transition matrices to different demographic groups to study how disease progression varies by population.
 The simulation outputs a CSV file that captures each individual's complete disease timeline, from infection to recovery or removal, along with their demographic details.
 
+Project Structure:
+Web Application (app/):
+- app.py: Main Streamlit web interface
+- demographic_management.py: Handles demographic data input and validation
+- state_management.py: Manages disease state definitions and transitions
+- simulation_management.py: Controls simulation execution and results display
 
+Command Line Interface (cli/):
+- user_input.py: Processes CSV inputs and runs simulations from command line
+
+Core Functionality (core/):
+- simulation_functions.py: Contains the core simulation logic used by both interfaces
+
+Running the Application:
+1. Web Interface:
+   - Install Streamlit: pip install streamlit
+   - Run: streamlit run app/app.py
+   
+2. Command Line:
+   - Place input CSV files in the data/ directory
+   - Run: python cli/user_input.py
 
 How the Code Works:
 user_input.py:
@@ -88,10 +108,3 @@ Removed      0.0        0.0          0.0         0.0       0.0    1.0      0.0
 Recovered    0.0        0.0          0.0         0.0       0.0    0.0      1.0
 
 Each box indicates the probability of going from the row to the column state.
-
-To run the code:
-
-Ensure Python 3.x is installed on your system.
-Place your input CSV files (combined_matrices.csv and demographic_info.csv) in the same directory as the Python files.
-Execute user_input.py using a Python interpreter.
-The simulation results will be printed to the console.

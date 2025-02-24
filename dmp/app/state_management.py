@@ -1,5 +1,5 @@
 import streamlit as st
-from user_input import validate_states_format
+from Simulation.dmp.cli.user_input import validate_states_format
 
 def initialize_states():
     """Initialize default states in session state"""

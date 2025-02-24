@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-from simulation_functions import run_simulation, visualize_state_timeline
+from Simulation.dmp.core.simulation_functions import run_simulation, visualize_state_timeline
 
 def create_initial_state_vector(num_states, initial_state_name, states_list):
     """Create initial state vector with 1 in the initial state and 0 elsewhere"""

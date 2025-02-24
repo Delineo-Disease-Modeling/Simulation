@@ -1,17 +1,17 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from simulation_functions import run_simulation, visualize_state_timeline
-from user_input import validate_matrices, find_matching_matrix, extract_matrices, parse_mapping_file, validate_states_format
+from Simulation.dmp.core.simulation_functions import run_simulation, visualize_state_timeline
+from Simulation.dmp.cli.user_input import validate_matrices, find_matching_matrix, extract_matrices, parse_mapping_file, validate_states_format
 import json
-from state_management import initialize_states, handle_states_management
-from demographic_management import (
+from Simulation.dmp.app.state_management import initialize_states, handle_states_management
+from Simulation.dmp.app.demographic_management import (
     initialize_demographics, 
     collect_demographic_options, 
     get_valid_ages,
     validate_demographic_value
 )
-from simulation_management import handle_simulation
+from Simulation.dmp.app.simulation_management import handle_simulation
 
 def create_initial_state_vector(num_states, initial_state_name, states_list):
     """Create initial state vector with 1 in the initial state and 0 elsewhere"""

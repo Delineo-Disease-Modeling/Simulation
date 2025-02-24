@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from werkzeug.exceptions import BadRequest
-from dmp.simulation_functions import run_simulation, states, default_initial_state
-from dmp.user_input import validate_matrices, find_matching_matrix, extract_matrices, parse_mapping_file
+from Simulation.dmp.core.simulation_functions import run_simulation, states, default_initial_state
+from Simulation.dmp.cli.user_input import validate_matrices, find_matching_matrix, extract_matrices, parse_mapping_file
 import pandas as pd
 from io import StringIO
 import numpy as np
