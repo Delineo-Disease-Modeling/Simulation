@@ -312,13 +312,29 @@ def run_cli():
     parser.add_argument("--matrices", required=True, help="Path to matrices CSV file")
     parser.add_argument("--mapping", required=True, help="Path to mapping CSV file")
     parser.add_argument("--states", help="Optional path to states file")
-    parser.add_argument("--age", type=int, required=True, help="Age of person")
-    parser.add_argument("--sex", required=True, choices=["M", "F"], help="Sex of person")
-    parser.add_argument("--vaccination", required=True, choices=["Vaccinated", "Unvaccinated"], 
-                       help="Vaccination status")
-    parser.add_argument("--variant", required=True, help="Virus variant")
+    
+    # First read the mapping file to get demographic categories
+    mapping_df, demographic_categories = parse_mapping_file(args.mapping)
+    
+    # Add arguments dynamically based on mapping file
+    for category in demographic_categories:
+        if category == "Age Range":
+            parser.add_argument(f"--{category.lower().replace(' ', '_')}", 
+                              type=int, required=True,
+                              help=f"{category} of person")
+        else:
+            parser.add_argument(f"--{category.lower().replace(' ', '_')}", 
+                              help=f"{category} of person")
     
     args = parser.parse_args()
+    
+    # Create demographics dictionary from provided arguments
+    demographics = {}
+    for category in demographic_categories:
+        arg_name = category.lower().replace(' ', '_')
+        value = getattr(args, arg_name)
+        if value is not None:
+            demographics[category] = value
     
     # Process input files
     matrix_df, mapping_df, states = process_input(
@@ -330,14 +346,6 @@ def run_cli():
     
     if matrix_df is None:
         return
-    
-    # Create demographics dictionary
-    demographics = {
-        "Age": args.age,
-        "Sex": args.sex,
-        "Vaccination Status": args.vaccination,
-        "Variant": args.variant
-    }
     
     # Initialize DMP and run simulation
     try:
