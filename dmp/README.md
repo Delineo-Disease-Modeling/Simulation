@@ -26,23 +26,61 @@ The platform offers three distinct interfaces:
 ### 1. Command Line Interface
 Run simulations directly from the command line:
 
-```bash
-# Basic usage
-python -m cli.user_input --matrices data/combined_matrices_usecase.csv \
-                        --mapping data/demographic_mapping_usecase.csv \
-                        --age_range 25 \
-                        --vaccination_status Vaccinated \
-                        --sex F \
-                        --variant Omicron
+### Basic Usage
+From the `Simulation/dmp` directory:
 
-# With custom states file
-python -m cli.user_input --matrices data/combined_matrices_usecase.csv \
-                        --mapping data/demographic_mapping_usecase.csv \
-                        --states data/custom_states.txt \
-                        --age_range 25 \
-                        --vaccination_status Vaccinated \
-                        --sex F \
-                        --variant Omicron
+```bash
+python3 -m cli.user_input \
+    --matrices data/combined_matrices_usecase.csv \
+    --mapping data/demographic_mapping_usecase.csv \
+    --age_range 25 \
+    --vaccination_status Vaccinated \
+    --sex F \
+    --variant Omicron
+```
+
+### Optional States File
+```bash
+python3 -m cli.user_input \
+    --matrices data/combined_matrices_usecase.csv \
+    --mapping data/demographic_mapping_usecase.csv \
+    --states data/custom_states.txt \
+    --age_range 25 \
+    --vaccination_status Vaccinated \
+    --sex F \
+    --variant Omicron
+```
+
+### Arguments
+
+Required:
+- `--matrices`: Path to CSV file containing transition matrices
+- `--mapping`: Path to CSV file containing demographic mappings
+- `--age_range`: Age of the individual
+- `--vaccination_status`: Vaccination status (e.g., "Vaccinated", "Unvaccinated")
+- `--sex`: Sex of the individual ("M" or "F")
+- `--variant`: Virus variant (e.g., "Delta", "Omicron")
+
+Optional:
+- `--states`: Path to custom states file (if not provided, uses default_states.txt)
+
+### Example Output
+```
+Loading input files...
+Using states: ['Infected', 'Hospitalized', 'ICU', 'Recovered', 'Deceased']
+
+Demographics:
+- Age Range: 25
+- Sex: F
+- Vaccination Status: Vaccinated
+- Variant: Omicron
+
+Using matrix set: Matrix_Set_1
+
+Disease Progression Timeline:
+   0.0 hours: Infected
+  24.0 hours: Hospitalized
+  96.0 hours: Recovered
 ```
 
 ### 2. REST API
@@ -182,8 +220,68 @@ data/
 
 Run tests:
 ```bash
-python -m api.test_api
+python3 -m api.test_api
 ```
 
 ## License
-[Your license information here] 
+[Your license information here]
+
+## API Reference
+
+### POST /initialize
+Initialize the DMP with configuration files.
+
+Request:
+```json
+{
+    "matrices_path": "path/to/matrices.csv",
+    "mapping_path": "path/to/mapping.csv",
+    "states_path": "path/to/states.txt"  // Optional
+}
+```
+
+Response:
+```json
+{
+    "status": "success",
+    "message": "DMP initialized successfully",
+    "states": ["Infected", "Hospitalized", "ICU", "Recovered", "Deceased"],
+    "demographic_categories": ["Age Range", "Sex", "Vaccination Status", "Variant"],
+    "available_demographics": {
+        "Age Range": ["0-18", "19-64", "65+"],
+        "Sex": ["M", "F"],
+        "Vaccination Status": ["Vaccinated", "Unvaccinated"],
+        "Variant": ["Delta", "Omicron"]
+    }
+}
+```
+
+### POST /simulate
+Run a simulation with provided demographics.
+
+Request:
+```json
+{
+    "demographics": {
+        "Age Range": "25",
+        "Sex": "F",
+        "Vaccination Status": "Vaccinated",
+        "Variant": "Omicron"
+    }
+}
+```
+
+Response:
+```json
+{
+    "status": "success",
+    "timeline": [
+        ["Infected", 0.0],
+        ["Hospitalized", 72.0],
+        ["Recovered", 240.0]
+    ],
+    "matrix_set": "Matrix_Set_1"
+}
+```
+
+Note: Times in the timeline are in hours. 

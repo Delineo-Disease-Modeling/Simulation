@@ -38,28 +38,23 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Disease Modeling Platform")
     parser.add_argument("--matrices", required=True, help="Path to matrices CSV file")
     parser.add_argument("--mapping", required=True, help="Path to mapping CSV file")
-    parser.add_argument("--states", help="Optional path to states file")
+    parser.add_argument("--states", help="Optional path to custom states file (default: data/default_states.txt)")
     parser.add_argument("--output", help="Optional path for output CSV file (default: results_TIMESTAMP.csv)")
     
     # First parse just the mapping file to get demographic categories
     initial_args, _ = parser.parse_known_args()
-    mapping_df = pd.read_csv(initial_args.mapping, skipinitialspace=True)  # Add skipinitialspace=True
+    mapping_df = pd.read_csv(initial_args.mapping, skipinitialspace=True)
     demographic_categories = [col.strip() for col in mapping_df.columns if col.strip() != "Matrix_Set"]
     
     # Add arguments dynamically based on mapping file
     for category in demographic_categories:
-        if category == "Age Range":
-            parser.add_argument("--age", type=int, required=True, 
-                              help="Age of person")
-        else:
-            # Convert category name to argument name
-            arg_name = category.lower().replace(' ', '_')
-            unique_values = mapping_df[category].unique()
-            valid_values = [str(v).strip() for v in unique_values if v != "*" and pd.notna(v)]
-            parser.add_argument(f"--{arg_name}", 
-                              required=True, 
-                              choices=valid_values,
-                              help=f"{category} value ({', '.join(valid_values)})")
+        # Convert category name to argument name
+        arg_name = category.lower().replace(' ', '_')
+        unique_values = mapping_df[category].unique()
+        valid_values = [str(v).strip() for v in unique_values if v != "*" and pd.notna(v)]
+        parser.add_argument(f"--{arg_name}", 
+                          required=True, 
+                          help=f"{category} value ({', '.join(valid_values)})")
     
     return parser.parse_args()
 
@@ -208,66 +203,56 @@ def extract_matrices(matrix_set, combined_matrix_df, num_states):
     return matrices
 
 def find_matching_matrix(demographics, mapping_df, demographic_categories):
-    """
-    Find the matrix set corresponding to the given demographics, supporting wildcards,
-    range-based matching, and optional categories.
-    """
-    print("\nInput Demographics:")
-    for key, value in demographics.items():
-        print(f"  {key}: {value}")
-
+    """Find the matrix set corresponding to the given demographics"""
+    print(f"Input demographics: {demographics}")
+    
     for idx, row in mapping_df.iterrows():
         match = True
-        print(f"\nChecking Row {idx}:")
-        print(row.to_string(index=False))
-
+        
         for category in demographic_categories:
             mapping_value = str(row[category]).strip()
-            input_value = str(demographics.get(category, "")).strip()
-
-            # Handle wildcard or blank cells in the mapping file
-            if mapping_value in ("*", ""):
+            input_value = str(demographics[category]).strip()
+            
+            # Handle wildcard or blank cells
+            if mapping_value in ("*", "") or input_value in ("*", ""):
                 continue
-
-            # Handle wildcard or blank cells in the user input
-            if input_value in ("*", ""):
-                continue
-
+                
             # Handle range-based matching
-            if "-" in mapping_value and category == "Age Range":
+            if "-" in mapping_value:
                 try:
                     range_start, range_end = map(int, mapping_value.split("-"))
-                    if not (range_start <= int(input_value) <= range_end):
-                        print(f"  Mismatch in {category}: {input_value} not in range {mapping_value}")
+                    input_num = int(input_value)
+                    if not (range_start <= input_num <= range_end):
                         match = False
                         break
                 except ValueError:
-                    raise ValueError(f"Invalid range format in mapping file: {mapping_value}")
-
-            # Handle "61+" or similar conditions
-            elif mapping_value.endswith("+") and category == "Age Range":
+                    if mapping_value != input_value:
+                        match = False
+                        break
+                    
+            # Handle "N+" format
+            elif "+" in mapping_value:
                 try:
-                    min_value = int(mapping_value[:-1])  # Extract the numeric part
-                    if int(input_value) < min_value:
-                        print(f"  Mismatch in {category}: {input_value} is less than {mapping_value}")
+                    min_value = int(mapping_value.rstrip("+"))
+                    input_num = int(input_value)
+                    if input_num < min_value:
                         match = False
                         break
                 except ValueError:
-                    raise ValueError(f"Invalid format for '61+' in mapping file: {mapping_value}")
-
+                    if mapping_value != input_value:
+                        match = False
+                        break
+                        
             # Handle exact matches
             elif mapping_value != input_value:
-                print(f"  Mismatch in {category}: {input_value} != {mapping_value}")
                 match = False
                 break
-
+                
         if match:
-            print("\nMatched Demographic Set:")
-            print(row.to_string(index=False))
+            print(f"\nFound matching set: {row['Matrix_Set']}")
             return row["Matrix_Set"]
-
-    # If no match, raise an error
-    raise ValueError("No matching matrix set found for the given demographics.")
+            
+    raise ValueError("No matching matrix set found for these demographics")
 
 
 def get_user_input(demographic_categories):
@@ -343,15 +328,11 @@ def process_input(matrix_file_path, mapping_file_path, states_file_path=None, is
         else:
             mapping_df = pd.read_csv(mapping_file_path)
             
-        # Load states if provided
+        # Load states from provided file or default file
         if states_file_path:
-            if is_web:
-                states = parse_states_file(states_file_path)
-            else:
-                with open(states_file_path, 'r') as f:
-                    states = parse_states_file(f)
+            states = parse_states_file(states_file_path)
         else:
-            states = default_states
+            states = parse_states_file(DEFAULT_STATES_PATH)
             
         return combined_matrix_df, mapping_df, states
         
@@ -400,8 +381,7 @@ def main():
             with open(args.states, 'r') as f:
                 states = [line.strip() for line in f if line.strip()]
         else:
-            states = ["Infected", "Infectious_Asymptomatic", "Infectious_Symptomatic", 
-                     "Hospitalized", "ICU", "Recovered", "Deceased"]
+            states = parse_states_file(DEFAULT_STATES_PATH)
         
         print(f"Using states: {states}")
         num_states = len(states)
@@ -410,56 +390,15 @@ def main():
         demographics = {}
         demographic_categories = [col.strip() for col in mapping_df.columns if col.strip() != "Matrix_Set"]
         for category in demographic_categories:
-            if category == "Age Range":
-                demographics["Age"] = args.age
-            else:
-                arg_name = category.lower().replace(' ', '_')
-                demographics[category] = getattr(args, arg_name)
+            arg_name = category.lower().replace(' ', '_')
+            demographics[category] = getattr(args, arg_name)
         
         print(f"Demographics: {demographics}")
         
         # Find matching matrix set
-        matching_set = None
-        for _, row in mapping_df.iterrows():
-            matches = True
-            for category, value in demographics.items():
-                if category == "Age":
-                    age_range = row.get("Age Range")
-                    if age_range and age_range != "*":
-                        try:
-                            if age_range.endswith('+'):
-                                min_age = int(age_range[:-1])
-                                if value < min_age:
-                                    matches = False
-                                    break
-                            else:
-                                start, end = map(int, age_range.split('-'))
-                                if not (start <= value <= end):
-                                    matches = False
-                                    break
-                        except ValueError:
-                            matches = False
-                            break
-                else:
-                    if row[category] != "*" and str(row[category]) != str(value):
-                        matches = False
-                        break
-            
-            if matches:
-                matching_set = row["Matrix_Set"]
-                break
+        matching_set = find_matching_matrix(demographics, mapping_df, demographic_categories)
         
-        if matching_set is None:
-            raise ValueError("No matching matrix set found for these demographics")
-        print(f"Using matrix set: {matching_set}")
-        
-        # Extract matrices in correct order:
-        # 1. Transition Matrix
-        # 2. Distribution Type
-        # 3. Mean
-        # 4. Standard Deviation
-        # 5. Min Cut-off
-        # 6. Max Cut-off
+        # Extract matrices in correct order using num_states
         transition_matrix = matrix_df.iloc[0:num_states, 0:num_states].values
         distribution_matrix = matrix_df.iloc[num_states:2*num_states, 0:num_states].values
         mean_matrix = matrix_df.iloc[2*num_states:3*num_states, 0:num_states].values
@@ -486,14 +425,16 @@ def main():
         )
         
         # Print results to console
-        visualize_state_timeline(timeline)
+        print("\nDisease Progression Timeline:")
+        for state, time in timeline:
+            print(f"{time:>6.1f} hours: {state}")
         
         # Save results to file
         save_results(timeline, demographics, args.output)
         
     except Exception as e:
         print(f"Error: {str(e)}")
-        raise  # Show full error traceback
+        raise
 
 if __name__ == "__main__":
     main()
