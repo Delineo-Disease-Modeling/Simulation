@@ -1,13 +1,17 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
 import pandas as pd
 import os
 import sys
+from pathlib import Path
 
 # Add the parent directory to the Python path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(parent_dir)
+
 from core.simulation_functions import run_simulation
+from cli.user_input import find_matching_matrix, parse_mapping_file, extract_matrices
 
 app = FastAPI()
 
@@ -15,73 +19,98 @@ app = FastAPI()
 matrix_df = None
 mapping_df = None
 states = None
+demographic_categories = None
+
+# Path to default states file
+DEFAULT_STATES_PATH = Path(parent_dir) / "data" / "default_states.txt"
 
 class InitConfig(BaseModel):
     matrices_path: str
     mapping_path: str
     states_path: Optional[str] = None
 
-class Demographics(BaseModel):
-    age: int
-    sex: str
-    vaccination_status: str
-    variant: str
+class SimulationRequest(BaseModel):
+    demographics: Dict[str, str] = Field(
+        ..., 
+        description="Dictionary of demographic values matching the mapping file columns"
+    )
 
 @app.post("/initialize")
 async def initialize_dmp(config: InitConfig):
     """Initialize DMP with configuration files"""
-    global matrix_df, mapping_df, states
+    global matrix_df, mapping_df, states, demographic_categories
     
     try:
+        print(f"Initializing DMP with:")
+        print(f"Matrices path: {config.matrices_path}")
+        print(f"Mapping path: {config.mapping_path}")
+        print(f"States path: {config.states_path or DEFAULT_STATES_PATH}")
+        
+        # Verify files exist
+        if not os.path.exists(config.matrices_path):
+            raise FileNotFoundError(f"Matrix file not found: {config.matrices_path}")
+        if not os.path.exists(config.mapping_path):
+            raise FileNotFoundError(f"Mapping file not found: {config.mapping_path}")
+        
         # Load matrices
-        matrix_df = pd.read_csv(config.matrices_path, header=None)
+        matrix_df = pd.read_csv(config.matrices_path)
+        print(f"Loaded matrix file with shape: {matrix_df.shape}")
         
-        # Load mapping
-        mapping_df = pd.read_csv(config.mapping_path, skipinitialspace=True)
+        # Load mapping and get demographic categories using existing function
+        mapping_df, demographic_categories = parse_mapping_file(config.mapping_path)
+        print(f"Loaded mapping file with categories: {demographic_categories}")
         
-        # Load states if provided, otherwise use defaults
-        if config.states_path:
-            with open(config.states_path, 'r') as f:
-                states = [line.strip() for line in f if line.strip()]
-        else:
-            states = ["Infected", "Infectious_Asymptomatic", "Infectious_Symptomatic", 
-                     "Hospitalized", "ICU", "Recovered", "Deceased"]
+        # Load states from file (custom or default)
+        states_path = config.states_path if config.states_path else DEFAULT_STATES_PATH
+        if not os.path.exists(states_path):
+            raise FileNotFoundError(f"States file not found: {states_path}")
+            
+        with open(states_path, 'r') as f:
+            states = [line.strip() for line in f if line.strip()]
+        
+        if not states:
+            raise ValueError("States file is empty")
+            
+        print(f"Using states from {states_path}: {states}")
+        
+        # Get available demographics using the mapping DataFrame
+        available_demographics = {
+            category: mapping_df[category].unique().tolist()
+            for category in demographic_categories
+        }
         
         return {
             "status": "success",
             "message": "DMP initialized successfully",
             "states": states,
-            "available_demographics": get_available_demographics()
+            "demographic_categories": demographic_categories,
+            "available_demographics": available_demographics
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-def get_available_demographics():
-    """Get available demographic options from mapping file"""
-    demographics = {}
-    for col in mapping_df.columns:
-        if col != "Matrix_Set":
-            unique_values = mapping_df[col].unique()
-            valid_values = [str(v).strip() for v in unique_values if v != "*" and pd.notna(v)]
-            demographics[col] = valid_values
-    return demographics
+        print(f"Error during initialization: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error during initialization: {str(e)}"
+        )
 
 @app.post("/simulate")
-async def run_dmp_simulation(demographics: Demographics):
-    """Run a single simulation with given demographics"""
-    global matrix_df, mapping_df, states
-    
+async def run_dmp_simulation(request: SimulationRequest):
+    """Run simulation with provided demographics"""
     if matrix_df is None or mapping_df is None or states is None:
         raise HTTPException(status_code=400, detail="DMP not initialized. Call /initialize first")
     
     try:
-        # Find matching matrix set
-        matching_set = find_matching_matrix_set(demographics)
+        print(f"Running simulation with demographics: {request.demographics}")
+        
+        # Find matching matrix set using existing function
+        matching_set = find_matching_matrix(request.demographics, mapping_df, demographic_categories)
         if not matching_set:
             raise ValueError("No matching matrix set found for given demographics")
             
-        # Extract matrices for the matching set
+        print(f"Found matching matrix set: {matching_set}")
+        
+        # Extract matrices using existing function
         matrices = extract_matrices(matching_set, matrix_df, len(states))
         
         # Run simulation
@@ -92,7 +121,7 @@ async def run_dmp_simulation(demographics: Demographics):
             matrices["Min Cut-Off"],
             matrices["Max Cut-Off"],
             matrices["Distribution Type"],
-            states.index("Infected"),  # Initial state
+            0,  # Start with first state
             states
         )
         
@@ -103,56 +132,14 @@ async def run_dmp_simulation(demographics: Demographics):
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error during simulation: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error during simulation: {str(e)}"
+        )
 
-def find_matching_matrix_set(demographics: Demographics):
-    """Find matching matrix set from mapping file"""
-    for _, row in mapping_df.iterrows():
-        if matches_demographics(row, demographics):
-            return row["Matrix_Set"]
-    return None
-
-def matches_demographics(row, demographics: Demographics):
-    """Check if row matches given demographics"""
-    # Handle age ranges
-    age_range = row["Age Range"]
-    if age_range != "*":
-        if age_range.endswith('+'):
-            min_age = int(age_range[:-1])
-            if demographics.age < min_age:
-                return False
-        else:
-            start, end = map(int, age_range.split('-'))
-            if not (start <= demographics.age <= end):
-                return False
-    
-    # Check other demographics
-    if (row["Sex"] != "*" and row["Sex"] != demographics.sex) or \
-       (row["Vaccination Status"] != "*" and row["Vaccination Status"] != demographics.vaccination_status) or \
-       (row["Variant"] != "*" and row["Variant"] != demographics.variant):
-        return False
-    
-    return True
-
-def extract_matrices(matrix_set: str, matrix_df: pd.DataFrame, num_states: int):
-    """Extract matrices for given set"""
-    matrix_set_id = int(matrix_set.split('_')[-1])
-    start_row = (matrix_set_id - 1) * (num_states * 6)
-    
-    matrices = {}
-    matrix_types = [
-        "Transition Matrix",
-        "Distribution Type",
-        "Mean",
-        "Standard Deviation",
-        "Min Cut-Off",
-        "Max Cut-Off"
-    ]
-    
-    for i, matrix_type in enumerate(matrix_types):
-        matrix_start = start_row + (i * num_states)
-        matrix_end = matrix_start + num_states
-        matrix = matrix_df.iloc[matrix_start:matrix_end, :num_states].values
-        matrices[matrix_type] = matrix
-    
-    return matrices 
+# Add error handlers
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc):
+    print(f"Unhandled error: {str(exc)}")
+    return {"detail": str(exc)} 

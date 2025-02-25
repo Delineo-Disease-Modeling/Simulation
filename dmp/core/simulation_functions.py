@@ -6,7 +6,7 @@ def run_simulation(transition_matrix, mean_matrix, std_dev_matrix,
                   initial_state_idx, states: List[str]) -> List[Tuple[str, float]]:
     """Run a single simulation of disease progression
     
-    Note: Input matrices contain times in days, but output timeline is in minutes
+    Note: Input matrices contain times in days, but output timeline is in hours
     
     Args:
         transition_matrix: Matrix of transition probabilities
@@ -19,9 +19,9 @@ def run_simulation(transition_matrix, mean_matrix, std_dev_matrix,
         states: List of state names
     
     Returns:
-        List of (state_name, time) tuples
+        List of (state_name, time) tuples where time is in hours
     """
-    MINUTES_PER_DAY = 24 * 60  # Convert days to minutes
+    HOURS_PER_DAY = 24  # Convert days to hours
     
     current_state = initial_state_idx
     timeline = [(states[current_state], 0.0)]  # Start at time 0
@@ -54,10 +54,10 @@ def run_simulation(transition_matrix, mean_matrix, std_dev_matrix,
             distribution_matrix[current_state][next_state]
         )
         
-        # Convert days to minutes
-        time_minutes = time_days * MINUTES_PER_DAY
+        # Convert days to hours
+        time_hours = time_days * HOURS_PER_DAY
         
-        total_time += time_minutes
+        total_time += time_hours
         timeline.append((states[next_state], total_time))
         current_state = next_state
         

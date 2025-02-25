@@ -4,6 +4,7 @@ import argparse
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from pathlib import Path
 
 # Add the parent directory to the Python path more explicitly
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -13,19 +14,24 @@ sys.path.append(parent_dir)
 # Import using the correct path
 from core.simulation_functions import run_simulation, generate_transition_time, validate_matrices
 
+# Path to default states file
+DEFAULT_STATES_PATH = Path(parent_dir) / "data" / "default_states.txt"
+
 # Define default states
 default_states = ["Infected", "Infectious", "Symptomatic", "Severe", "Critical", "Deceased", "Recovered"]
 default_initial_state = "Infected"
 
 def parse_states_file(file_path):
-    """Parse custom states from file"""
+    """Parse states from file"""
     try:
         with open(file_path, 'r') as f:
             states = [line.strip() for line in f if line.strip()]
+        if not states:
+            raise ValueError("States file is empty")
         return states
     except Exception as e:
         print(f"Error reading states file: {str(e)}")
-        return default_states
+        raise
 
 def parse_args():
     """Parse command line arguments dynamically based on mapping file"""
@@ -310,15 +316,10 @@ def validate_states_format(states):
 
 def process_states_input(states_file=None):
     """Process user-defined states from file or use defaults"""
-    if states_file:
-        try:
-            with open(states_file, 'r') as f:
-                states = [line.strip() for line in f if line.strip()]
-            validate_states_format(states)
-            return states
-        except FileNotFoundError:
-            raise ValueError(f"States file not found: {states_file}")
-    return default_states  # Fall back to default states if no file provided
+    states_path = states_file if states_file else DEFAULT_STATES_PATH
+    if not os.path.exists(states_path):
+        raise FileNotFoundError(f"States file not found: {states_path}")
+    return parse_states_file(states_path)
 
 def process_input(matrix_file_path, mapping_file_path, states_file_path=None, is_web=True):
     """Process input files for both web and CLI interfaces

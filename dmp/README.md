@@ -1,0 +1,189 @@
+# Disease Modeling Platform (DMP)
+
+## Overview
+This project simulates the progression of individuals through various stages of a disease, based on transition probabilities, time intervals, and demographic information. The system models how people move through health states such as being infected, hospitalized, and recovered, accommodating a wide range of disease progression scenarios using customizable transition matrices and time intervals.
+
+The simulation helps answer questions like:
+- How long does it take for a vaccinated person to recover compared to an unvaccinated person?
+- What is the probability that an elderly individual moves from infection to hospitalization versus recovery?
+- How does the average time spent in the ICU differ across demographic groups?
+
+## Installation
+
+```bash
+# Clone the repository
+git clone [repository-url]
+cd Simulation/dmp
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+## Interfaces
+
+The platform offers three distinct interfaces:
+
+### 1. Command Line Interface
+Run simulations directly from the command line:
+
+```bash
+# Basic usage
+python -m cli.user_input --matrices data/combined_matrices_usecase.csv \
+                        --mapping data/demographic_mapping_usecase.csv \
+                        --age_range 25 \
+                        --vaccination_status Vaccinated \
+                        --sex F \
+                        --variant Omicron
+
+# With custom states file
+python -m cli.user_input --matrices data/combined_matrices_usecase.csv \
+                        --mapping data/demographic_mapping_usecase.csv \
+                        --states data/custom_states.txt \
+                        --age_range 25 \
+                        --vaccination_status Vaccinated \
+                        --sex F \
+                        --variant Omicron
+```
+
+### 2. REST API
+Start the API server:
+```bash
+uvicorn api.dmp_api:app --reload
+```
+
+Initialize the DMP:
+```bash
+curl -X POST http://localhost:8000/initialize \
+     -H "Content-Type: application/json" \
+     -d '{
+           "matrices_path": "data/combined_matrices_usecase.csv",
+           "mapping_path": "data/demographic_mapping_usecase.csv",
+           "states_path": "data/custom_states.txt"
+         }'
+```
+
+Run a simulation:
+```bash
+curl -X POST http://localhost:8000/simulate \
+     -H "Content-Type: application/json" \
+     -d '{
+           "demographics": {
+             "Age Range": "25",
+             "Vaccination Status": "Vaccinated",
+             "Sex": "F",
+             "Variant": "Omicron"
+           }
+         }'
+```
+
+### 3. Web Interface (Streamlit)
+```bash
+streamlit run app/app.py
+```
+Features:
+- Interactive UI for matrix creation and editing
+- Real-time visualization of disease progression
+- Demographic parameter customization
+- Default values provided for quick start
+
+## Configuration Files
+
+### States File
+- Default: `data/default_states.txt`
+- One state per line
+- Example states: Infected, Hospitalized, ICU, Recovered, Deceased
+
+### Matrix Requirements
+The combined matrices CSV file must follow a specific structure. For each matrix set:
+
+1. Matrix Order (6 matrices per set):
+   - Transition Matrix: Probabilities of moving between states
+   - Distribution Type: Type of statistical distribution for time intervals
+   - Mean Matrix: Average time spent in each state
+   - Standard Deviation Matrix: Variation in time intervals
+   - Min Cutoff Matrix: Minimum allowed time in each state
+   - Max Cutoff Matrix: Maximum allowed time in each state
+
+2. Distribution Types:
+   - 0: Fixed time (uses mean value only)
+   - 1: Normal distribution
+   - 2: Uniform distribution
+   - 3: Log-normal distribution
+   - 4: Gamma distribution
+
+3. Matrix Restrictions:
+   - Transition Matrix: Values must sum to 1 for each row (or 0 for terminal states)
+   - All matrices must be square (n x n where n is number of states)
+   - Mean values must be within min/max cutoff range
+   - Non-zero transition probabilities must have valid distribution types
+   - All values must be non-negative
+
+### Demographic Mapping File
+CSV file mapping demographics to matrix sets:
+- Must include "Matrix_Set" column
+- Other columns define demographic categories
+- Supports wildcards (*) for flexible matching
+- Age ranges support both "N-M" and "N+" formats
+
+## Time Calculations
+
+1. Input Times:
+   - All times in matrices are specified in DAYS
+   - Example: mean time of 2.0 represents 2 days
+
+2. Output Times:
+   - All output times are converted to HOURS
+   - Conversion: hours = days * 24
+   - Example: 2 days = 48 hours
+
+3. Time Generation:
+   - Times generated based on specified distribution
+   - Bounded by min/max cutoffs
+   - Out-of-bounds times are regenerated
+   - Available distributions handle different scenarios:
+     * Fixed: Always uses mean value
+     * Normal: Bell curve around mean
+     * Uniform: Random between (mean ± std_dev)
+     * Log-normal: Skewed distribution
+     * Gamma: Shape determined by mean and std dev
+
+Example Output:
+```
+Disease Progression Timeline:
+   0.0 hours: Infected
+  12.0 hours: Infectious_Symptomatic  # 0.5 days after infection
+  96.0 hours: Recovered              # 4 days after symptoms
+```
+
+## Project Structure
+```
+api/
+- dmp_api.py: FastAPI endpoints
+- test_api.py: API testing suite
+
+app/
+- app.py: Streamlit web interface
+- state_management.py: States handling
+- demographic_management.py: Demographics handling
+- simulation_management.py: Simulation execution
+
+cli/
+- user_input.py: Command line interface
+
+core/
+- simulation_functions.py: Core simulation logic
+
+data/
+- Example matrices and demographic mappings
+- Default configuration files
+```
+
+## Development
+
+Run tests:
+```bash
+python -m api.test_api
+```
+
+## License
+[Your license information here] 

@@ -22,7 +22,7 @@ def test_dmp_api():
                 "states_path": states_path
             }
         )
-        init_response.raise_for_status()  # Raise exception for bad status codes
+        init_response.raise_for_status()
         init_data = init_response.json()
         
         print("✓ Initialization successful")
@@ -35,28 +35,32 @@ def test_dmp_api():
     
     print("\n2. Testing Simulation...")
     try:
-        # Try a few different demographic combinations
+        # Test cases with specific ages that should match to ranges
         test_cases = [
             {
-                "age": 25,
-                "sex": "F",
-                "vaccination_status": "Vaccinated",
-                "variant": "Omicron"
+                "demographics": {
+                    "Age Range": "25",  # Should match "19-64" in mapping file
+                    "Vaccination Status": "Vaccinated",
+                    "Sex": "F",
+                    "Variant": "Omicron"
+                }
             },
             {
-                "age": 70,
-                "sex": "M",
-                "vaccination_status": "Unvaccinated",
-                "variant": "Delta"
+                "demographics": {
+                    "Age Range": "70",  # Should match "65+" in mapping file
+                    "Vaccination Status": "Unvaccinated",
+                    "Sex": "M",
+                    "Variant": "Delta"
+                }
             }
         ]
         
-        for i, demographics in enumerate(test_cases, 1):
-            print(f"\nRunning simulation {i} with demographics:", demographics)
+        for i, test_case in enumerate(test_cases, 1):
+            print(f"\nRunning simulation {i} with demographics:", test_case["demographics"])
             
             sim_response = requests.post(
                 f"{BASE_URL}/simulate",
-                json=demographics
+                json=test_case
             )
             sim_response.raise_for_status()
             sim_data = sim_response.json()
@@ -65,7 +69,7 @@ def test_dmp_api():
             print(f"Used matrix set: {sim_data['matrix_set']}")
             print("\nDisease progression timeline:")
             for state, time in sim_data["timeline"]:
-                print(f"{time:>6.1f} minutes: {state}")
+                print(f"{time:>6.1f} hours: {state}")
                 
     except requests.exceptions.RequestException as e:
         print(f"✗ Simulation failed: {str(e)}")
