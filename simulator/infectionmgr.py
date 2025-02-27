@@ -1,10 +1,21 @@
 from .pap import InfectionState, InfectionTimeline, VaccinationState
 from .infection_model import CAT
-from dmp.user_input import process_dataframes
+from dmp.cli.user_input import process_dataframes, find_matching_matrix, extract_matrices, validate_matrices, run_simulation
 import pandas as pd
 from io import StringIO
 import requests
 from typing import Dict, Any
+
+class Person: 
+    def __init__(self, age, sex, is_vaccinated, interventions, location, invisible=False):
+        self.age = age
+        self.sex = sex; 
+        self.is_vaccinated = is_vaccinated
+        self.interventions = interventions
+        self.location = location    
+        self.invisible = invisible
+    
+
 
 class InfectionManager:
     def __init__(self, matrices_dict, timestep=15, people=[]):
@@ -119,7 +130,7 @@ class InfectionManager:
                         continue
                     
                     # Assuming CAT function can h andle the matrix without needing to specify a disease
-                    if CAT(p, True, num_timesteps, 7e2):
+                    if CAT(p, True, num_timesteps, 7e3):
                         new_infections.append(disease)
                         
                         if newlyInfected.get(disease) == None:
