@@ -10,12 +10,13 @@ import requests
 from infection_model import probability_of_infection 
 
 class Person: 
-    def __init__(self, age, vaccination_status, sex, variant, matrix_set, invisible = False): 
+    def __init__(self, age, vaccination_status, sex, variant, matrix_set): 
         self.age = age
         self.vaccination_status = vaccination_status
         self.sex = sex
         self.variant = variant
         self.matrix_set = matrix_set
+        self.invisible = False 
 
     def getDisease(self):
         return self.variant
@@ -101,9 +102,8 @@ def main():
                 exit()
 
             # Step 2: Send a simulation request with demographics
-            simulation_payload = {
-                person.getDemographics()
-            }
+            simulation_payload = person.getDemographics()
+        
 
             simulation_response = requests.post(f"{BASE_URL}/simulate", json=simulation_payload)
 
@@ -113,7 +113,7 @@ def main():
                 print(timeline)
                 if "timeline" in timeline and timeline["timeline"]:
                     last_status = timeline["timeline"][-1][0]  # Get the last status in the timeline
-                    if (last_status == "deceased"): 
+                    if (last_status.lower() == "deceased"): 
                         person.setInvisible()
             else:
                 print("❌ Simulation failed:", simulation_response.text)
