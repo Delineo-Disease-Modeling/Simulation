@@ -23,6 +23,9 @@ class Person:
     def __str__(self): 
         return f"{self.age}, {self.vaccination_status}, {self.sex}, {self.variant}, {self.matrix_set}"
     
+    def getDemographics(self): 
+        return f"{self.age}, {self.vaccination_status}, {self.sex}, {self.variant}, {self.matrix_set}"
+
 # Function to read the CSV file using pandas and create Person objects
 def read_csv_and_create_objects(csv_file):
     # Read the CSV file into a pandas DataFrame
@@ -69,11 +72,40 @@ def main():
 
         print("Probability of infection: " + str(p_infection))
 
-        if p_infection > 0.5: 
+        if p_infection > 0.05: 
             print("Sending POST request to DMP API with person's demographics")
+            BASE_URL = "http://localhost:8000"
+            init_payload = {
+                "matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
+                "mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
+                "states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/custom_states.txt"
+            }
+            init_response = requests.post(f"{BASE_URL}/initialize", json=init_payload)
+            init_response.raise_for_status()
+            init_data = init_response.json()
 
+            if init_response.status_code == 200:
+                print("DMP successfully initialized!")
+            else:
+                print("Initialization failed:", init_response.text)
+                exit()
 
-    
+            # Step 2: Send a simulation request with demographics
+            simulation_payload = {
+                
+            }
+
+            simulation_response = requests.post(f"{BASE_URL}/simulate", json=simulation_payload)
+
+            if simulation_response.status_code == 200:
+                timeline = simulation_response.json()
+                print("✅ Simulation successful! Disease timeline:")
+                print(timeline)
+            else:
+                print("❌ Simulation failed:", simulation_response.text)
+                exit()
+        
+
 
 if __name__ == '__main__':
     main()
