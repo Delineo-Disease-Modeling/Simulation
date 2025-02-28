@@ -10,7 +10,7 @@ import requests
 from infection_model import probability_of_infection 
 
 class Person: 
-    def __init__(self, age, vaccination_status, sex, variant, matrix_set): 
+    def __init__(self, age, vaccination_status, sex, variant, matrix_set, invisible = False): 
         self.age = age
         self.vaccination_status = vaccination_status
         self.sex = sex
@@ -32,6 +32,9 @@ class Person:
                         "Variant": self.variant
                     }
         }
+    
+    def setInvisible(self): 
+        self.invisible = True 
 
 # Function to read the CSV file using pandas and create Person objects
 def read_csv_and_create_objects(csv_file):
@@ -108,6 +111,10 @@ def main():
                 timeline = simulation_response.json()
                 print("✅ Simulation successful! Disease timeline:")
                 print(timeline)
+                if "timeline" in timeline and timeline["timeline"]:
+                    last_status = timeline["timeline"][-1][0]  # Get the last status in the timeline
+                    if (last_status == "deceased"): 
+                        person.setInvisible()
             else:
                 print("❌ Simulation failed:", simulation_response.text)
                 exit()
