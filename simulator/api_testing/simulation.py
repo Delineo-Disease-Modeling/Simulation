@@ -24,7 +24,14 @@ class Person:
         return f"{self.age}, {self.vaccination_status}, {self.sex}, {self.variant}, {self.matrix_set}"
     
     def getDemographics(self): 
-        return f"{self.age}, {self.vaccination_status}, {self.sex}, {self.variant}, {self.matrix_set}"
+        return {
+            "demographics": {
+                        "Age Range": self.age, 
+                        "Vaccination Status": self.vaccination_status,
+                        "Sex": self.sex,
+                        "Variant": self.variant
+                    }
+        }
 
 # Function to read the CSV file using pandas and create Person objects
 def read_csv_and_create_objects(csv_file):
@@ -56,29 +63,29 @@ def main():
         # calculate probability of infection of each person 
         R_0 = 900 # upper limit of virions to get infected 
         disease = person.getDisease()
-        d = 0.5 # particle degradation rate
-        t_i = 60 # duration of exposure 
+        d = 0.1 # particle degradation rate
+        t_i = 600 # duration of exposure 
         r = 1860 # emission rate of person (src: https://pmc.ncbi.nlm.nih.gov/articles/PMC9128309/)
         m_i = 0.5 # mask filteration rate 
         V = 3000 # volume of room in liters 
-        fv_list = 0.6 # fraction of viruses in droplet size class i 
+        fv_list = 0.9 # fraction of viruses in droplet size class i 
         p_list = 0.7 # probability of droplet size class i
         t_room = 10000 # time spent in room 
-        t_close = 10000 # time spent within 2 meters of infected person
-        a_filter = 4.8; # air changes per hour 
-        distance = 0.45 #distance from infected person 
+        t_close = 100000 # time spent within 2 meters of infected person
+        a_filter = 7; # air changes per hour 
+        distance = 0.1 #distance from infected person 
 
         p_infection = probability_of_infection(disease, d, t_i, r, m_i, V, fv_list, p_list, t_room, t_close, a_filter)
 
         print("Probability of infection: " + str(p_infection))
 
-        if p_infection > 0.05: 
+        if p_infection > 0.5: 
             print("Sending POST request to DMP API with person's demographics")
             BASE_URL = "http://localhost:8000"
             init_payload = {
-                "matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
-                "mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
-                "states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/custom_states.txt"
+                "matrices_path": "combined_matrices_usecase.csv",
+                "mapping_path": "demographic_mapping_usecase.csv",
+                "states_path": "custom_states.txt"
             }
             init_response = requests.post(f"{BASE_URL}/initialize", json=init_payload)
             init_response.raise_for_status()
@@ -92,7 +99,7 @@ def main():
 
             # Step 2: Send a simulation request with demographics
             simulation_payload = {
-                
+                person.getDemographics()
             }
 
             simulation_response = requests.post(f"{BASE_URL}/simulate", json=simulation_payload)
@@ -105,7 +112,6 @@ def main():
                 print("❌ Simulation failed:", simulation_response.text)
                 exit()
         
-
 
 if __name__ == '__main__':
     main()
