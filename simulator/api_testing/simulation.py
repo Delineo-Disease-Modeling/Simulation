@@ -10,24 +10,23 @@ import requests
 from infection_model import probability_of_infection 
 
 class Person: 
-    def __init__(self, age, vaccination_status, sex, variant, matrix_set): 
+    def __init__(self, age, vaccination_status, sex, variant): 
         self.age = age
         self.vaccination_status = vaccination_status
         self.sex = sex
         self.variant = variant
-        self.matrix_set = matrix_set
         self.invisible = False 
 
     def getDisease(self):
         return self.variant
     
     def __str__(self): 
-        return f"{self.age}, {self.vaccination_status}, {self.sex}, {self.variant}, {self.matrix_set}"
+        return f"{self.age}, {self.vaccination_status}, {self.sex}, {self.variant}"
     
     def getDemographics(self): 
         return {
             "demographics": {
-                        "Age Range": self.age, 
+                        "Age": str(self.age),
                         "Vaccination Status": self.vaccination_status,
                         "Sex": self.sex,
                         "Variant": self.variant
@@ -50,15 +49,14 @@ def read_csv_and_create_objects(csv_file):
             age=row['Age'],
             vaccination_status=row['Vaccination Status'],
             sex=row['Sex'],
-            variant=row['Variant'],
-            matrix_set=row['Matrix_Set']
+            variant=row['Variant']
         )
         people.append(person)
     
     return people
 
 def main():
-    people = read_csv_and_create_objects('/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographics.csv')
+    people = read_csv_and_create_objects('/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/demographics.csv')
     for person in people: 
         print(person)
     
@@ -87,9 +85,12 @@ def main():
             print("Sending POST request to DMP API with person's demographics")
             BASE_URL = "http://localhost:8000"
             init_payload = {
-                "matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
-                "mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
-                "states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/custom_states.txt"
+                # "matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
+                # "mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
+                # "states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/custom_states.txt"
+                "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
+                "mapping_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
+                "states_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/custom_states.txt"
             }
             init_response = requests.post(f"{BASE_URL}/initialize", json=init_payload)
             init_response.raise_for_status()
