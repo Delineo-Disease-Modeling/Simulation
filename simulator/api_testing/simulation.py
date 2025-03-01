@@ -57,9 +57,27 @@ def read_csv_and_create_objects(csv_file):
 
 def main():
     people = read_csv_and_create_objects('/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographics.csv')
-    for person in people: 
-        print(person)
+
     
+    print("Sending POST request to DMP API with person's demographics")
+    BASE_URL = "http://localhost:8000"
+    init_payload = {
+        "matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
+        "mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
+        "states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/custom_states.txt"
+        # "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
+        # "mapping_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
+        # "states_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/custom_states.txt"
+    }
+    init_response = requests.post(f"{BASE_URL}/initialize", json=init_payload)
+    init_response.raise_for_status()
+    init_data = init_response.json()
+
+    if init_response.status_code == 200:
+        print("DMP successfully initialized!")
+    else:
+        print("Initialization failed:", init_response.text)
+        exit()
 
     for person in people: 
         # calculate probability of infection of each person 
@@ -82,27 +100,8 @@ def main():
         print("Probability of infection: " + str(p_infection))
 
         if p_infection > 0.5: 
-            print("Sending POST request to DMP API with person's demographics")
-            BASE_URL = "http://localhost:8000"
-            init_payload = {
-                "matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
-                "mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
-                "states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/custom_states.txt"
-                # "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
-                # "mapping_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
-                # "states_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/custom_states.txt"
-            }
-            init_response = requests.post(f"{BASE_URL}/initialize", json=init_payload)
-            init_response.raise_for_status()
-            init_data = init_response.json()
-
-            if init_response.status_code == 200:
-                print("DMP successfully initialized!")
-            else:
-                print("Initialization failed:", init_response.text)
-                exit()
-
-            # Step 2: Send a simulation request with demographics
+    
+            # Send a simulation request with demographics
             simulation_payload = person.getDemographics()
         
 
