@@ -32,7 +32,7 @@ This is version 0 of the integration, allowing the simulator to calculate infect
 - The simulator reads demographic data from `demographics.csv` and creates `Person` objects.
 
 ### Step 2: Infection Probability Calculation
-- For each person, the simulator calculates the probability of infection using parameters such as:
+- For each person, the simulator calculates the probability of infection using the infection model V0 and takes in parameters such as:
   - Virion threshold (`R₀`)
   - Disease variant
   - Particle degradation rate
@@ -43,9 +43,10 @@ This is version 0 of the integration, allowing the simulator to calculate infect
   - Time spent in room and close proximity
   - Air changes per hour
   - Distance from infected person
+At the moment, the parameters are the same for every individual, but these can be changed by the user to better suit the simulation. 
 
 ### Step 3: DMP Interaction
-- If a person's infection probability exceeds 50%, the simulator:
+- If a person's infection probability exceeds 50% (assumed threshold), the simulator:
   1. Initializes the DMP with necessary data paths.
   2. Sends the person's demographics to the DMP.
   3. Receives the disease trajectory and updates the person's status if they are deceased.
@@ -66,6 +67,6 @@ This is version 0 of the integration, allowing the simulator to calculate infect
 ## Future Improvements
 - Enhance error handling for API interactions.
 - Expand to accommodate different disease models.
-- 
+- Expand to have different parameters for each individual to calculate probability of infection. Need to figure out where this data will come from. 
 
 This documentation provides a comprehensive overview of the integration process, detailing the components, workflow, and future enhancements. 
