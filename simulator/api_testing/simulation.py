@@ -55,6 +55,10 @@ def read_csv_and_create_objects(csv_file):
     
     return people
 
+def load_infection_paramters(): 
+    df = pd.read_csv("/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/infection_model_parameters.csv", header = 0)
+    return df.set_index("parameter")["value"].to_dict()
+
 def main():
     people = read_csv_and_create_objects('/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographics.csv')
 
@@ -84,22 +88,10 @@ def main():
         if person.invisible: 
             return 
         
-        # calculate probability of infection of each person 
-        R_0 = 900 # upper limit of virions to get infected 
-        disease = person.getDisease()
-        d = 0.1 # particle degradation rate
-        t_i = 600 # duration of exposure 
-        r = 1860 # emission rate of person (src: https://pmc.ncbi.nlm.nih.gov/articles/PMC9128309/)
-        m_i = 0.5 # mask filteration rate 
-        V = 3000 # volume of room in liters 
-        fv_list = 0.9 # fraction of viruses in droplet size class i 
-        p_list = 0.7 # probability of droplet size class i
-        t_room = 10000 # time spent in room 
-        t_close = 100000 # time spent within 2 meters of infected person
-        a_filter = 7; # air changes per hour 
-        distance = 0.1 #distance from infected person 
+        params = load_infection_paramters()
 
-        p_infection = probability_of_infection(disease, d, t_i, r, m_i, V, fv_list, p_list, t_room, t_close, a_filter)
+        # calculate probability of infection of each person 
+        p_infection = probability_of_infection(person.getDisease(), params["d"], params["t_i"], params["r"], params["m_i"], params["V"], params["fv_list"], params["p_list"], params["t_room"], params["t_close"], params["a_filter"])
 
         print("Probability of infection: " + str(p_infection))
 
