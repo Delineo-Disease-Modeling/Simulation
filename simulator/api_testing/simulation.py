@@ -80,6 +80,10 @@ def main():
         exit()
 
     for person in people: 
+        # if a person is invisible, it means they are not in the simulation anymore 
+        if person.invisible: 
+            return 
+        
         # calculate probability of infection of each person 
         R_0 = 900 # upper limit of virions to get infected 
         disease = person.getDisease()
@@ -113,7 +117,7 @@ def main():
                 print(timeline)
                 if "timeline" in timeline and timeline["timeline"]:
                     last_status = timeline["timeline"][-1][0]  # Get the last status in the timeline
-                    if (last_status.lower() == "deceased"): 
+                    if (last_status.lower() == "deceased" or last_status.lower() == "ICU" or last_status.lower() == "hospitalized"): 
                         person.setInvisible()
             else:
                 print("❌ Simulation failed:", simulation_response.text)
