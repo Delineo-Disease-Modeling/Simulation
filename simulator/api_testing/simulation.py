@@ -8,6 +8,7 @@ This file does the following:
 import pandas as pd
 import requests 
 from infection_model import probability_of_infection 
+import random
 
 class Person: 
     def __init__(self, age, vaccination_status, sex, variant): 
@@ -59,6 +60,13 @@ def load_infection_paramters():
     df = pd.read_csv("/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/infection_model_parameters.csv", header = 0)
     return df.set_index("parameter")["value"].to_dict()
 
+def get_status_at_time(t, timeline):
+    current_status = "Unknown"
+    for status, time in timeline["timeline"]:
+        if t >= time:
+            current_status = status
+    return current_status
+
 def main():
     people = read_csv_and_create_objects('/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographics.csv')
 
@@ -95,8 +103,8 @@ def main():
 
         print("Probability of infection: " + str(p_infection))
 
-        if p_infection > 0.5: 
-    
+        if random.random() < p_infection:
+            time = random.randint(0, 100)
             # Send a simulation request with demographics
             simulation_payload = person.getDemographics()
         
@@ -107,6 +115,8 @@ def main():
                 timeline = simulation_response.json()
                 print("✅ Simulation successful! Disease timeline:")
                 print(timeline)
+                current_status = get_status_at_time(time, timeline)
+                print("Status at time " + str(time) + ": " + current_status)
                 if "timeline" in timeline and timeline["timeline"]:
                     last_status = timeline["timeline"][-1][0]  # Get the last status in the timeline
                     if (last_status.lower() == "deceased" or last_status.lower() == "ICU" or last_status.lower() == "hospitalized"): 
