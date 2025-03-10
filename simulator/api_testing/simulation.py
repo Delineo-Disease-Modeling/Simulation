@@ -9,6 +9,7 @@ import pandas as pd
 import requests 
 from infection_model import probability_of_infection 
 import random
+from collections import Counter
 
 class Person: 
     def __init__(self, age, vaccination_status, sex, variant): 
@@ -17,6 +18,7 @@ class Person:
         self.sex = sex
         self.variant = variant
         self.invisible = False 
+        self.final_state = None
 
     def getDisease(self):
         return self.variant
@@ -34,8 +36,9 @@ class Person:
                     }
         }
     
-    def setInvisible(self): 
-        self.invisible = True 
+    def setInvisible(self, state): 
+        self.invisible = True
+        self.final_state = state
 
 # Function to read the CSV file using pandas and create Person objects
 def read_csv_and_create_objects(csv_file):
@@ -57,7 +60,7 @@ def read_csv_and_create_objects(csv_file):
     return people
 
 def load_infection_paramters(): 
-    df = pd.read_csv("/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/infection_model_parameters.csv", header = 0)
+    df = pd.read_csv("/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/infection_model_parameters.csv", header = 0)
     return df.set_index("parameter")["value"].to_dict()
 
 def get_status_at_time(t, timeline):
@@ -68,18 +71,23 @@ def get_status_at_time(t, timeline):
     return current_status
 
 def main():
-    people = read_csv_and_create_objects('/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographics.csv')
-
+    people = read_csv_and_create_objects('/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/demographics.csv')
+    total_people = len(people)
+    infected_count = 0
+    invisible_states = Counter()
+    current_states = Counter()
+    
+    print(f"Total population: {total_people} people")
     
     print("Sending POST request to DMP API with person's demographics")
     BASE_URL = "http://localhost:8000"
     init_payload = {
-        "matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
-        "mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
-        "states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/custom_states.txt"
-        # "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
-        # "mapping_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
-        # "states_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/custom_states.txt"
+        # "matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
+        # "mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
+        # "states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing/custom_states.txt"
+        "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/combined_matrices_usecase.csv",
+        "mapping_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/demographic_mapping_usecase.csv",
+        "states_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing/custom_states.txt"
     }
     init_response = requests.post(f"{BASE_URL}/initialize", json=init_payload)
     init_response.raise_for_status()
@@ -91,39 +99,78 @@ def main():
         print("Initialization failed:", init_response.text)
         exit()
 
-    for person in people: 
+    for i, person in enumerate(people): 
         # if a person is invisible, it means they are not in the simulation anymore 
         if person.invisible: 
-            return 
+            continue
         
         params = load_infection_paramters()
 
         # calculate probability of infection of each person 
         p_infection = probability_of_infection(person.getDisease(), params["d"], params["t_i"], params["r"], params["m_i"], params["V"], params["fv_list"], params["p_list"], params["t_room"], params["t_close"], params["a_filter"])
 
-        print("Probability of infection: " + str(p_infection))
+        print(f"Person {i+1}: {person} - Probability of infection: {p_infection:.4f}")
 
         if random.random() < p_infection:
-            time = random.randint(0, 100)
+            infected_count += 1
+            time = random.randint(100, 300)
             # Send a simulation request with demographics
             simulation_payload = person.getDemographics()
-        
-
             simulation_response = requests.post(f"{BASE_URL}/simulate", json=simulation_payload)
 
             if simulation_response.status_code == 200:
                 timeline = simulation_response.json()
-                print("✅ Simulation successful! Disease timeline:")
-                print(timeline)
+                print(f"✅ Person {i+1} infected - Disease timeline:")
+                print(timeline["timeline"])
+                
+                # Get status at the current time
                 current_status = get_status_at_time(time, timeline)
-                print("Status at time " + str(time) + ": " + current_status)
-                if "timeline" in timeline and timeline["timeline"]:
-                    last_status = timeline["timeline"][-1][0]  # Get the last status in the timeline
-                    if (last_status.lower() == "deceased" or last_status.lower() == "ICU" or last_status.lower() == "hospitalized"): 
-                        person.setInvisible()
+                print(f"Status at time {time}: {current_status}")
+                
+                # Track this person's current disease state
+                current_states[current_status] += 1
+                
+                # Set person as invisible based on CURRENT state, not final state
+                if current_status in ["Deceased", "ICU", "Hospitalized"]:
+                    person.setInvisible(current_status)
+                    invisible_states[current_status] += 1
+                    print(f"⚠️ Person {i+1} marked invisible due to {current_status} at time {time}")
             else:
-                print("❌ Simulation failed:", simulation_response.text)
+                print(f"❌ Person {i+1} simulation failed: {simulation_response.text}")
                 exit()
+    
+    # Calculate statistics
+    infection_rate = (infected_count / total_people) * 100
+    invisible_count = sum(invisible_states.values())
+    invisible_rate = (invisible_count / total_people) * 100
+    
+    # Print summary statistics
+    print("\n" + "="*50)
+    print("SIMULATION SUMMARY")
+    print("="*50)
+    print(f"Total population: {total_people}")
+    print(f"Total infected: {infected_count} ({infection_rate:.2f}%)")
+    print(f"Total invisible: {invisible_count} ({invisible_rate:.2f}%)")
+    
+    print("\nCurrent Disease States at Simulation End:")
+    for state, count in current_states.items():
+        percentage = (count / infected_count) * 100 if infected_count > 0 else 0
+        print(f"  - {state}: {count} ({percentage:.2f}%)")
+    
+    print("\nInvisible People by Reason:")
+    for state, count in invisible_states.items():
+        percentage = (count / invisible_count) * 100 if invisible_count > 0 else 0
+        print(f"  - {state}: {count} ({percentage:.2f}%)")
+    
+    # Calculate visibility statistics
+    visible_count = infected_count - invisible_count
+    visible_rate = (visible_count / infected_count) * 100 if infected_count > 0 else 0
+    
+    print("\nVisibility Summary:")
+    print(f"  - Visible: {visible_count} ({visible_rate:.2f}% of infected)")
+    print(f"  - Invisible: {invisible_count} ({100-visible_rate:.2f}% of infected)")
+    
+    print("="*50)
         
 
 if __name__ == '__main__':

@@ -52,9 +52,11 @@ async def initialize_dmp(config: InitConfig):
         if not os.path.exists(config.mapping_path):
             raise FileNotFoundError(f"Mapping file not found: {config.mapping_path}")
         
-        # Load matrices
-        matrix_df = pd.read_csv(config.matrices_path)
+        # Load matrices with explicit delimiter and no header
+        matrix_df = pd.read_csv(config.matrices_path, header=None, sep=',', skipinitialspace=True)
         print(f"Loaded matrix file with shape: {matrix_df.shape}")
+        print(f"First few rows of matrix data:")
+        print(matrix_df.iloc[:10])
         
         # Load mapping and get demographic categories using existing function
         mapping_df, demographic_categories = parse_mapping_file(config.mapping_path)
@@ -80,15 +82,15 @@ async def initialize_dmp(config: InitConfig):
         }
         
         return {
-            "status": "success",
-            "message": "DMP initialized successfully",
+            "status": "success", 
             "states": states,
-            "demographic_categories": demographic_categories,
-            "available_demographics": available_demographics
+            "demographics": available_demographics
         }
         
     except Exception as e:
         print(f"Error during initialization: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=500, 
             detail=f"Error during initialization: {str(e)}"
