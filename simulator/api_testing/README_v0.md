@@ -73,7 +73,6 @@ At the moment, the parameters are the same for every individual, but these can b
 #### 1. Time-Based Disease State
 - **Random Time Point**: Each person's simulation now runs until a random time point which can be adjusted in the code
 - **Current vs. Final State**: Uses the person's disease state at the current simulation time instead of the final disease state
-- **Realistic Disease Progression**: This allows for a more diverse mix of disease states in the population
 
 #### 2. Enhanced Invisibility Rules
 - **Additional States**: Persons are now marked invisible for three conditions:
@@ -92,12 +91,5 @@ At the moment, the parameters are the same for every individual, but these can b
 - **CSV Parsing**: Fixed matrix file reading by explicitly setting delimiter to comma
 - **Header Handling**: Ensured proper handling of CSV data with `header=None` parameter
 - **Spacing Handling**: Added `skipinitialspace=True` to properly handle whitespace after commas
-
-### Enhanced Output Example
-
-## Future Improvements
-- Enhance error handling for API interactions.
-- Expand to accommodate different disease models.
-- Expand to have different parameters for each individual to calculate probability of infection. Need to figure out where this data will come from. 
 
 This documentation provides a comprehensive overview of the integration process, detailing the components, workflow, and future enhancements. 
