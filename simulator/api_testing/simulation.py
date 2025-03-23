@@ -78,6 +78,7 @@ def main():
     infected_count = 0
     invisible_states = Counter()
     current_states = Counter()
+    infectious = []
     
     print(f"Total population: {total_people} people")
     
@@ -137,6 +138,9 @@ def main():
                     person.setInvisible(current_status)
                     invisible_states[current_status] += 1
                     print(f"⚠️ Person {i+1} marked invisible due to {current_status} at time {time}")
+
+                if current_status == "Infectious_Asymptomatic" or current_status == "Infectious_Symptomatic" or current_status == "Infected": 
+                    infectious.append(person)
             else:
                 print(f"❌ Person {i+1} simulation failed: {simulation_response.text}")
                 exit()
@@ -173,6 +177,10 @@ def main():
     print(f"  - Invisible: {invisible_count} ({100-visible_rate:.2f}% of infected)")
     
     print("="*50)
+
+    print("All infectious people at time " + str(time) + ":")
+    for person in infectious: 
+        print(person)
         
 
 if __name__ == '__main__':
