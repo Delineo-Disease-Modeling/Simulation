@@ -79,6 +79,8 @@ def main():
     invisible_states = Counter()
     current_states = Counter()
     infectious = []
+    can_get_infected = [] # list of people who are not infectious or invisible and can get infected 
+    recoveredCanGetInfected = True
     
     print(f"Total population: {total_people} people")
     
@@ -141,6 +143,10 @@ def main():
 
                 if current_status == "Infectious_Asymptomatic" or current_status == "Infectious_Symptomatic" or current_status == "Infected": 
                     infectious.append(person)
+
+                if (current_status == "Recovered" and recoveredCanGetInfected) or (person.invisible == False and not(current_status == "Infectious_Asymptomatic" or current_status == "Infectious_Symptomatic" or current_status == "Infected")):
+                    can_get_infected.append(person)
+            
             else:
                 print(f"❌ Person {i+1} simulation failed: {simulation_response.text}")
                 exit()
@@ -180,6 +186,12 @@ def main():
 
     print("All infectious people at time " + str(time) + ":")
     for person in infectious: 
+        print(person)
+
+    print("\n")
+
+    print("People who can get infected at time " + str(time) + ":")
+    for person in can_get_infected: 
         print(person)
         
 
