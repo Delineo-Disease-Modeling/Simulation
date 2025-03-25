@@ -1,0 +1,7 @@
+Infected
+Infectious_Asymptomatic
+Infectious_Symptomatic
+Hospitalized
+ICU
+Recovered
+Deceased
