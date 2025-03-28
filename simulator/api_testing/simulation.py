@@ -78,6 +78,7 @@ def main():
     infected_count = 0
     invisible_states = Counter()
     current_states = Counter()
+    invisible = []
     infectious = []
     can_get_infected = [] # list of people who are not infectious or invisible and can get infected 
     recoveredCanGetInfected = True
@@ -139,6 +140,7 @@ def main():
                 if current_status in ["Deceased", "ICU", "Hospitalized"]:
                     person.setInvisible(current_status)
                     invisible_states[current_status] += 1
+                    invisible.append(person)
                     print(f"⚠️ Person {i+1} marked invisible due to {current_status} at time {time}")
 
                 if current_status == "Infectious_Asymptomatic" or current_status == "Infectious_Symptomatic" or current_status == "Infected": 
@@ -192,6 +194,12 @@ def main():
 
     print("People who can get infected at time " + str(time) + ":")
     for person in can_get_infected: 
+        print(person)
+    
+    print("\n")
+
+    print("People removed from the simulation at time " + str(time) + ":")
+    for person in invisible: 
         print(person)
         
 
