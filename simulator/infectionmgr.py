@@ -1,6 +1,6 @@
 from .pap import InfectionState, InfectionTimeline, VaccinationState
 from .infection_model import CAT
-from dmp.user_input import find_matching_matrix, extract_matrices, validate_matrices, run_simulation
+# from dmp.user_input import find_matching_matrix, extract_matrices, validate_matrices, run_simulation
 import pandas as pd
 from io import StringIO
 import simulation
