@@ -3,6 +3,7 @@ from .infection_model import CAT
 from dmp.user_input import find_matching_matrix, extract_matrices, validate_matrices, run_simulation
 import pandas as pd
 from io import StringIO
+import simulation
 
 class InfectionManager:
     def __init__(self, matrices_dict, timestep=15, people=[]):
@@ -138,7 +139,10 @@ class InfectionManager:
 
     # When will this person turn from infected to infectious? And later symptomatic? Hospitalized?
     def create_timeline(self, person, disease, curtime):
-        # tl = process_dataframes([self.matrices], {})[0]
+        
+        simulation.main()
+        
+        """ # tl = process_dataframes([self.matrices], {})[0]
         
         demographic_info = pd.read_csv(StringIO(f'Sex,Age,Is_Vaccinated,Matrix_Set\n{"M" if person.sex == 0 else "F"},{person.age},{person.interventions["vaccine"] != VaccinationState.NONE},1'))
 
@@ -215,4 +219,4 @@ class InfectionManager:
                 else:
                     val[disease][state] = InfectionTimeline(curtime + tl[str], curtime + maxt)
                 
-        person.timeline = val
+        person.timeline = val """
