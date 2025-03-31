@@ -1,9 +1,8 @@
 from .pap import InfectionState, InfectionTimeline, VaccinationState
 from .infection_model import CAT
-# from dmp.user_input import find_matching_matrix, extract_matrices, validate_matrices, run_simulation
 import pandas as pd
 from io import StringIO
-import simulation
+import requests
 
 class InfectionManager:
     def __init__(self, matrices_dict, timestep=15, people=[]):
@@ -135,88 +134,84 @@ class InfectionManager:
                         if file is not None:
                             file.write(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}\n')
 
-
-
-    # When will this person turn from infected to infectious? And later symptomatic? Hospitalized?
     def create_timeline(self, person, disease, curtime):
+        """Create a disease timeline for a newly infected person using the DMP API"""
         
-        simulation.main()
+        # Set up API connection
+        BASE_URL = "http://localhost:8000"
         
-        """ # tl = process_dataframes([self.matrices], {})[0]
-        
-        demographic_info = pd.read_csv(StringIO(f'Sex,Age,Is_Vaccinated,Matrix_Set\n{"M" if person.sex == 0 else "F"},{person.age},{person.interventions["vaccine"] != VaccinationState.NONE},1'))
-
-        #matrices = self.matrices_dict[disease]
-        
-        demographic_mapping = 'Matrix_Set,Age Range,Health Status,Pre-existing Conditions,Vaccination Status,Region\nMatrix_Set_1,18-35,Healthy,*,Vaccinated,Urban\nMatrix_Set_2,36-60,Moderate,Mild,Vaccinated,Suburban\nMatrix_Set_3,61+,At-Risk,Severe,Unvaccinated,Rural\nMatrix_Set_4,61+,Healthy,None,Vaccinated,Urban'
-        combined_matrices = '0.0,0.2,0.2,0.0,0.0,0.0,0.6\n0.0,0.0,0.3,0.0,0.0,0.0,0.7\n0.0,0.0,0.0,0.3,0.1,0.0,0.6\n0.0,0.0,0.0,0.0,0.2,0.0,0.8\n0.0,0.0,0.0,0.0,0.0,0.1,0.9\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n\n0,1,1,0,0,0,2\n0,0,2,0,0,0,1\n0,0,0,3,1,0,2\n0,0,0,0,1,0,2\n0,0,0,0,0,1,1\n0,0,0,0,0,0,0\n0,0,0,0,0,0,0\n\n0.0,2.0,3.0,0.0,0.0,0.0,1.0\n0.0,0.0,3.0,0.0,0.0,0.0,2.0\n0.0,0.0,0.0,2.0,3.0,0.0,4.0\n0.0,0.0,0.0,0.0,2.0,0.0,5.0\n0.0,0.0,0.0,0.0,0.0,2.0,3.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n\n0.0,0.5,0.5,0.0,0.0,0.0,0.3\n0.0,0.0,0.7,0.0,0.0,0.0,0.5\n0.0,0.0,0.0,0.6,0.7,0.0,0.8\n0.0,0.0,0.0,0.0,0.4,0.0,0.7\n0.0,0.0,0.0,0.0,0.0,0.3,0.4\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n\n0,1,2,0,0,0,1\n0,0,2,0,0,0,1\n0,0,0,1,2,0,3\n0,0,0,0,1,0,3\n0,0,0,0,0,1,2\n0,0,0,0,0,0,0\n0,0,0,0,0,0,0\n\n0,4,5,0,0,0,3\n0,0,6,0,0,0,4\n0,0,0,4,6,0,5\n0,0,0,0,5,0,6\n0,0,0,0,0,4,5\n0,0,0,0,0,0,0\n0,0,0,0,0,0,0\n0.0,0.5,0.5,0.0,0.0,0.0,0.0\n0.0,0.0,0.7,0.2,0.0,0.0,0.1\n0.0,0.0,0.0,0.6,0.2,0.0,0.2\n0.0,0.0,0.0,0.0,0.5,0.1,0.4\n0.0,0.0,0.0,0.0,0.0,0.4,0.6\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n\n0,1,2,0,0,0,0\n0,0,1,2,0,0,3\n0,0,0,3,1,0,2\n0,0,0,0,2,1,1\n0,0,0,0,0,1,2\n0,0,0,0,0,0,0\n0,0,0,0,0,0,0\n\n0.0,6.0,6.0,0.0,0.0,0.0,0.0\n0.0,0.0,7.0,10.0,0.0,0.0,5.0\n0.0,0.0,0.0,8.0,10.0,0.0,6.0\n0.0,0.0,0.0,0.0,12.0,15.0,10.0\n0.0,0.0,0.0,0.0,0.0,20.0,18.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n\n0.0,2.0,3.0,0.0,0.0,0.0,0.0\n0.0,0.0,3.0,5.0,0.0,0.0,2.0\n0.0,0.0,0.0,4.0,5.0,0.0,3.0\n0.0,0.0,0.0,0.0,6.0,8.0,5.0\n0.0,0.0,0.0,0.0,0.0,7.0,6.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n\n0.0,3.0,4.0,0.0,0.0,0.0,0.0\n0.0,0.0,5.0,6.0,0.0,0.0,3.0\n0.0,0.0,0.0,4.0,6.0,0.0,4.0\n0.0,0.0,0.0,0.0,8.0,10.0,6.0\n0.0,0.0,0.0,0.0,0.0,10.0,9.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n\n0.0,8.0,10.0,0.0,0.0,0.0,0.0\n0.0,0.0,12.0,15.0,0.0,0.0,8.0\n0.0,0.0,0.0,10.0,14.0,0.0,9.0\n0.0,0.0,0.0,0.0,16.0,18.0,14.0\n0.0,0.0,0.0,0.0,0.0,20.0,19.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.2,0.4,0.1,0.2,0.0,0.1\n0.0,0.0,0.3,0.2,0.3,0.0,0.2\n0.0,0.0,0.0,0.3,0.3,0.0,0.4\n0.0,0.0,0.0,0.0,0.4,0.2,0.4\n0.0,0.0,0.0,0.0,0.0,0.3,0.7\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n\n0,3,3,2,1,0,1\n0,0,2,3,3,0,1\n0,0,0,3,3,0,1\n0,0,0,0,3,2,1\n0,0,0,0,0,2,2\n0,0,0,0,0,0,0\n0,0,0,0,0,0,0\n\n0.0,8.0,10.0,15.0,20.0,0.0,25.0\n0.0,0.0,10.0,15.0,25.0,0.0,30.0\n0.0,0.0,0.0,12.0,18.0,0.0,35.0\n0.0,0.0,0.0,0.0,20.0,15.0,40.0\n0.0,0.0,0.0,0.0,0.0,18.0,45.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n\n0.0,2.0,3.0,5.0,6.0,0.0,7.0\n0.0,0.0,3.0,5.0,7.0,0.0,8.0\n0.0,0.0,0.0,4.0,6.0,0.0,9.0\n0.0,0.0,0.0,0.0,5.0,4.0,8.0\n0.0,0.0,0.0,0.0,0.0,5.0,10.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n0.0,0.0,0.0,0.0,0.0,0.0,0.0\n\n0,5,6,10,15,0,20\n0,0,6,10,20,0,25\n0,0,0,8,12,0,30\n0,0,0,0,15,10,35\n0,0,0,0,0,12,40\n0,0,0,0,0,0,0\n0,0,0,0,0,0,0\n\n0,12,15,20,25,0,30\n0,0,15,20,30,0,35\n0,0,0,16,20,0,40\n0,0,0,0,22,15,45\n0,0,0,0,0,18,50\n0,0,0,0,0,0,0\n0,0,0,0,0,0,0'
-        demographics = {
-            'Age Range': '62',
-            'Health Status': 'At-Risk',
-            'Vaccination Status': 'Unvaccinated',
-            'Region': 'Rural'
+        # Prepare the demographic payload for the API
+        simulation_payload = {
+            "demographics": {
+                "Age": str(person.age),
+                "Vaccination Status": "Vaccinated" if person.interventions["vaccine"] != VaccinationState.NONE else "Unvaccinated",
+                "Sex": "F" if person.sex == 1 else "M",
+                "Variant": disease 
             }
-        initial_state = 'Infected'
-
-        # Convert string CSVs to pandas DataFrame
-        mapping_df = pd.read_csv(StringIO(demographic_mapping))
-        combined_matrix_df = pd.read_csv(StringIO(combined_matrices), header=None)
-
-        # Extract demographic categories
-        demographic_categories = [col for col in mapping_df.columns if col != "Matrix_Set"]
-
-        # Find matching matrix set and extract matrices
-        matrix_set = find_matching_matrix(demographics, mapping_df, demographic_categories)
-        matrices = extract_matrices(matrix_set, combined_matrix_df)
-
-        # Validate matrices
-        validate_matrices(
-            transition_matrix=matrices["Transition Matrix"],
-            mean_matrix=matrices["Mean"],
-            std_dev_matrix=matrices["Standard Deviation"],
-            min_cutoff_matrix=matrices["Min Cut-Off"],
-            max_cutoff_matrix=matrices["Max Cut-Off"],
-            distribution_matrix=matrices["Distribution Type"]
-        )
-
-        # Run the simulation using positional arguments
-        tl = run_simulation(
-            matrices["Transition Matrix"],  # Positional argument 1
-            matrices["Mean"],               # Positional argument 2
-            matrices["Standard Deviation"], # Positional argument 3
-            matrices["Min Cut-Off"],        # Positional argument 4
-            matrices["Max Cut-Off"],        # Positional argument 5
-            matrices["Distribution Type"],  # Positional argument 6
-            initial_state                   # Positional argument 7
-        )
-        
-        tl = {state:time/60 for [state,time] in tl}
-                                
-        mint = tl[min(tl, key=tl.get)]
-        maxt = 10080 #tl[max(tl, key=tl.get)]
-        
-        val = {}
-        val[disease] = {
-            InfectionState.INFECTED: InfectionTimeline(curtime, curtime + maxt)
-        }
-                
-        str_to_state = {
-            'Symptomatic': InfectionState.SYMPTOMATIC,
-            'Infectious Asymptomatic': InfectionState.INFECTIOUS,
-            'Infectious Symptomatic': InfectionState.INFECTIOUS,
-            'Infectious Symptomatic': InfectionState.SYMPTOMATIC,
-            'Hospitalized': InfectionState.HOSPITALIZED,
-            'ICU': InfectionState.HOSPITALIZED,
-            'Recovered': InfectionState.RECOVERED,
-            'Removed': InfectionState.REMOVED
         }
         
-        for str, state in str_to_state.items():
-            if str in tl.keys():
-                if state in val[disease].keys():
-                    curmin = val[disease][state].start
-                    val[disease][state] = InfectionTimeline(min(curmin, curtime + tl[str]), curtime + maxt)
-                else:
-                    val[disease][state] = InfectionTimeline(curtime + tl[str], curtime + maxt)
-                
-        person.timeline = val """
+        # Send request to DMP API
+        try:
+            simulation_response = requests.post(f"{BASE_URL}/simulate", json=simulation_payload)
+            simulation_response.raise_for_status()
+            
+            # Process the timeline returned from the API
+            timeline_data = simulation_response.json()
+            
+            # Map DMP states to our infection states
+            str_to_state = {
+                'Infected': InfectionState.INFECTED,
+                'Symptomatic': InfectionState.SYMPTOMATIC,
+                'Infectious_Asymptomatic': InfectionState.INFECTIOUS,
+                'Infectious_Symptomatic': InfectionState.SYMPTOMATIC,
+                'Hospitalized': InfectionState.HOSPITALIZED,
+                'ICU': InfectionState.HOSPITALIZED,
+                'Recovered': InfectionState.RECOVERED,
+                'Deceased': InfectionState.REMOVED
+            }
+            
+            # Initialize the timeline for this disease
+            val = {}
+            val[disease] = {}
+            
+            # Get the maximum time in the timeline for end time calculation
+            max_time = max([time for _, time in timeline_data["timeline"]])
+            
+            # Process each state transition in the timeline
+            for status, time in timeline_data["timeline"]:
+                if status in str_to_state:
+                    state = str_to_state[status]
+                    # Convert time from minutes to whatever unit curtime is using
+                    adjusted_time = time / 60  # Adjust this conversion factor as needed
+                    
+                    if state in val[disease]:
+                        # Update existing timeline entry
+                        current_start = val[disease][state].start
+                        val[disease][state] = InfectionTimeline(
+                            min(current_start, curtime + adjusted_time), 
+                            curtime + max_time/60
+                        )
+                    else:
+                        # Create new timeline entry
+                        val[disease][state] = InfectionTimeline(
+                            curtime + adjusted_time, 
+                            curtime + max_time/60
+                        )
+            
+            # Set the person's timeline
+            person.timeline = val
+            
+            # Set the person's initial state for this disease
+            person.states[disease] = InfectionState.INFECTED
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Error communicating with DMP API: {e}")
+            # Fallback to a simple timeline if API fails
+            person.states[disease] = InfectionState.INFECTED
+            person.timeline = {
+                disease: {
+                    InfectionState.INFECTED: InfectionTimeline(curtime, curtime + 1440),  # 24 hours
+                    InfectionState.INFECTIOUS: InfectionTimeline(curtime + 240, curtime + 1440),  # 4 hours later
+                    InfectionState.RECOVERED: InfectionTimeline(curtime + 1440, curtime + 10080)  # 1 day later
+                }
+            }
