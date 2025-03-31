@@ -48,7 +48,7 @@ def run_simulation_endpoint():
     length = request.json.get('length', 10080)
 
     try:
-        return simulate.run_simulator(request.json.get('matrices'), request.json.get('location', 'barnsdall'), length, {
+        return simulate.run_simulator(request.json.get('location', 'barnsdall'), length, {
             'mask': request.json.get('mask', 0.4),
             'vaccine': request.json.get('vaccine', 0.2),
             'capacity': request.json.get('capacity', 1.0),
@@ -69,7 +69,7 @@ def run_main():
     # Initialize DMP API before running simulation
     initialize_dmp_api()
     
-    return simulate.run_simulator(None, 'barnsdall', 10080, {
+    return simulate.run_simulator('barnsdall', 10080, {
         'mask': 0.0,
         'vaccine': 0.0,
         'capacity': 1.0,
