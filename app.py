@@ -1,15 +1,34 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from werkzeug.exceptions import BadRequest
-import pandas as pd
-from io import StringIO
-import numpy as np
 from simulator import simulate
+import requests
 
 app = Flask(__name__)
 
 # Enable CORS
 CORS(app)
+
+# Initialize DMP API when the server starts
+def initialize_dmp_api():
+    BASE_URL = "http://localhost:8000"
+    init_payload = {
+        #"matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/combined_matrices_usecase.csv",
+        #"mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/demographic_mapping_usecase.csv",
+        #"states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/custom_states.txt"
+        "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/combined_matrices_usecase.csv",
+        "mapping_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/demographic_mapping_usecase.csv",
+        "states_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/custom_states.txt"
+    }
+    
+    try:
+        init_response = requests.post(f"{BASE_URL}/initialize", json=init_payload)
+        init_response.raise_for_status()
+        print("DMP API successfully initialized!")
+        return True
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to initialize DMP API: {e}")
+        return False
 
 @app.route("/simulation/", methods=['POST', 'GET'])
 @cross_origin()
@@ -21,6 +40,9 @@ def run_simulation_endpoint():
 
     if not request.json:
         return jsonify({"error": "No data sent"}), 400
+
+    # Initialize DMP API before running simulation
+    initialize_dmp_api()
 
     # Simulation length in minutes
     length = request.json.get('length', 10080)
@@ -38,78 +60,15 @@ def run_simulation_endpoint():
         return jsonify({"error": str(e)}), 400
 
 
-# @app.route("/dmp/", methods=['POST'])
-# @cross_origin()
-# def run_dmp_simulation_endpoint():
-#     """
-#     Endpoint to run Disease Modeling Platform (DMP) simulation.
-#     """
-#     try:
-#         # Force JSON parsing
-#         request.get_json(force=True)
-#     except BadRequest:
-#         return jsonify({"error": "Bad Request"}), 400
-
-#     if not request.json:
-#         return jsonify({"error": "No data sent"}), 400
-
-#     try:
-#         # Parse input parameters
-#         demographic_mapping = request.json.get('demographic_mapping')
-#         combined_matrices = request.json.get('combined_matrices')
-#         demographics = request.json.get('demographics', {})
-#         initial_state = request.json.get('initial_state', default_initial_state)
-
-#         # Convert string CSVs to pandas DataFrame
-#         mapping_df = pd.read_csv(StringIO(demographic_mapping))
-#         combined_matrix_df = pd.read_csv(StringIO(combined_matrices), header=None)
-
-#         # Ensure 'Matrix_Set' column exists in the demographic mapping file
-#         if "Matrix_Set" not in mapping_df.columns:
-#             return jsonify({"error": "'Matrix_Set' column missing in demographic mapping"}), 400
-
-#         # Extract demographic categories
-#         demographic_categories = [col for col in mapping_df.columns if col != "Matrix_Set"]
-
-#         # Find matching matrix set and extract matrices
-#         matrix_set = find_matching_matrix(demographics, mapping_df, demographic_categories)
-#         matrices = extract_matrices(matrix_set, combined_matrix_df)
-
-#         # Validate matrices
-#         validate_matrices(
-#             transition_matrix=matrices["Transition Matrix"],
-#             mean_matrix=matrices["Mean"],
-#             std_dev_matrix=matrices["Standard Deviation"],
-#             min_cutoff_matrix=matrices["Min Cut-Off"],
-#             max_cutoff_matrix=matrices["Max Cut-Off"],
-#             distribution_matrix=matrices["Distribution Type"]
-#         )
-
-#         # Run the simulation using positional arguments
-#         simulation_data = run_simulation(
-#             matrices["Transition Matrix"],  # Positional argument 1
-#             matrices["Mean"],               # Positional argument 2
-#             matrices["Standard Deviation"], # Positional argument 3
-#             matrices["Min Cut-Off"],        # Positional argument 4
-#             matrices["Max Cut-Off"],        # Positional argument 5
-#             matrices["Distribution Type"],  # Positional argument 6
-#             initial_state                   # Positional argument 7
-#         )
-
-#         # Return the simulation results as JSON
-#         return jsonify({"status": "success", "simulation_data": simulation_data})
-
-#     except Exception as e:
-#         return jsonify({"error": f"Error during DMP simulation: {e}"}), 400
-
-
-
 @app.route("/", methods=['GET'])
 @cross_origin()
 def run_main():
     """
     Basic simulation endpoint for testing.
     """
+    # Initialize DMP API before running simulation
+    initialize_dmp_api()
+    
     return simulate.run_simulator(None, 'barnsdall', 10080, {
         'mask': 0.0,
         'vaccine': 0.0,
@@ -121,4 +80,6 @@ def run_main():
 
 
 if __name__ == '__main__':
+    # Initialize DMP API when the server starts
+    initialize_dmp_api()
     app.run(host='0.0.0.0', port=1880)

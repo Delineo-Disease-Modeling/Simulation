@@ -65,7 +65,6 @@ def move_people(simulator, items, is_household):
             person.location = place
 
 def run_simulator(matrices_dict, location, max_length, interventions, save_file=False):
-
     # Set random seed if user specifies
     if not interventions['randseed']:
         random.seed(0)
@@ -83,23 +82,17 @@ def run_simulator(matrices_dict, location, max_length, interventions, save_file=
 
     default_infected = ['160', '43', '47', '4', '36', '9', '14', '19', '27', '22']
 
-    default_matrices_dict = {
-        'delta': pd.read_csv(curdir + '/matrices.csv', header=None),
-        'omicron': pd.read_csv(curdir + '/matrices2.csv', header=None)
-    }
-
-    if not matrices_dict:
-        matrices_dict = default_matrices_dict
-    else:
-        matrices_dict = {i:pd.read_csv(StringIO(j), header=None) for i,j in matrices_dict.items()}
-
+    # Define the variants we want to use - we don't need matrices anymore
+    # since disease progression is handled by the DMP API
+    variants = ['Delta', 'Omicron']
+    
     # Ensure no more variants than infected individuals
-    if len(matrices_dict) > len(default_infected):
+    if len(variants) > len(default_infected):
         raise ValueError("Not enough infected IDs to assign each variant uniquely")
 
     # Randomly match infected IDs with variants
     random.shuffle(default_infected)
-    variant_assignments = dict(zip(default_infected, matrices_dict.keys()))
+    variant_assignments = {id: variant for id, variant in zip(default_infected, variants)}
 
     for id, data in pap['people'].items():
         household = simulator.get_household(str(data['home']))
@@ -107,23 +100,6 @@ def run_simulator(matrices_dict, location, max_length, interventions, save_file=
             raise Exception(f"Person {id} is assigned to a house that does not exist ({data['home']})")
         person = Person(id, data['sex'], data['age'], household)
         
-        #TODO create list of people and infect each one with variant one by one
-        # if id == '160':
-        #     person.states['alpha'] = InfectionState.INFECTED | InfectionState.INFECTIOUS
-        #     person.timeline = {
-        #         'alpha': {
-        #             InfectionState.INFECTIOUS: InfectionTimeline(0, 4000)
-        #         }
-        #     }
-        
-        # if id == '43':
-        #     person.states['omicron'] = InfectionState.INFECTED | InfectionState.INFECTIOUS
-        #     person.timeline = {
-        #         'omicron': {
-        #             InfectionState.INFECTIOUS: InfectionTimeline(0, 4000)
-        #         }
-        #     }
-
         # Infect person with a uniquely assigned variant
         if id in variant_assignments:
             variant = variant_assignments[id]
@@ -131,12 +107,11 @@ def run_simulator(matrices_dict, location, max_length, interventions, save_file=
             person.timeline = {
                 variant: {
                     InfectionState.INFECTED: InfectionTimeline(0, 10800),
-                    InfectionState.INFECTIOUS: InfectionTimeline(0, 10800)  # Customize duration as needed
+                    InfectionState.INFECTIOUS: InfectionTimeline(0, 10800)  # Initial timeline until DMP updates it
                 }
             }
         
         # Assign masked and vaccination states
-        # TODO: Meet with Wanli for these values
         if random.random() < simulator.iv_weights['mask']:
             person.set_masked(True)
         
@@ -146,70 +121,18 @@ def run_simulator(matrices_dict, location, max_length, interventions, save_file=
         
         simulator.add_person(person)
         household.add_member(person)
-            
     
-    # Check to see that all people are accounted for in each house
-    #for house in simulator.households:
-    #    print(house.id, house.total_count)
+    # Create infection manager without matrices - it will use DMP API
+    infectionmgr = InfectionManager({}, people=simulator.people)
     
-    #matrices = (curdir + '/matrices.csv') if matrices is None else StringIO(matrices)
-    #infectionmgr = InfectionManager(pd.read_csv(matrices, header=None), people=simulator.people)
-
-        # Instead of a single matrix, prepare a dictionary of matrices
-
-    infectionmgr = InfectionManager(matrices_dict, people=simulator.people)
-
-    
-    # Pass the dictionary to InfectionManager
-    #infectionmgr = InfectionManager(matrices_dict, people=simulator.people)
-    
-    # with open(curdir + '/patterns.json') as file:
-    #     patterns = json.load(file)
-
     with open(curdir + f'/{location}/patterns.json') as file:
         patterns = json.load(file)
         
-    # with open(curdir + '/patterns_alg.json') as file:
-    #     patterns = json.load(file)
-
     last_timestep = 0
     timestamps = list(patterns.keys())
     
-    # result = {}
-    # deltaInfected = {}
-    # omicronInfected = {}
-
-    # while len(timestamps) > 0:
-    #     print(f'Running movement simulator for timestep {last_timestep}')
-        
-    #     if last_timestep >= int(timestamps[0]):        
-    #         data = patterns[timestamps[0]]
-            
-    #         # Move people to homes for this timestep
-    #         move_people(simulator, data['homes'].items(), True)
-            
-    #         # Move people to facilities for this timestep
-    #         move_people(simulator, data['places'].items(), False)
-            
-    #         timestamps.pop(0)
-    #         #print(f'Completed movement for timestep {timestamps.pop(0)}')  
-        
-    #     infectionmgr.run_model(1, None, last_timestep, deltaInfected, omicronInfected)
-    #     result[last_timestep] = {'delta': dict(deltaInfected), 'omicron': dict(omicronInfected) }
-    #     last_timestep += simulator.timestep
-
-    # print("Delta Infected:")
-    # print(deltaInfected)
-    # print("Omicron Infected:")
-    # print(omicronInfected)
-
-    # with open('results.json', 'w') as file:
-    #     json.dump(result, file, indent=4)
-
-    # return result
-
     result = {}
-    variantInfected = {variant: {} for variant in matrices_dict.keys()}
+    variantInfected = {variant: {} for variant in variants}
     
     movement_json = {}
     infectivity_json = {}
@@ -233,7 +156,12 @@ def run_simulator(matrices_dict, location, max_length, interventions, save_file=
         
         newlyInfected = {}
         
-        infectionmgr.run_model(1, None, last_timestep, variantInfected, newlyInfected)
+        try:
+            infectionmgr.run_model(1, None, last_timestep, variantInfected, newlyInfected)
+        except Exception as e:
+            print(f"Error during infection modeling at timestep {last_timestep}: {e}")
+            print("Continuing to next timestep...")
+            newlyInfected = {}
         
         infectivity_json[last_timestep] = {i:j for i,j in newlyInfected.items()}
         

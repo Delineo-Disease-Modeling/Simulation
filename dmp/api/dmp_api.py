@@ -106,26 +106,37 @@ async def run_dmp_simulation(request: SimulationRequest):
         print(f"Running simulation with demographics: {request.demographics}")
         
         # Find matching matrix set using existing function
-        matching_set = find_matching_matrix(request.demographics, mapping_df, demographic_categories)
-        if not matching_set:
-            raise ValueError("No matching matrix set found for given demographics")
+        try:
+            matching_set = find_matching_matrix(request.demographics, mapping_df, demographic_categories)
+            if not matching_set:
+                # If no match found, use Matrix_Set_1 as default
+                matching_set = "Matrix_Set_1"
+                print(f"No matching matrix set found, using default: {matching_set}")
+        except ValueError:
+            # If error occurs during matching, use Matrix_Set_1 as default
+            matching_set = "Matrix_Set_1"
+            print(f"Error during matrix matching, using default: {matching_set}")
             
-        print(f"Found matching matrix set: {matching_set}")
+        print(f"Using matrix set: {matching_set}")
         
         # Extract matrices using existing function
         matrices = extract_matrices(matching_set, matrix_df, len(states))
         
         # Run simulation
-        timeline = run_simulation(
+        initial_state_idx = 0  # Assuming first state is always the initial state
+        simulation_data = run_simulation(
             matrices["Transition Matrix"],
             matrices["Mean"],
             matrices["Standard Deviation"],
             matrices["Min Cut-Off"],
             matrices["Max Cut-Off"],
             matrices["Distribution Type"],
-            0,  # Start with first state
+            initial_state_idx,
             states
         )
+        
+        # Format timeline for response
+        timeline = [(state, time) for state, time in simulation_data]
         
         return {
             "status": "success",
