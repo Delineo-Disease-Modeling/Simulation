@@ -64,7 +64,7 @@ def move_people(simulator, items, is_household):
             place.add_member(person)
             person.location = place
 
-def run_simulator(matrices_dict, location, max_length, interventions, save_file=False):
+def run_simulator(location, max_length, interventions, save_file=False):
     # Set random seed if user specifies
     if not interventions['randseed']:
         random.seed(0)
@@ -82,8 +82,8 @@ def run_simulator(matrices_dict, location, max_length, interventions, save_file=
 
     default_infected = ['160', '43', '47', '4', '36', '9', '14', '19', '27', '22']
 
-    # Define the variants we want to use - we don't need matrices anymore
-    # since disease progression is handled by the DMP API
+    # Define the variants we want to use
+    # Disease progression is handled by the DMP API
     variants = ['Delta', 'Omicron']
     
     # Ensure no more variants than infected individuals
@@ -122,7 +122,7 @@ def run_simulator(matrices_dict, location, max_length, interventions, save_file=
         simulator.add_person(person)
         household.add_member(person)
     
-    # Create infection manager without matrices - it will use DMP API
+    # Create infection manager with DMP API
     infectionmgr = InfectionManager({}, people=simulator.people)
     
     with open(curdir + f'/{location}/patterns.json') as file:

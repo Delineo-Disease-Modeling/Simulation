@@ -161,9 +161,8 @@ class InfectionManager:
             # Map DMP states to our infection states
             str_to_state = {
                 'Infected': InfectionState.INFECTED,
-                'Symptomatic': InfectionState.SYMPTOMATIC,
                 'Infectious_Asymptomatic': InfectionState.INFECTIOUS,
-                'Infectious_Symptomatic': InfectionState.SYMPTOMATIC,
+                'Infectious_Symptomatic': InfectionState.INFECTIOUS,
                 'Hospitalized': InfectionState.HOSPITALIZED,
                 'ICU': InfectionState.HOSPITALIZED,
                 'Recovered': InfectionState.RECOVERED,
