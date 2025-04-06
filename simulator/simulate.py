@@ -1,5 +1,6 @@
 from .pap import Person, Household, Facility, InfectionState, VaccinationState
 from .infectionmgr import *
+from .config import SIMULATION, INFECTION_MODEL
 from io import StringIO
 import pandas as pd
 import json
@@ -12,8 +13,8 @@ curdir = os.path.dirname(os.path.abspath(__file__))
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
-    def __init__(self, timestep=60, intervention_weights={}):
-        self.timestep = timestep        # in minutes
+    def __init__(self, timestep=None, intervention_weights={}):
+        self.timestep = timestep or SIMULATION["default_timestep"]  # in minutes
         self.iv_weights = intervention_weights
         self.people = []
         self.households = []            # list of all houses
@@ -64,7 +65,17 @@ def move_people(simulator, items, is_household):
             place.add_member(person)
             person.location = place
 
-def run_simulator(location, max_length, interventions, save_file=False):
+def run_simulator(location=None, max_length=None, interventions=None, save_file=False):
+    # Use defaults from config if parameters not provided
+    location = location or SIMULATION["default_location"]
+    max_length = max_length or SIMULATION["default_max_length"]
+    
+    # Merge provided interventions with defaults
+    default_interventions = SIMULATION["default_interventions"].copy()
+    if interventions:
+        default_interventions.update(interventions)
+    interventions = default_interventions
+    
     # Set random seed if user specifies
     if not interventions['randseed']:
         random.seed(0)
@@ -80,11 +91,9 @@ def run_simulator(location, max_length, interventions, save_file=False):
     for id, data in pap['places'].items():
         simulator.add_facility(Facility(id, data['cbg'], data['label'], data.get('capacity', -1)))
 
-    default_infected = ['160', '43', '47', '4', '36', '9', '14', '19', '27', '22']
-
-    # Define the variants we want to use
-    # Disease progression is handled by the DMP API
-    variants = ['Delta', 'Omicron']
+    # Get default infected IDs and variants from config
+    default_infected = SIMULATION["default_infected_ids"]
+    variants = SIMULATION["variants"]
     
     # Ensure no more variants than infected individuals
     if len(variants) > len(default_infected):
@@ -104,10 +113,11 @@ def run_simulator(location, max_length, interventions, save_file=False):
         if id in variant_assignments:
             variant = variant_assignments[id]
             person.states[variant] = InfectionState.INFECTED | InfectionState.INFECTIOUS
+            initial_duration = INFECTION_MODEL["initial_timeline"]["duration"]
             person.timeline = {
                 variant: {
-                    InfectionState.INFECTED: InfectionTimeline(0, 10800),
-                    InfectionState.INFECTIOUS: InfectionTimeline(0, 10800)  # Initial timeline until DMP updates it
+                    InfectionState.INFECTED: InfectionTimeline(0, initial_duration),
+                    InfectionState.INFECTIOUS: InfectionTimeline(0, initial_duration)  # Initial timeline until DMP updates it
                 }
             }
         
@@ -117,7 +127,9 @@ def run_simulator(location, max_length, interventions, save_file=False):
         
         # Maryland: 90% at least one dose, 78.3% fully vaccinated
         if random.random() < simulator.iv_weights['vaccine']:
-            person.set_vaccinated(VaccinationState(random.randint(1, 2)))
+            min_doses = SIMULATION["vaccination_options"]["min_doses"]
+            max_doses = SIMULATION["vaccination_options"]["max_doses"]
+            person.set_vaccinated(VaccinationState(random.randint(min_doses, max_doses)))
         
         simulator.add_person(person)
         household.add_member(person)
@@ -141,7 +153,8 @@ def run_simulator(location, max_length, interventions, save_file=False):
         if (last_timestep > max_length):
             break
         
-        if last_timestep % 6000 == 0:
+        log_interval = SIMULATION["log_interval"]
+        if last_timestep % log_interval == 0:
             print(f'Running movement simulator for timestep {last_timestep}')
         
         if last_timestep >= int(timestamps[0]):        

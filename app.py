@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from werkzeug.exceptions import BadRequest
 from simulator import simulate
+from simulator.config import DMP_API, SERVER, SIMULATION
 import requests
 
 app = Flask(__name__)
@@ -11,14 +12,11 @@ CORS(app)
 
 # Initialize DMP API when the server starts
 def initialize_dmp_api():
-    BASE_URL = "http://localhost:8000"
+    BASE_URL = DMP_API["base_url"]
     init_payload = {
-        #"matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/combined_matrices_usecase.csv",
-        #"mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/demographic_mapping_usecase.csv",
-        #"states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/custom_states.txt"
-        "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/combined_matrices_usecase.csv",
-        "mapping_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/demographic_mapping_usecase.csv",
-        "states_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/custom_states.txt"
+        "matrices_path": DMP_API["paths"]["matrices_path"],
+        "mapping_path": DMP_API["paths"]["mapping_path"],
+        "states_path": DMP_API["paths"]["states_path"]
     }
     
     try:
@@ -36,26 +34,25 @@ def run_simulation_endpoint():
     try:
         request.get_json(force=True)
     except BadRequest:
-        return jsonify({"error": "Bad Request"}), 400
+        return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
 
     if not request.json:
-        return jsonify({"error": "No data sent"}), 400
+        return jsonify({"error": SERVER["error_messages"]["no_data"]}), 400
 
     # Initialize DMP API before running simulation
     initialize_dmp_api()
 
-    # Simulation length in minutes
-    length = request.json.get('length', 10080)
+    # Get simulation length from request or use default
+    length = request.json.get('length', SIMULATION["default_max_length"])
+    location = request.json.get('location', SIMULATION["default_location"])
+    
+    # Build interventions dict from request, using defaults for missing values
+    interventions = {}
+    for key in SIMULATION["default_interventions"]:
+        interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
 
     try:
-        return simulate.run_simulator(request.json.get('location', 'barnsdall'), length, {
-            'mask': request.json.get('mask', 0.4),
-            'vaccine': request.json.get('vaccine', 0.2),
-            'capacity': request.json.get('capacity', 1.0),
-            'lockdown': request.json.get('lockdown', 0),
-            'selfiso': request.json.get('selfiso', 0.5),
-            'randseed': request.json.get('randseed', True)
-        })
+        return simulate.run_simulator(location, length, interventions)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -69,17 +66,11 @@ def run_main():
     # Initialize DMP API before running simulation
     initialize_dmp_api()
     
-    return simulate.run_simulator('barnsdall', 10080, {
-        'mask': 0.0,
-        'vaccine': 0.0,
-        'capacity': 1.0,
-        'lockdown': 0,
-        'selfiso': 0.0,
-        'randseed': False
-    })
+    # Use default values from config
+    return simulate.run_simulator()
 
 
 if __name__ == '__main__':
     # Initialize DMP API when the server starts
     initialize_dmp_api()
-    app.run(host='0.0.0.0', port=1880)
+    app.run(host=SERVER["host"], port=SERVER["port"])
