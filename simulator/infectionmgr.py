@@ -1,14 +1,15 @@
 from .pap import InfectionState, InfectionTimeline, VaccinationState
 from .infection_model import CAT
+from .config import DMP_API, INFECTION_MODEL
 import pandas as pd
 from io import StringIO
 import requests
 
 class InfectionManager:
-    def __init__(self, matrices_dict, timestep=15, people=[]):
+    def __init__(self, matrices_dict, timestep=None, people=[]):
         self.matrices_dict = matrices_dict  
-        self.timestep = timestep
-        self.multidisease = True
+        self.timestep = timestep or INFECTION_MODEL["default_timestep"]
+        self.multidisease = INFECTION_MODEL["allow_multidisease"]
         self.infected = []
         
         for p in people:
@@ -138,7 +139,7 @@ class InfectionManager:
         """Create a disease timeline for a newly infected person using the DMP API"""
         
         # Set up API connection
-        BASE_URL = "http://localhost:8000"
+        BASE_URL = DMP_API["base_url"]
         
         # Prepare the demographic payload for the API
         simulation_payload = {
@@ -158,16 +159,8 @@ class InfectionManager:
             # Process the timeline returned from the API
             timeline_data = simulation_response.json()
             
-            # Map DMP states to our infection states
-            str_to_state = {
-                'Infected': InfectionState.INFECTED,
-                'Infectious_Asymptomatic': InfectionState.INFECTIOUS,
-                'Infectious_Symptomatic': InfectionState.INFECTIOUS,
-                'Hospitalized': InfectionState.HOSPITALIZED,
-                'ICU': InfectionState.HOSPITALIZED,
-                'Recovered': InfectionState.RECOVERED,
-                'Deceased': InfectionState.REMOVED
-            }
+            # Map DMP states to our infection states using config
+            str_to_state = {k: getattr(InfectionState, v) for k, v in DMP_API["state_mapping"].items()}
             
             # Initialize the timeline for this disease
             val = {}
@@ -180,21 +173,21 @@ class InfectionManager:
             for status, time in timeline_data["timeline"]:
                 if status in str_to_state:
                     state = str_to_state[status]
-                    # Convert time from minutes to whatever unit curtime is using
-                    adjusted_time = time / 60  # Adjust this conversion factor as needed
+                    # Convert time from API units to simulation units
+                    adjusted_time = time / DMP_API["time_conversion_factor"]
                     
                     if state in val[disease]:
                         # Update existing timeline entry
                         current_start = val[disease][state].start
                         val[disease][state] = InfectionTimeline(
                             min(current_start, curtime + adjusted_time), 
-                            curtime + max_time/60
+                            curtime + max_time/DMP_API["time_conversion_factor"]
                         )
                     else:
                         # Create new timeline entry
                         val[disease][state] = InfectionTimeline(
                             curtime + adjusted_time, 
-                            curtime + max_time/60
+                            curtime + max_time/DMP_API["time_conversion_factor"]
                         )
             
             # Set the person's timeline
@@ -206,11 +199,14 @@ class InfectionManager:
         except requests.exceptions.RequestException as e:
             print(f"Error communicating with DMP API: {e}")
             # Fallback to a simple timeline if API fails
+            fallback_timeline = INFECTION_MODEL["fallback_timeline"]
             person.states[disease] = InfectionState.INFECTED
             person.timeline = {
                 disease: {
-                    InfectionState.INFECTED: InfectionTimeline(curtime, curtime + 1440),  # 24 hours
-                    InfectionState.INFECTIOUS: InfectionTimeline(curtime + 240, curtime + 1440),  # 4 hours later
-                    InfectionState.RECOVERED: InfectionTimeline(curtime + 1440, curtime + 10080)  # 1 day later
+                    InfectionState.INFECTED: InfectionTimeline(curtime, curtime + fallback_timeline["infected_duration"]),
+                    InfectionState.INFECTIOUS: InfectionTimeline(curtime + fallback_timeline["infectious_delay"], 
+                                                               curtime + fallback_timeline["infected_duration"]),
+                    InfectionState.RECOVERED: InfectionTimeline(curtime + fallback_timeline["infected_duration"], 
+                                                              curtime + fallback_timeline["recovery_duration"])
                 }
             }
