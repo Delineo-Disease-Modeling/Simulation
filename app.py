@@ -13,12 +13,12 @@ CORS(app)
 def initialize_dmp_api():
     BASE_URL = "http://localhost:8000"
     init_payload = {
-        #"matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/combined_matrices_usecase.csv",
-        #"mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/demographic_mapping_usecase.csv",
-        #"states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/custom_states.txt"
-        "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/combined_matrices_usecase.csv",
-        "mapping_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/demographic_mapping_usecase.csv",
-        "states_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/custom_states.txt"
+        "matrices_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/combined_matrices_usecase.csv",
+        "mapping_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/demographic_mapping_usecase.csv",
+        "states_path": "/Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/api_testing_copy/custom_states.txt"
+        #"matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/combined_matrices_usecase.csv",
+        #"mapping_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/demographic_mapping_usecase.csv",
+        #"states_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/api_testing_copy/custom_states.txt"
     }
     
     try:
