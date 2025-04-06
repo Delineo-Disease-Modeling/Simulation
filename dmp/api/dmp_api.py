@@ -138,6 +138,12 @@ async def run_dmp_simulation(request: SimulationRequest):
         # Format timeline for response
         timeline = [(state, time) for state, time in simulation_data]
         
+        # Print simple timeline in hours
+        print("\nTimeline (hours):")
+        for state, time in timeline:
+            hours = time
+            print(f"{hours:.2f} hours: {state}")
+        
         return {
             "status": "success",
             "timeline": timeline,
