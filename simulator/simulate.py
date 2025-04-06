@@ -5,7 +5,7 @@ from io import StringIO
 import pandas as pd
 import json
 import os
-from data_interface import load_people, load_places, load_sample_data
+# from data_interface import load_people, load_places, load_sample_data
 import requests
 
 import random
@@ -82,11 +82,11 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     if not interventions['randseed']:
         random.seed(0)
     
-    #with open(curdir + f'/{location}/papdata.json') as file:
-        #pap = json.load(file)
+    with open(curdir + f'/{location}/papdata.json') as file:
+        pap = json.load(file)
     
     # Load people and places from the DMP API
-    pap = load_sample_data() # replace with pap = load_places() 
+    # pap = load_sample_data() # replace with pap = load_places() 
     people_data = pap['people']
     homes_data = pap['homes']
     places_data = pap['places']
