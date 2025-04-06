@@ -1,9 +1,11 @@
-from .pap import Person, Household, Facility, InfectionState, VaccinationState
-from .infectionmgr import *
+from pap import Person, Household, Facility, InfectionState, VaccinationState
+from infectionmgr import *
 from io import StringIO
 import pandas as pd
 import json
 import os
+from data_interface import load_people, load_places, load_sample_data
+import requests
 
 import random
 
@@ -69,17 +71,24 @@ def run_simulator(matrices_dict, location, max_length, interventions, save_file=
     if not interventions['randseed']:
         random.seed(0)
     
-    with open(curdir + f'/{location}/papdata.json') as file:
-        pap = json.load(file)
+    #with open(curdir + f'/{location}/papdata.json') as file:
+        #pap = json.load(file)
+    
+    # Load people and places from the DMP API
+    pap = load_sample_data() # replace with pap = load_places() 
+    people_data = pap['people']
+    homes_data = pap['homes']
+    places_data = pap['places']
     
     simulator = DiseaseSimulator(intervention_weights=interventions);
     
-    for id, data in pap['homes'].items():
+    for id, data in homes_data.items():
         simulator.add_household(Household(data['cbg'], id))
 
-    for id, data in pap['places'].items():
+    for id, data in places_data.items():
         simulator.add_facility(Facility(id, data['cbg'], data['label'], data.get('capacity', -1)))
-
+    
+    
     default_infected = ['160', '43', '47', '4', '36', '9', '14', '19', '27', '22']
 
     # Define the variants we want to use - we don't need matrices anymore
@@ -94,15 +103,15 @@ def run_simulator(matrices_dict, location, max_length, interventions, save_file=
     random.shuffle(default_infected)
     variant_assignments = {id: variant for id, variant in zip(default_infected, variants)}
 
-    for id, data in pap['people'].items():
+    for id, data in people_data.items():
         household = simulator.get_household(str(data['home']))
         if household is None:
             raise Exception(f"Person {id} is assigned to a house that does not exist ({data['home']})")
         person = Person(id, data['sex'], data['age'], household)
         
         # Infect person with a uniquely assigned variant
-        if id in variant_assignments:
-            variant = variant_assignments[id]
+        if str(id) in variant_assignments:
+            variant = variant_assignments[str(id)]
             person.states[variant] = InfectionState.INFECTED | InfectionState.INFECTIOUS
             person.timeline = {
                 variant: {
