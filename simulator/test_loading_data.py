@@ -1,11 +1,5 @@
-from data_interface import load_people, load_places, load_sample_data
+from data_interface import *
 import json
 
-pap = load_sample_data()
-people = pap['people']
-places = pap['places']
-print("All data", pap)
-print("---------------")
-print("People data", people)
-print("---------------")
-print("Places data", places)
+data = load_movement_pap_data("0")
+print(data)
