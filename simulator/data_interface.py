@@ -29,16 +29,27 @@ def load_places():
     
 def load_sample_data(): 
     return {
-        "homes": {
-            "0": {"cbg": "24003707003"},
-            "1": {"cbg": "24003707003"}
-        },
-        "places": {
-            "0": {"cbg": "24003707003", "label": "school", "capacity": 57},
-            "1": {"cbg": "24003707003", "label": "work", "capacity": 25}
-        },
         "people": {
-            "0": {"sex": "M", "age": 52, "home": 0},
-            "1": {"sex": "F", "age": 30, "home": 1}
+            "0": {
+                "sex": "M", 
+                "age": 52, 
+                "home": 0
+                },
+            "1": {
+                "sex": "F", 
+                "age": 30,
+                 "home": 1
+                 }
+        }, 
+        "places": {
+            "0": {
+                "label": "school",
+                "cbg": "1", 
+                },
+            "1": {
+                "cbg": "24003707003", 
+                "label": "work", 
+                "capacity": 25
+                }
         }
     }
