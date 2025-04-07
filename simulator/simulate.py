@@ -5,7 +5,7 @@ from io import StringIO
 import pandas as pd
 import json
 import os
-# from data_interface import load_people, load_places, load_sample_data
+from data_interface import load_movement_pap_data
 import requests
 
 import random
@@ -41,6 +41,9 @@ class DiseaseSimulator:
         return next((f for f in self.facilities if f.id == id), None)
 
 def move_people(simulator, items, is_household):
+    data = load_movement_pap_data(); 
+    movement_patterns = data['movement_patterns']
+    pap_data = data['papdata']
     for id, people in items:
         place = simulator.get_household(str(id)) if is_household else simulator.get_facility(str(id))
         if place is None:
@@ -87,9 +90,15 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     
     # Load people and places from the DMP API
     # pap = load_sample_data() # replace with pap = load_places() 
-    people_data = pap['people']
+    data = load_movement_pap_data(); 
+    movement_patterns = data['movement_patterns']
+    pap_data = data['papdata']
+    # people_data = pap['people']
+    people_data = pap_data['people']
+
     homes_data = pap['homes']
-    places_data = pap['places']
+    #places_data = pap['places']
+    places_data = pap_data['places']
     
     simulator = DiseaseSimulator(intervention_weights=interventions);
     
