@@ -83,7 +83,20 @@ def load_sample_data():
                         "age": 74,
                         "home": "47"
                 }
-            } 
+            }, 
+            "places": {
+        "1": {
+            "label": "American Heritage Bank",
+            "cbg": -1
+        },
+        "2": {
+            "label": "Andy's Hamburgers",
+            "cbg": -1
+        },
+        "3": {
+            "label": "Ascension Health",
+            "cbg": -1
+        },
         }
     }
     }  
