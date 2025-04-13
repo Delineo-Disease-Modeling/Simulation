@@ -42,8 +42,8 @@ class DiseaseSimulator:
 
 def move_people(simulator, items, is_household):
     data = load_movement_pap_data(); 
-    movement_patterns = data['movement_patterns']
-    pap_data = data['papdata']
+    patterns = data['movement_patterns']
+    pap = data['papdata']
     for id, people in items:
         place = simulator.get_household(str(id)) if is_household else simulator.get_facility(str(id))
         if place is None:
@@ -85,14 +85,14 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     if not interventions['randseed']:
         random.seed(0)
     
-    with open(curdir + f'/{location}/papdata.json') as file:
-        pap = json.load(file)
+    #with open(curdir + f'/{location}/papdata.json') as file:
+        #pap = json.load(file)
     
     # Load people and places from the DMP API
     # pap = load_sample_data() # replace with pap = load_places() 
     data = load_movement_pap_data(); 
-    movement_patterns = data['movement_patterns']
-    pap_data = data['papdata']
+    patterns = data['movement_patterns']
+    pap = data['papdata']
     # people_data = pap['people']
     people_data = pap_data['people']
 
@@ -154,8 +154,8 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     # Create infection manager with DMP API
     infectionmgr = InfectionManager({}, people=simulator.people)
     
-    with open(curdir + f'/{location}/patterns.json') as file:
-        patterns = json.load(file)
+    #with open(curdir + f'/{location}/patterns.json') as file:
+        #patterns = json.load(file)
         
     last_timestep = 0
     timestamps = list(patterns.keys())
