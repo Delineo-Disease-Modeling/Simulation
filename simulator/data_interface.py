@@ -3,7 +3,7 @@ import requests
 BASE_URL = "https://db.delineo.me/"
 
 def load_movement_pap_data(cz_id = 1): 
-    url = "https://db.delineo.me/patterns/{cz_id}"
+    url = "https://db.delineo.me/patterns/1"
     
     try:
         response = requests.get(url)
@@ -48,27 +48,42 @@ def load_places():
     
 def load_sample_data(): 
     return {
-        "people": {
-            "0": {
-                "sex": "M", 
-                "age": 52, 
-                "home": 0
-                },
+        "movement_patterns": {
             "1": {
-                "sex": "F", 
-                "age": 30,
-                 "home": 1
-                 }
-        }, 
-        "places": {
-            "0": {
-                "label": "school",
-                "cbg": "1", 
+                "homes": {
+                    "1 ": {"id": 1, "population": [43, 63]},
+                    "2": {"id": 2, "population": [75, 103]}
                 },
-            "1": {
-                "cbg": "24003707003", 
-                "label": "work", 
-                "capacity": 25
+                "places": {
+                    "1": {"id": 1, "population": [43,63]},
+                    "2": {"id": 2, "population": [75, 103]}
                 }
+            }
+        },
+        "papdata": {
+            {
+                "people": {
+                    "43": {
+                        "sex": 1,
+                        "age": 53,
+                        "home": "20"
+                    },
+                    "63": {
+                        "sex": 0,
+                        "age": 39,
+                        "home": "29"
+                    },
+                    "75": {
+                        "sex": 1,
+                        "age": 37,
+                        "home": "34"
+                    },
+                    "103": {
+                        "sex": 1,
+                        "age": 74,
+                        "home": "47"
+                }
+            } 
         }
     }
+    }  
