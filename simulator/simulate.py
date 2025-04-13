@@ -1,6 +1,6 @@
-from .pap import Person, Household, Facility, InfectionState, VaccinationState
-from .infectionmgr import *
-from .config import SIMULATION, INFECTION_MODEL
+from pap import Person, Household, Facility, InfectionState, VaccinationState
+from infectionmgr import *
+from config import SIMULATION, INFECTION_MODEL
 from io import StringIO
 import pandas as pd
 import json
@@ -91,16 +91,16 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     # Load people and places from the DMP API
     # pap = load_sample_data() # replace with pap = load_places() 
     data = load_sample_data(); 
-    patterns = data['movement_patterns']
-    pap = data['papdata']
+    patterns = data.get("data", {}).get("patterns", {})
+    pap = data.get("data", {}).get("papdata", {})
     # people_data = pap['people']
-    people_data = pap['people']
+    people_data = pap.get("people", {})
 
-    homes_data = pap['homes']
+    homes_data = pap.get("homes", {})
     #places_data = pap['places']
-    places_data = pap['places']
+    places_data = pap.get("places", {})
     
-    simulator = DiseaseSimulator(intervention_weights=interventions);
+    simulator = DiseaseSimulator(intervention_weights=interventions)
     
     for id, data in homes_data.items():
         simulator.add_household(Household(data['cbg'], id))

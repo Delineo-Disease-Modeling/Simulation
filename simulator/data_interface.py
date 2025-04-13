@@ -2,23 +2,24 @@ import requests
 
 BASE_URL = "https://db.delineo.me/"
 
-def load_movement_pap_data(cz_id = 1): 
+def load_movement_pap_data(cz_id=1): 
     url = "https://db.delineo.me/patterns/1"
     
     try:
         response = requests.get(url)
         response.raise_for_status()  # Raise exception for HTTP errors
 
-        data = response.json()
+        data = response.json().get("data", {})
 
         return {
-            "movement_patterns": data.get("movement_patterns", {}),
-            "papdata": data.get("papdata", {})
+            "data": {
+                "patterns": data.get("patterns", {}),
+                "papdata": data.get("papdata", {})
+            }
         }
 
     except requests.RequestException as e:
         return {"error": str(e)}
-
 
 
 def load_people(): 
@@ -99,4 +100,5 @@ def load_sample_data():
         },
         }
     }
+    } 
     }  
