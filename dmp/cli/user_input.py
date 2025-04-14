@@ -149,7 +149,8 @@ def parse_mapping_file(mapping_file_path):
         tuple: (DataFrame of mappings, list of demographic categories)
     """
     try:
-        mapping_df = pd.read_csv(mapping_file_path)
+        # Read CSV file with comment lines (starting with #) skipped
+        mapping_df = pd.read_csv(mapping_file_path, comment='#', skipinitialspace=True)
         print("Columns in Mapping File:", mapping_df.columns.tolist())
 
         if "Matrix_Set" not in mapping_df.columns:
@@ -316,17 +317,17 @@ def process_input(matrix_file_path, mapping_file_path, states_file_path=None, is
         is_web: Boolean indicating if this is web (True) or CLI (False)
     """
     try:
-        # Load matrices
+        # Load matrices with comment lines skipped
         if is_web:
-            combined_matrix_df = pd.read_csv(matrix_file_path)
+            combined_matrix_df = pd.read_csv(matrix_file_path, comment='#')
         else:
-            combined_matrix_df = pd.read_csv(matrix_file_path)
+            combined_matrix_df = pd.read_csv(matrix_file_path, comment='#')
             
-        # Load mapping
+        # Load mapping with comment lines skipped
         if is_web:
-            mapping_df = pd.read_csv(mapping_file_path)
+            mapping_df = pd.read_csv(mapping_file_path, comment='#', skipinitialspace=True)
         else:
-            mapping_df = pd.read_csv(mapping_file_path)
+            mapping_df = pd.read_csv(mapping_file_path, comment='#', skipinitialspace=True)
             
         # Load states from provided file or default file
         if states_file_path:
@@ -373,8 +374,8 @@ def main():
     try:
         # Process input files
         print("\nLoading input files...")
-        matrix_df = pd.read_csv(args.matrices, header=None)
-        mapping_df = pd.read_csv(args.mapping, skipinitialspace=True)
+        matrix_df = pd.read_csv(args.matrices, header=None, comment='#')
+        mapping_df = pd.read_csv(args.mapping, skipinitialspace=True, comment='#')
         
         # Load states from file
         if args.states:
