@@ -5,7 +5,7 @@ from io import StringIO
 import pandas as pd
 import json
 import os
-# from data_interface import load_people, load_places, load_sample_data
+from .data_interface import load_movement_pap_data
 import requests
 
 import random
@@ -41,6 +41,7 @@ class DiseaseSimulator:
         return next((f for f in self.facilities if f.id == id), None)
 
 def move_people(simulator, items, is_household):
+
     for id, people in items:
         place = simulator.get_household(str(id)) if is_household else simulator.get_facility(str(id))
         if place is None:
@@ -82,16 +83,22 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     if not interventions['randseed']:
         random.seed(0)
     
-    with open(curdir + f'/{location}/papdata.json') as file:
-        pap = json.load(file)
+    #with open(curdir + f'/{location}/papdata.json') as file:
+        #pap = json.load(file)
     
     # Load people and places from the DMP API
     # pap = load_sample_data() # replace with pap = load_places() 
-    people_data = pap['people']
-    homes_data = pap['homes']
-    places_data = pap['places']
+    data = load_movement_pap_data(); 
+    patterns = data.get("data", {}).get("patterns", {})
+    pap = data.get("data", {}).get("papdata", {})
+    # people_data = pap['people']
+    people_data = pap.get("people", {})
+
+    homes_data = pap.get("homes", {})
+    #places_data = pap['places']
+    places_data = pap.get("places", {})
     
-    simulator = DiseaseSimulator(intervention_weights=interventions);
+    simulator = DiseaseSimulator(intervention_weights=interventions)
     
     for id, data in homes_data.items():
         simulator.add_household(Household(data['cbg'], id))
@@ -112,6 +119,9 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     variant_assignments = {id: variant for id, variant in zip(default_infected, variants)}
 
     for id, data in people_data.items():
+        if id == "181" or id == "182" or id == "193" or id == "199" or id == "209" or id == "229" or id == "232" or id == "242" or id == "255" or id == "265" or id == "272" or id == "285" or id == "295" or id == "304" or id == "309" or id == "314" or id == "329": 
+            # Skip this person as they are not in the simulation
+            continue
         household = simulator.get_household(str(data['home']))
         if household is None:
             raise Exception(f"Person {id} is assigned to a house that does not exist ({data['home']})")
@@ -145,8 +155,8 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     # Create infection manager with DMP API
     infectionmgr = InfectionManager({}, people=simulator.people)
     
-    with open(curdir + f'/{location}/patterns.json') as file:
-        patterns = json.load(file)
+    #with open(curdir + f'/{location}/patterns.json') as file:
+        #patterns = json.load(file)
         
     last_timestep = 0
     timestamps = list(patterns.keys())
