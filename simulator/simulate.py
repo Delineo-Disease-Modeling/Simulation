@@ -119,9 +119,9 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     variant_assignments = {id: variant for id, variant in zip(default_infected, variants)}
 
     for id, data in people_data.items():
-        if id == "181" or id == "182" or id == "193" or id == "199" or id == "209" or id == "229" or id == "232" or id == "242" or id == "255" or id == "265" or id == "272" or id == "285" or id == "295" or id == "304" or id == "309" or id == "314" or id == "329": 
-            # Skip this person as they are not in the simulation
-            continue
+        # if id == "181" or id == "182" or id == "193" or id == "199" or id == "209" or id == "229" or id == "232" or id == "242" or id == "255" or id == "265" or id == "272" or id == "285" or id == "295" or id == "304" or id == "309" or id == "314" or id == "329": 
+            # Skip these people as they are not in the simulation
+            # continue
         household = simulator.get_household(str(data['home']))
         if household is None:
             raise Exception(f"Person {id} is assigned to a house that does not exist ({data['home']})")
