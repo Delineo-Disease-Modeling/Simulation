@@ -52,8 +52,8 @@ async def initialize_dmp(config: InitConfig):
         if not os.path.exists(config.mapping_path):
             raise FileNotFoundError(f"Mapping file not found: {config.mapping_path}")
         
-        # Load matrices with explicit delimiter and no header
-        matrix_df = pd.read_csv(config.matrices_path, header=None, sep=',', skipinitialspace=True)
+        # Load matrices with explicit delimiter, no header, and skip comment lines
+        matrix_df = pd.read_csv(config.matrices_path, header=None, sep=',', skipinitialspace=True, comment='#')
         print(f"Loaded matrix file with shape: {matrix_df.shape}")
         print(f"First few rows of matrix data:")
         print(matrix_df.iloc[:10])
