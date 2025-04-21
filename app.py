@@ -60,7 +60,7 @@ def run_simulation_endpoint():
     for key in SIMULATION["default_interventions"]:
         interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
         
-    return Response(simulation(cz_id, length, interventions), mimetype='text/plain')
+    return Response(simulation(cz_id, length, interventions))
 
 
 @app.route("/", methods=['GET'])
