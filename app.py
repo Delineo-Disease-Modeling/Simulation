@@ -1,9 +1,10 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS, cross_origin
 from werkzeug.exceptions import BadRequest
 from simulator import simulate
 from simulator.config import DMP_API, SERVER, SIMULATION
 import requests
+import json
 
 app = Flask(__name__)
 
@@ -27,6 +28,14 @@ def initialize_dmp_api():
     except requests.exceptions.RequestException as e:
         print(f"Failed to initialize DMP API: {e}")
         return False
+    
+def simulation(cz_id, length, interventions):
+    yield ''
+    try:
+        yield json.dumps(simulate.run_simulator(cz_id, length, interventions))
+    except Exception as e:
+        print(e)
+        return '{}'
 
 @app.route("/simulation/", methods=['POST'])
 @cross_origin()
@@ -50,11 +59,8 @@ def run_simulation_endpoint():
     interventions = {}
     for key in SIMULATION["default_interventions"]:
         interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
-
-    try:
-        return jsonify(simulate.run_simulator(cz_id, length, interventions))
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        
+    return Response(simulation(cz_id, length, interventions), mimetype='text/plain')
 
 
 @app.route("/", methods=['GET'])
