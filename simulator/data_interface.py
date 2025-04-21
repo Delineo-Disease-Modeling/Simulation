@@ -9,12 +9,10 @@ def load_movement_pap_data(cz_id: int):
     
     if not response.ok:
         print('error getting patterns')
-        return
+        return {}
     
     data = response.json().get("data", {})
     
-    print(data)
-
     return {
         "data": {
             "patterns": data.get("patterns", {}),
