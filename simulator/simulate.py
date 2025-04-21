@@ -68,15 +68,15 @@ def move_people(simulator, items, is_household):
             place.add_member(person)
             person.location = place
 
-def run_simulator(cz_id=None, max_length=None, interventions=None, save_file=False):
+def run_simulator(cz_id: int, max_length=None, interventions=None, save_file=False):
     # Use defaults from config if parameters not provided
-    cz_id = cz_id or 1
     max_length = max_length or SIMULATION["default_max_length"]
     
     # Merge provided interventions with defaults
     default_interventions = SIMULATION["default_interventions"].copy()
     if interventions:
         default_interventions.update(interventions)
+
     interventions = default_interventions
     
     # Set random seed if user specifies

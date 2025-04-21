@@ -2,24 +2,25 @@ import requests
 
 BASE_URL = "https://db.delineo.me/"
 
-def load_movement_pap_data(cz_id=1): 
-    url = f"http://127.0.0.1:1890/patterns/{cz_id}"
+def load_movement_pap_data(cz_id: int): 
+    print('loading data...')
     
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise exception for HTTP errors
+    response = requests.get(f"https://db.delineo.me/patterns/{cz_id}")
+    
+    if not response.ok:
+        print('error getting patterns')
+        return
+    
+    data = response.json().get("data", {})
+    
+    print(data)
 
-        data = response.json().get("data", {})
-
-        return {
-            "data": {
-                "patterns": data.get("patterns", {}),
-                "papdata": data.get("papdata", {})
-            }
+    return {
+        "data": {
+            "patterns": data.get("patterns", {}),
+            "papdata": data.get("papdata", {})
         }
-
-    except requests.RequestException as e:
-        return {"error": str(e)}
+    }
 
 
 def load_people(): 
@@ -30,7 +31,7 @@ def load_people():
         people(dict): Dictionary containing people information.
         """
     try:
-        response = requests.get(f"{BASE_URL}/people")
+        response = requests.get(f"{BASE_URL}people")
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:
@@ -40,7 +41,7 @@ def load_people():
 
 def load_places(): 
     try:
-        response = requests.get(f"{BASE_URL}/places")
+        response = requests.get(f"{BASE_URL}places")
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:

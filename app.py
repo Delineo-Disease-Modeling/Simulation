@@ -28,7 +28,7 @@ def initialize_dmp_api():
         print(f"Failed to initialize DMP API: {e}")
         return False
 
-@app.route("/simulation/", methods=['POST', 'GET'])
+@app.route("/simulation/", methods=['POST'])
 @cross_origin()
 def run_simulation_endpoint():
     try:
@@ -40,12 +40,12 @@ def run_simulation_endpoint():
         return jsonify({"error": SERVER["error_messages"]["no_data"]}), 400
 
     # Initialize DMP API before running simulation
-    initialize_dmp_api()
+    #initialize_dmp_api()
 
     # Get simulation length from request or use default
     length = request.json.get('length', SIMULATION["default_max_length"])
     cz_id = request.json.get('czone_id', 1)
-    
+        
     # Build interventions dict from request, using defaults for missing values
     interventions = {}
     for key in SIMULATION["default_interventions"]:
