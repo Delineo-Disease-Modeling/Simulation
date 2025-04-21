@@ -3,7 +3,7 @@ import requests
 BASE_URL = "https://db.delineo.me/"
 
 def load_movement_pap_data(cz_id=1): 
-    url = "https://db.delineo.me/patterns/2"
+    url = f"http://127.0.0.1:1890/patterns/{cz_id}"
     
     try:
         response = requests.get(url)

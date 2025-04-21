@@ -74,7 +74,7 @@ SIMULATION = {
 # Server configuration
 SERVER = {
     "host": "0.0.0.0",
-    "port": 1880,
+    "port": 1870,
     "error_messages": {
         "bad_request": "Bad Request",
         "no_data": "No data sent"

@@ -68,9 +68,9 @@ def move_people(simulator, items, is_household):
             place.add_member(person)
             person.location = place
 
-def run_simulator(location=None, max_length=None, interventions=None, save_file=False):
+def run_simulator(cz_id=None, max_length=None, interventions=None, save_file=False):
     # Use defaults from config if parameters not provided
-    location = location or SIMULATION["default_location"]
+    cz_id = cz_id or 1
     max_length = max_length or SIMULATION["default_max_length"]
     
     # Merge provided interventions with defaults
@@ -88,7 +88,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     
     # Load people and places from the DMP API
     # pap = load_sample_data() # replace with pap = load_places() 
-    data = load_movement_pap_data(); 
+    data = load_movement_pap_data(cz_id); 
     patterns = data.get("data", {}).get("patterns", {})
     pap = data.get("data", {}).get("papdata", {})
     # people_data = pap['people']
@@ -104,7 +104,8 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         simulator.add_household(Household(data['cbg'], id))
 
     for id, data in places_data.items():
-        simulator.add_facility(Facility(id, data['cbg'], data['label'], data.get('capacity', -1)))
+        simulator.add_facility(Facility(id, -1, data['label'], data.get('capacity', -1)))
+        # simulator.add_facility(Facility(id, data['cbg'], data['label'], data.get('capacity', -1)))
 
     # Get default infected IDs and variants from config
     default_infected = SIMULATION["default_infected_ids"]

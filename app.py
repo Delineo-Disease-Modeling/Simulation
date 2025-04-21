@@ -44,7 +44,7 @@ def run_simulation_endpoint():
 
     # Get simulation length from request or use default
     length = request.json.get('length', SIMULATION["default_max_length"])
-    location = request.json.get('location', SIMULATION["default_location"])
+    cz_id = request.json.get('czone_id', 1)
     
     # Build interventions dict from request, using defaults for missing values
     interventions = {}
@@ -52,7 +52,7 @@ def run_simulation_endpoint():
         interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
 
     try:
-        return simulate.run_simulator(location, length, interventions)
+        return simulate.run_simulator(cz_id, length, interventions)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
