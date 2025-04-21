@@ -5,7 +5,7 @@ This centralizes hardcoded values that were previously scattered across files.
 
 # DMP API settings
 DMP_API = {
-    "base_url": "http://localhost:8000",
+    "base_url": "http://127.0.0.1:8000",
     "paths": {
         # Default paths for initialization
         "matrices_path": r"./data/combined_matrices.csv",
@@ -73,7 +73,7 @@ SIMULATION = {
 
 # Server configuration
 SERVER = {
-    "host": "0.0.0.0",
+    "host": "127.0.0.1",
     "port": 1870,
     "error_messages": {
         "bad_request": "Bad Request",
