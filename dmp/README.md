@@ -70,17 +70,18 @@ Loading input files...
 Using states: ['Infected', 'Hospitalized', 'ICU', 'Recovered', 'Deceased']
 
 Demographics:
-- Age Range: 25
-- Sex: F
+- Age: 70
+- Sex: M
 - Vaccination Status: Vaccinated
 - Variant: Omicron
 
-Using matrix set: Matrix_Set_1
+Using matrix set: Matrix_Set_23
 
 Disease Progression Timeline:
    0.0 hours: Infected
-  24.0 hours: Hospitalized
-  96.0 hours: Recovered
+  40.3 hours: Infectious_Syptomatic
+  92.9 hours: Hospitalized
+  212.9 hours: Recovered
 ```
 
 ### 2. REST API
@@ -106,7 +107,7 @@ curl -X POST http://localhost:8000/simulate \
      -H "Content-Type: application/json" \
      -d '{
            "demographics": {
-             "Age Range": "25",
+             "Age": "25",
              "Vaccination Status": "Vaccinated",
              "Sex": "F",
              "Variant": "Omicron"
@@ -246,9 +247,9 @@ Response:
     "status": "success",
     "message": "DMP initialized successfully",
     "states": ["Infected", "Hospitalized", "ICU", "Recovered", "Deceased"],
-    "demographic_categories": ["Age Range", "Sex", "Vaccination Status", "Variant"],
+    "demographic_categories": ["Age", "Sex", "Vaccination Status", "Variant"],
     "available_demographics": {
-        "Age Range": ["0-18", "19-64", "65+"],
+        "Age": ["0-18", "19-64", "65+"],
         "Sex": ["M", "F"],
         "Vaccination Status": ["Vaccinated", "Unvaccinated"],
         "Variant": ["Delta", "Omicron"]
@@ -263,11 +264,11 @@ Request:
 ```json
 {
     "demographics": {
-        "Age Range": "25",
-        "Sex": "F",
-        "Vaccination Status": "Vaccinated",
-        "Variant": "Omicron"
-    }
+                    "Age": "15",
+                    "Vaccination Status": "Vaccinated",
+                    "Sex": "F",
+                    "Variant": "Omicron"
+                }
 }
 ```
 
@@ -277,10 +278,10 @@ Response:
     "status": "success",
     "timeline": [
         ["Infected", 0.0],
-        ["Hospitalized", 72.0],
-        ["Recovered", 240.0]
+        ["Infectious_Symptomatic", 21.8],
+        ["Recovered", 69.8]
     ],
-    "matrix_set": "Matrix_Set_1"
+    "matrix_set": "Matrix_Set_14"
 }
 ```
 

@@ -1,40 +1,45 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from Simulation.dmp.core.simulation_functions import run_simulation, visualize_state_timeline
-from Simulation.dmp.cli.user_input import validate_matrices, find_matching_matrix, extract_matrices, parse_mapping_file, validate_states_format
+import os
+import sys
+from pathlib import Path
+
+# Add the Simulation directory to the Python path for imports
+simulation_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(simulation_dir)
+
+from dmp.core.simulation_functions import run_simulation
+from dmp.cli.user_input import (
+    validate_matrices, 
+    find_matching_matrix, 
+    extract_matrices, 
+    parse_mapping_file, 
+    validate_states_format
+)
 import json
-from Simulation.dmp.app.state_management import initialize_states, handle_states_management
-from Simulation.dmp.app.demographic_management import (
+from state_management import initialize_states, handle_states_management
+from demographic_management import (
     initialize_demographics, 
     collect_demographic_options, 
     get_valid_ages,
     validate_demographic_value
 )
-from Simulation.dmp.app.simulation_management import handle_simulation
+from simulation_management import handle_simulation
+from simulation_analysis import analyze_simulations
 
-def create_initial_state_vector(num_states, initial_state_name, states_list):
-    """Create initial state vector with 1 in the initial state and 0 elsewhere"""
-    initial_vector = np.zeros(num_states)
-    initial_vector[states_list.index(initial_state_name)] = 1
-    return initial_vector
-
-# Reserve space for errors
-error_placeholder = st.empty()
-
-# Initialize session state for matrix sets if not exists
+# Initialize session state variables
 if 'matrix_sets' not in st.session_state:
     st.session_state.matrix_sets = {}
 
-# Initialize session state for default demographics if not exists
 if 'default_demographics' not in st.session_state:
     st.session_state.default_demographics = {
-        "Age Range": "*",
+        "Age": "*",
         "Sex": "*",
-        "Vaccination Status": "*"
+        "Vaccination Status": "*",
+        "Variant": "*"  # Added Variant to default demographics
     }
 
-# Initialize session state for states if not exists
 if 'states' not in st.session_state:
     st.session_state.states = [
         "Infected", 
@@ -79,23 +84,44 @@ if input_method == "File Upload":
 
             # Process demographic mapping and matrices
             mapping_df, demographic_categories = parse_mapping_file(demographic_file)
-            combined_matrix_df = pd.read_csv(uploaded_file)
+            
+            # Load matrices with explicit delimiter, no header, and skip comment lines
+            matrix_df = pd.read_csv(uploaded_file, header=None, sep=',', skipinitialspace=True, comment='#')
+            
+            # Store the raw matrix data and mapping data in session state
+            st.session_state.matrix_df = matrix_df
+            st.session_state.mapping_df = mapping_df
+            st.session_state.demographic_categories = demographic_categories
             
             # Create matrix sets from uploaded files
             for idx, row in mapping_df.iterrows():
-                set_name = f"Set_{idx + 1}"  # Use index instead of SetID
+                set_name = f"Matrix_Set_{idx + 1}"
                 demographics = {col: row[col] for col in demographic_categories}
                 
-                # Extract matrices for this set using the index + 1 as ID
-                matrices = extract_matrices(idx + 1, combined_matrix_df)
-                
-                # Store in session state
-                st.session_state.matrix_sets[set_name] = {
-                    "matrices": matrices,
-                    "demographics": demographics
-                }
+                try:
+                    # Extract matrices for this set
+                    block_size = 6 * len(st.session_state.states)
+                    start_idx = idx * block_size
+                    end_idx = start_idx + block_size
+                    
+                    matrices = {
+                        "Transition Matrix": matrix_df.iloc[start_idx:start_idx + len(st.session_state.states)].values,
+                        "Distribution Type": matrix_df.iloc[start_idx + len(st.session_state.states):start_idx + 2*len(st.session_state.states)].values,
+                        "Mean": matrix_df.iloc[start_idx + 2*len(st.session_state.states):start_idx + 3*len(st.session_state.states)].values,
+                        "Standard Deviation": matrix_df.iloc[start_idx + 3*len(st.session_state.states):start_idx + 4*len(st.session_state.states)].values,
+                        "Min Cut-Off": matrix_df.iloc[start_idx + 4*len(st.session_state.states):start_idx + 5*len(st.session_state.states)].values,
+                        "Max Cut-Off": matrix_df.iloc[start_idx + 5*len(st.session_state.states):end_idx].values
+                    }
+                    
+                    st.session_state.matrix_sets[set_name] = {
+                        "matrices": matrices,
+                        "demographics": demographics
+                    }
+                except Exception as e:
+                    st.error(f"Error processing matrix set {set_name}: {str(e)}")
+                    continue
             
-            st.success(f"Successfully loaded {len(mapping_df)} matrix sets!")
+            st.success(f"Successfully loaded {len(st.session_state.matrix_sets)} matrix sets!")
             
         except Exception as e:
             st.error(f"Error processing files: {str(e)}")
@@ -134,9 +160,10 @@ else:  # Manual Input
         with default_demo_cols[0]:
             if st.button("Reset to Original Defaults"):
                 st.session_state.default_demographics = {
-                    "Age Range": "*",
+                    "Age": "*",
                     "Sex": "*",
-                    "Vaccination Status": "*"
+                    "Vaccination Status": "*",
+                    "Variant": "*"  # Added Variant to default demographics
                 }
         
         # Edit default demographics
@@ -356,12 +383,15 @@ if demographic_options or get_valid_ages():  # Show if there are demographics or
                 key="sim_age"
             )
             if age_selection != "*":
+                # Store the age as a number
                 simulation_demographics["Age"] = int(age_selection)
+            else:
+                simulation_demographics["Age"] = "*"
     
     # Handle other demographics
     col_idx = 1
     for demo_name, possible_values in demographic_options.items():
-        if demo_name != "Age Range":  # Skip age range as we handle it separately
+        if demo_name != "Age":  # Skip age as we handle it separately
             with demo_cols[col_idx % num_columns]:
                 valid_options = sorted([v for v in possible_values if v])
                 
@@ -372,9 +402,7 @@ if demographic_options or get_valid_ages():  # Show if there are demographics or
                         options=sex_options,
                         key=f"sim_{demo_name}"
                     )
-                    if selection != "*":
-                        simulation_demographics[demo_name] = selection
-                
+                    simulation_demographics[demo_name] = selection
                 elif demo_name == "Vaccination Status":
                     vax_options = ["*"] + [opt for opt in ["Vaccinated", "Unvaccinated"] if opt in valid_options]
                     selection = st.selectbox(
@@ -382,32 +410,43 @@ if demographic_options or get_valid_ages():  # Show if there are demographics or
                         options=vax_options,
                         key=f"sim_{demo_name}"
                     )
-                    if selection != "*":
-                        simulation_demographics[demo_name] = selection
-                
-                elif valid_options:
-                    options = ["*"] + valid_options
+                    simulation_demographics[demo_name] = selection
+                elif demo_name == "Variant":
+                    variant_options = ["*"] + [opt for opt in ["Delta", "Omicron"] if opt in valid_options]
                     selection = st.selectbox(
                         f"Select {demo_name}",
-                        options=options,
+                        options=variant_options,
                         key=f"sim_{demo_name}"
                     )
-                    if selection != "*":
-                        simulation_demographics[demo_name] = selection
-            col_idx += 1
+                    simulation_demographics[demo_name] = selection
+                else:
+                    # For other demographics, use text input with wildcard option
+                    value = st.text_input(
+                        f"Enter {demo_name}",
+                        value="*",
+                        key=f"sim_{demo_name}"
+                    )
+                    simulation_demographics[demo_name] = value
+                col_idx += 1
 
-# Initial state selection - after states are defined/updated
-if "Infected" in st.session_state.states:
-    default_initial = "Infected"
-else:
-    default_initial = st.session_state.states[0]
+# Store the collected demographics in session state
+st.session_state.simulation_demographics = simulation_demographics
 
+# Add initial state selection
+st.subheader("Select Initial State")
 initial_state = st.selectbox(
-    "Select Initial State",
+    "Initial State",
     options=st.session_state.states,
-    index=st.session_state.states.index(default_initial),
-    help="Select the initial state for the simulation. Default is 'Infected' for standard states or the first state for custom states."
+    key="initial_state"
 )
 
-# Handle simulation
-handle_simulation(initial_state)
+# Add tabs for single simulation and analysis
+sim_tab, analysis_tab = st.tabs(["Single Simulation", "Analysis"])
+
+with sim_tab:
+    # Handle single simulation
+    handle_simulation(initial_state)
+
+with analysis_tab:
+    # Handle multiple simulations and analysis
+    analyze_simulations(simulation_demographics, initial_state)

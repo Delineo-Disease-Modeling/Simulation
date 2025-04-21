@@ -140,68 +140,64 @@ def validate_matrices(transition_matrix, mean_matrix, std_dev_matrix, min_cutoff
                 continue
 
 def parse_mapping_file(mapping_file_path):
-    """Parse demographic mapping file and extract categories
-    
-    Args:
-        mapping_file_path (str): Path to the mapping CSV file
-    
-    Returns:
-        tuple: (DataFrame of mappings, list of demographic categories)
-    """
+    """Parse mapping file and return mapping DataFrame and demographic categories"""
     try:
-        # Read CSV file with comment lines (starting with #) skipped
-        mapping_df = pd.read_csv(mapping_file_path, comment='#', skipinitialspace=True)
-        print("Columns in Mapping File:", mapping_df.columns.tolist())
-
-        if "Matrix_Set" not in mapping_df.columns:
-            raise ValueError("The mapping file must include a 'Matrix_Set' column.")
-            
-        demographic_categories = [col for col in mapping_df.columns if col != "Matrix_Set"]
-        return mapping_df, demographic_categories
+        # Read CSV file, skipping comment lines and handling whitespace
+        mapping_df = pd.read_csv(
+            mapping_file_path,
+            comment='#',
+            skipinitialspace=True
+        )
         
+        # Clean column names and get demographic categories
+        mapping_df.columns = [col.strip() for col in mapping_df.columns]
+        demographic_categories = [col for col in mapping_df.columns if col != "Matrix_Set"]
+        
+        return mapping_df, demographic_categories
     except Exception as e:
-        raise ValueError(f"Error reading mapping file: {str(e)}")
+        print(f"Error reading mapping file: {str(e)}")
+        raise
 
 def extract_matrices(matrix_set, combined_matrix_df, num_states):
-    """
-    Extract matrices for a given set ID from the combined matrix dataframe
-    
-    Args:
-        matrix_set: str, the matrix set identifier (e.g., "Matrix_Set_1")
-        combined_matrix_df: pandas DataFrame containing all matrices
-        num_states: int, number of states in the model
-    """
-    # Extract the numeric ID from the matrix set string
-    matrix_set_id = int(matrix_set.split('_')[-1])
-    
-    matrices = {}
-    matrix_types = [
-        "Transition Matrix",
-        "Distribution Type",
-        "Mean",
-        "Standard Deviation",
-        "Min Cut-Off",
-        "Max Cut-Off"
-    ]
-    
-    # Each matrix set contains 6 matrices of size num_states x num_states
-    # Each matrix takes up num_states rows in the CSV
-    start_row = (matrix_set_id - 1) * (num_states * 6)
-    
-    for i, matrix_type in enumerate(matrix_types):
-        # Get the rows for this matrix
-        matrix_start = start_row + (i * num_states)
-        matrix_end = matrix_start + num_states
+    """Extract matrices for a given matrix set from the combined DataFrame"""
+    try:
+        # Read CSV file if it's a path, otherwise use the DataFrame directly
+        if isinstance(combined_matrix_df, (str, Path)):
+            combined_matrix_df = pd.read_csv(
+                combined_matrix_df,
+                comment='#',
+                skipinitialspace=True,
+                header=None
+            )
         
-        # Extract and convert matrix values
-        matrix_data = combined_matrix_df.iloc[matrix_start:matrix_end].values
+        # Calculate the block size for each matrix set
+        block_size = 6 * num_states  # 6 matrices per set
         
-        # Convert string values to float, handling any trailing commas
-        matrix = np.array([[float(str(val).strip(',')) for val in row[:num_states]] for row in matrix_data])
+        # Extract the matrix set number from the name (e.g., "Matrix_Set_14" -> 14)
+        try:
+            set_number = int(matrix_set.split('_')[-1]) - 1  # Convert to 0-based index
+        except (ValueError, IndexError):
+            # If we can't parse the number, use the first set
+            set_number = 0
         
-        matrices[matrix_type] = matrix
-    
-    return matrices
+        # Calculate the start and end indices for this matrix set
+        start_idx = set_number * block_size
+        end_idx = start_idx + block_size
+        
+        # Extract each matrix
+        matrices = {
+            "Transition Matrix": combined_matrix_df.iloc[start_idx:start_idx + num_states].values,
+            "Distribution Type": combined_matrix_df.iloc[start_idx + num_states:start_idx + 2*num_states].values,
+            "Mean": combined_matrix_df.iloc[start_idx + 2*num_states:start_idx + 3*num_states].values,
+            "Standard Deviation": combined_matrix_df.iloc[start_idx + 3*num_states:start_idx + 4*num_states].values,
+            "Min Cut-Off": combined_matrix_df.iloc[start_idx + 4*num_states:start_idx + 5*num_states].values,
+            "Max Cut-Off": combined_matrix_df.iloc[start_idx + 5*num_states:end_idx].values
+        }
+        
+        return matrices
+    except Exception as e:
+        print(f"Error extracting matrices: {str(e)}")
+        raise
 
 def find_matching_matrix(demographics, mapping_df, demographic_categories):
     """Find the matrix set corresponding to the given demographics"""

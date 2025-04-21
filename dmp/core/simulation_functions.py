@@ -23,7 +23,8 @@ def run_simulation(transition_matrix, mean_matrix, std_dev_matrix,
     """
     HOURS_PER_DAY = 24  # Convert days to hours
     
-    current_state = initial_state_idx
+    # Initialize current state with the provided index
+    current_state = int(initial_state_idx)  # Ensure it's an integer
     timeline = [(states[current_state], 0.0)]  # Start at time 0
     total_time = 0.0
     max_iterations = 1000  # Add safety limit
