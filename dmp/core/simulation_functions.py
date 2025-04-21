@@ -69,6 +69,11 @@ def run_simulation(transition_matrix, mean_matrix, std_dev_matrix,
     if iteration >= max_iterations:
         print(f"Warning: Simulation stopped after {max_iterations} iterations")
     
+    # Print timeline for each run
+    # print("\nSimulation Timeline:")
+    # for state, time in timeline:
+    #     print(f"{time:.2f} hours: {state}")
+    
     return timeline
 
 def generate_transition_time(mean: float, std_dev: float, 
