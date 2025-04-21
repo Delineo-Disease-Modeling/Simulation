@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
 import pandas as pd
@@ -14,6 +15,14 @@ from core.simulation_functions import run_simulation
 from cli.user_input import find_matching_matrix, parse_mapping_file, extract_matrices
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Global variables to store configuration
 matrix_df = None
