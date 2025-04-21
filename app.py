@@ -52,7 +52,7 @@ def run_simulation_endpoint():
         interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
 
     try:
-        return simulate.run_simulator(cz_id, length, interventions)
+        return jsonify(simulate.run_simulator(cz_id, length, interventions))
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
