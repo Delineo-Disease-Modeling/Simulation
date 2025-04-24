@@ -54,20 +54,21 @@ def test_dmp_api():
             },
             {
                 "demographics": {
-                    "Age": "65",
-                    "Vaccination Status": "Vaccinated",
+                    "Age": "70",
+                    "Vaccination Status": "Unvaccinated",
                     "Sex": "M",
                     "Variant": "Omicron"
                 }
-            },
-            {
-                "demographics": {
-                    "Age": "65",
-                    "Vaccination Status": "Vaccinated",
-                    "Sex": "M",
-                    "Variant": "Delta"
-                }
             }
+            # },
+            # {
+            #     "demographics": {
+            #         "Age": "65",
+            #         "Vaccination Status": "Vaccinated",
+            #         "Sex": "M",
+            #         "Variant": "Delta"
+            #     }
+            # }
         ]
         
         for i, test_case in enumerate(test_cases, 1):

@@ -4,14 +4,15 @@ def initialize_demographics():
     """Initialize default demographics in session state"""
     if 'default_demographics' not in st.session_state:
         st.session_state.default_demographics = {
-            "Age Range": "*",
+            "Age": "*",
             "Sex": "*",
-            "Vaccination Status": "*"
+            "Vaccination Status": "*",
+            "Variant": "*"
         }
 
 def validate_demographic_value(demo_name, value):
     """Validate demographic values based on their type"""
-    if demo_name == "Age Range":
+    if demo_name == "Age":
         if value == "*":
             return True
         try:
@@ -32,11 +33,17 @@ def get_age_ranges_from_matrix_sets():
     """Extract and parse all age ranges from matrix sets"""
     age_ranges = []
     for matrix_set in st.session_state.matrix_sets.values():
-        age_range = matrix_set["demographics"].get("Age Range")
+        age_range = matrix_set["demographics"].get("Age")
         if age_range and age_range != "*":
             try:
-                start, end = map(int, age_range.split("-"))
-                age_ranges.append((start, end))
+                if age_range.endswith("+"):
+                    # Handle "65+" format
+                    start = int(age_range[:-1])
+                    age_ranges.append((start, 110))  # Set upper limit to 110
+                else:
+                    # Handle "19-64" format
+                    start, end = map(int, age_range.split("-"))
+                    age_ranges.append((start, end))
             except ValueError:
                 continue
     return age_ranges
@@ -50,6 +57,10 @@ def get_valid_ages():
     valid_ages = set()
     for start, end in age_ranges:
         valid_ages.update(range(start, end + 1))
+    
+    # # Add ages up to 100 for the 65+ range
+    # valid_ages.update(range(65, 101))
+    
     return sorted(list(valid_ages))
 
 def collect_demographic_options():

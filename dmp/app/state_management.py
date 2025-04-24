@@ -1,5 +1,13 @@
 import streamlit as st
-from Simulation.dmp.cli.user_input import validate_states_format
+import os
+import sys
+
+# Add the parent directory to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
+from cli.user_input import validate_states_format
 
 def initialize_states():
     """Initialize default states in session state"""
