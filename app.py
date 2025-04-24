@@ -5,6 +5,7 @@ from simulator import simulate
 from simulator.config import DMP_API, SERVER, SIMULATION
 import requests
 
+
 app = Flask(__name__)
 
 # Enable CORS
