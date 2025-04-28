@@ -35,7 +35,7 @@ def simulation(cz_id, length, interventions):
         yield json.dumps(simulate.run_simulator(cz_id, length, interventions))
     except Exception as e:
         print(e)
-        return '{}'
+        yield '{}'
 
 @app.route("/simulation/", methods=['POST'])
 @cross_origin()
