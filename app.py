@@ -35,7 +35,7 @@ def simulation(cz_id, length, interventions):
         data = simulate.run_simulator(cz_id, length, interventions)
         
         # Upload generated data to DB
-        if '10080' in data['movement']:
+        if length == 10080:
             resp = requests.post('https://db.delineo.me/simdata', json={
                 'czone_id': int(cz_id),
                 'simdata': data
@@ -45,6 +45,8 @@ def simulation(cz_id, length, interventions):
                 print(f'Uploaded cached simulator data for #{cz_id}')
             else:
                 print(f'Could not upload cached data for #{cz_id}')
+                
+        print('success!')
         
         yield json.dumps(data)
     except Exception as e:
