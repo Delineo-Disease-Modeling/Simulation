@@ -32,7 +32,21 @@ def initialize_dmp_api():
 def simulation(cz_id, length, interventions):
     yield ''
     try:
-        yield json.dumps(simulate.run_simulator(cz_id, length, interventions))
+        data = simulate.run_simulator(cz_id, length, interventions)
+        
+        # Upload generated data to DB
+        if '10080' in data['movement']:
+            resp = requests.post('https://db.delineo.me/simdata', json={
+                'czone_id': int(cz_id),
+                'simdata': data
+            })
+            
+            if resp.ok:
+                print(f'Uploaded cached simulator data for #{cz_id}')
+            else:
+                print(f'Could not upload cached data for #{cz_id}')
+        
+        yield json.dumps(data)
     except Exception as e:
         print(e)
         yield '{}'

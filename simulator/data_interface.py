@@ -5,7 +5,7 @@ BASE_URL = "https://db.delineo.me/"
 def load_movement_pap_data(cz_id: int): 
     print('loading data...')
     
-    response = requests.get(f"https://db.delineo.me/patterns/{cz_id}")
+    response = requests.get(f"{BASE_URL}patterns/{cz_id}")
     
     if not response.ok:
         print('error getting patterns')
