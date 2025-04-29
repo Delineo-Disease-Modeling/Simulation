@@ -32,7 +32,7 @@ def initialize_dmp_api():
 def simulation(cz_id, length, interventions):
     yield ''
     try:
-        data = simulate.run_simulator(cz_id, length, interventions)
+        data = json.dumps(simulate.run_simulator(cz_id, length, interventions))
         
         # Upload generated data to DB
         if length == 10080:
@@ -48,7 +48,7 @@ def simulation(cz_id, length, interventions):
                 
         print('success!')
         
-        yield json.dumps(data)
+        yield data
     except Exception as e:
         print(e)
         yield '{}'
