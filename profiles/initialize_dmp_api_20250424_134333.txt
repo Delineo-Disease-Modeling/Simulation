@@ -1,0 +1,38 @@
+         3990 function calls (3765 primitive calls) in 0.004 seconds
+
+   Ordered by: cumulative time
+   List reduced from 349 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.004    0.004 /Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/app_3.py:70(initialize_dmp_api)
+        1    0.000    0.000    0.004    0.004 /Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/dmp_functions.py:17(initialize_dmp)
+        2    0.000    0.000    0.003    0.002 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/parsers/readers.py:868(read_csv)
+        2    0.000    0.000    0.003    0.002 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/parsers/readers.py:583(_read)
+        2    0.000    0.000    0.002    0.001 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/parsers/readers.py:1907(read)
+        2    0.000    0.000    0.002    0.001 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/frame.py:694(__init__)
+        2    0.000    0.000    0.002    0.001 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/internals/construction.py:423(dict_to_mgr)
+        1    0.000    0.000    0.001    0.001 /Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/user_input.py:142(parse_mapping_file)
+      6/4    0.000    0.000    0.001    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/series.py:389(__init__)
+        2    0.000    0.000    0.001    0.001 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/parsers/readers.py:1575(__init__)
+        2    0.000    0.000    0.001    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/parsers/readers.py:1848(_make_engine)
+        2    0.000    0.000    0.001    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/series.py:607(_init_dict)
+        2    0.000    0.000    0.001    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/common.py:664(get_handle)
+  818/816    0.000    0.000    0.001    0.000 {built-in method builtins.isinstance}
+       21    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/indexes/base.py:7593(ensure_index)
+       24    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/construction.py:517(sanitize_array)
+        7    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/indexes/base.py:475(__new__)
+        2    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/parsers/c_parser_wrapper.py:222(read)
+        2    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/internals/construction.py:96(arrays_to_mgr)
+        4    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/frame.py:4062(__getitem__)
+        2    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/parsers/c_parser_wrapper.py:60(__init__)
+       25    0.000    0.000    0.000    0.000 <frozen abc>:117(__instancecheck__)
+        2    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/series.py:5136(reindex)
+       25    0.000    0.000    0.000    0.000 {built-in method _abc._abc_instancecheck}
+        2    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/generic.py:5343(reindex)
+        2    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/common.py:304(_get_filepath_or_buffer)
+        2    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/internals/construction.py:596(_homogenize)
+    96/11    0.000    0.000    0.000    0.000 <frozen abc>:121(__subclasscheck__)
+    96/11    0.000    0.000    0.000    0.000 {built-in method _abc._abc_subclasscheck}
+        4    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/common.py:1165(_is_binary_mode)
+
+
