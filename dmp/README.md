@@ -119,11 +119,41 @@ curl -X POST http://localhost:8000/simulate \
 ```bash
 streamlit run app/app.py
 ```
+
 Features:
 - Interactive UI for matrix creation and editing
 - Real-time visualization of disease progression
 - Demographic parameter customization
 - Default values provided for quick start
+- Multiple input methods:
+  * File Upload: Upload matrices, demographic mappings, and custom states
+  * Manual Input: Create and edit matrix sets directly in the interface
+- Advanced simulation analysis:
+  * Single Analysis: Run multiple simulations with the same parameters
+  * Quick Comparison: Compare disease progression across different demographic presets
+  * Statistical analysis of simulation results:
+    - Final state distribution
+    - Average time to reach each state
+    - State transition analysis
+    - Percentage of simulations passing through each state
+- State Management:
+  * Custom state definitions
+  * State validation and formatting
+- Demographic Management:
+  * Default demographic settings
+  * Custom demographic categories
+  * Age range validation
+  * Wildcard support for flexible matching
+
+Project Structure:
+```
+app/
+├── app.py                 # Main Streamlit application
+├── simulation_analysis.py # Advanced simulation analysis and visualization
+├── simulation_management.py # Core simulation execution logic
+├── demographic_management.py # Demographic parameter handling
+└── state_management.py    # State definition and validation
+```
 
 ## Configuration Files
 
@@ -203,6 +233,7 @@ api/
 app/
 - app.py: Streamlit web interface
 - state_management.py: States handling
+- simulation_analysis.py: Advanced simulation analysis and visualization
 - demographic_management.py: Demographics handling
 - simulation_management.py: Simulation execution
 
