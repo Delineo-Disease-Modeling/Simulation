@@ -55,8 +55,6 @@ async def initialize_dmp(config: InitConfig):
         # Load matrices with explicit delimiter, no header, and skip comment lines
         matrix_df = pd.read_csv(config.matrices_path, header=None, sep=',', skipinitialspace=True, comment='#')
         print(f"Loaded matrix file with shape: {matrix_df.shape}")
-        print(f"First few rows of matrix data:")
-        print(matrix_df.iloc[:10])
         
         # Load mapping and get demographic categories using existing function
         mapping_df, demographic_categories = parse_mapping_file(config.mapping_path)

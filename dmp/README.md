@@ -56,7 +56,7 @@ python3 -m cli.user_input \
 Required:
 - `--matrices`: Path to CSV file containing transition matrices
 - `--mapping`: Path to CSV file containing demographic mappings
-- `--age_range`: Age of the individual
+- `--age`: Age of the individual
 - `--vaccination_status`: Vaccination status (e.g., "Vaccinated", "Unvaccinated")
 - `--sex`: Sex of the individual ("M" or "F")
 - `--variant`: Virus variant (e.g., "Delta", "Omicron")
@@ -95,8 +95,8 @@ Initialize the DMP:
 curl -X POST http://localhost:8000/initialize \
      -H "Content-Type: application/json" \
      -d '{
-           "matrices_path": "data/combined_matrices_usecase.csv",
-           "mapping_path": "data/demographic_mapping_usecase.csv",
+           "matrices_path": "data/combined_matrices.csv",
+           "mapping_path": "data/demographic_mapping.csv",
            "states_path": "data/custom_states.txt"
          }'
 ```
