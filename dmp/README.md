@@ -31,9 +31,9 @@ From the `Simulation/dmp` directory:
 
 ```bash
 python3 -m cli.user_input \
-    --matrices data/combined_matrices_usecase.csv \
-    --mapping data/demographic_mapping_usecase.csv \
-    --age_range 25 \
+    --matrices data/combined_matrices.csv \
+    --mapping data/demographic_mapping.csv \
+    --age 25 \
     --vaccination_status Vaccinated \
     --sex F \
     --variant Omicron
@@ -42,10 +42,10 @@ python3 -m cli.user_input \
 ### Optional States File
 ```bash
 python3 -m cli.user_input \
-    --matrices data/combined_matrices_usecase.csv \
-    --mapping data/demographic_mapping_usecase.csv \
+    --matrices data/combined_matrices.csv \
+    --mapping data/demographic_mapping.csv \
     --states data/custom_states.txt \
-    --age_range 25 \
+    --age 25 \
     --vaccination_status Vaccinated \
     --sex F \
     --variant Omicron

@@ -12,7 +12,7 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
 # Import using the correct path
-from simulation_functions import run_simulation, generate_transition_time, validate_matrices
+from core.simulation_functions import run_simulation, generate_transition_time, validate_matrices
 
 # Path to default states file
 DEFAULT_STATES_PATH = Path(parent_dir) / "data" / "default_states.txt"
@@ -86,7 +86,7 @@ def validate_distribution_type(matrix):
     if not np.isin(matrix, valid_types).all():
         raise ValueError(f"Distribution Type matrix must contain only the values {valid_types}.")
 
-def validate_matrices(transition_matrix, mean_matrix, std_dev_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_matrix):
+def validate_matrices(transition_matrix, mean_matrix, std_dev_matrix, min_cutoff_matrix, max_cutoff_matrix, distribution_matrix, states):
     """
     Validates all the matrices with the updated rule that if a transition probability is 0,
     corresponding values in other matrices are allowed to be 0 but not required to be.
@@ -129,11 +129,6 @@ def validate_matrices(transition_matrix, mean_matrix, std_dev_matrix, min_cutoff
                     raise ValueError(
                         f"For active transition from {states[i]} to {states[j]}, Standard Deviation cannot be negative. "
                         f"Got Std Dev: {std_dev_matrix[i][j]}"
-                    )
-                if distribution_matrix[i][j] == 0:
-                    raise ValueError(
-                        f"For active transition from {states[i]} to {states[j]}, Distribution Type must be non-zero. "
-                        f"Got Distribution Type: {distribution_matrix[i][j]}"
                     )
             # If transition probability is 0, skip validation for other matrices
             else:
@@ -270,7 +265,8 @@ def process_demographic_input(demographics, mapping_df, combined_matrix_df, demo
         std_dev_matrix=matrices["Standard Deviation"],
         min_cutoff_matrix=matrices["Min Cut-Off"],
         max_cutoff_matrix=matrices["Max Cut-Off"],
-        distribution_matrix=matrices["Distribution Type"]
+        distribution_matrix=matrices["Distribution Type"],
+        states=states
     )
     
     simulation_data = run_simulation(
@@ -405,7 +401,7 @@ def main():
         
         # Validate matrices
         validate_matrices(transition_matrix, mean_matrix, std_dev_matrix,
-                        min_cutoff_matrix, max_cutoff_matrix, distribution_matrix)
+                        min_cutoff_matrix, max_cutoff_matrix, distribution_matrix, states)
         
         # Run simulation
         print("\nRunning simulation...")
