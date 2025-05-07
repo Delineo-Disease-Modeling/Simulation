@@ -18,27 +18,35 @@ class DiseaseSimulator:
     def __init__(self, timestep=None, intervention_weights={}):
         self.timestep = timestep or SIMULATION["default_timestep"]  # in minutes
         self.iv_weights = intervention_weights
-        self.people = []
-        self.households = []            # list of all houses
-        self.facilities = []
+        self.people = {}
+        self.households = {}          # list of all houses
+        self.facilities = {}
     
     def add_person(self, person):
         self.people.append(person)
         
     def get_person(self, id):
-        return next((p for p in self.people if p.id == id), None)
-    
+        #return next((p for p in self.people if p.id == id), None)
+        return self.people.get(id) 
+
     def add_household(self, household):
-        self.households.append(household)
+        #self.households.append(household)
+        self.households[household.id] = household
+
     
     def get_household(self, id):
-        return next((h for h in self.households if h.id == id), None)
-    
+        #return next((h for h in self.households if h.id == id), None)
+        return self.households.get(id)
+
+
     def add_facility(self, facility):
-        self.facilities.append(facility)
+        #self.facilities.append(facility)
+        self.facilities[facility.id] = facility
+
     
     def get_facility(self, id):
-        return next((f for f in self.facilities if f.id == id), None)
+        #return next((f for f in self.facilities if f.id == id), None)
+        return self.facilities.get(id)
 
 def move_people(simulator, items, is_household):
 

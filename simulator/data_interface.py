@@ -20,6 +20,16 @@ def load_movement_pap_data(cz_id=1):
 
     except requests.RequestException as e:
         return {"error": str(e)}
+    
+def stream_movement_data(cz_id = 2, timestep = 0):
+    try: 
+        url = f"{BASE_URL}/patterns/{cz_id}/step/{timestep}"
+        response = requests.get(url, stream = True)
+        response.raise_for_status()
+        return response.json().get("data", {}).get("pattern", {})
+    except requests.RequestException as e:
+        print("Error fetching movement data:", e)
+        return {}
 
 
 def load_people(): 
