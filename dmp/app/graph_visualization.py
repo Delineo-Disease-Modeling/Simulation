@@ -38,15 +38,14 @@ def convert_graph_to_matrices(states, edges):
         i = state_to_idx[source]
         j = state_to_idx[target]
         
-        # Parse edge label
-        label_parts = edge['data']['label'].split('\n')
-        transition_matrix[i, j] = float(label_parts[0].split('=')[1])
-        mean_matrix[i, j] = float(label_parts[1].split('=')[1])
-        std_dev_matrix[i, j] = float(label_parts[2].split('=')[1])
-        dist_type = label_parts[3]
+        # Get edge properties with defaults
+        transition_matrix[i, j] = edge['data'].get('transition_prob', 1.0)
+        mean_matrix[i, j] = edge['data'].get('mean_time', 0)
+        std_dev_matrix[i, j] = edge['data'].get('std_dev', 0.0)
+        dist_type = edge['data'].get('distribution_type', 'normal')
         distribution_matrix[i, j] = dist_type_to_num.get(dist_type, 0)
-        min_cutoff_matrix[i, j] = float(label_parts[4].split('=')[1])
-        max_cutoff_matrix[i, j] = float(label_parts[5].split('=')[1])
+        min_cutoff_matrix[i, j] = edge['data'].get('min_cutoff', 0.0)
+        max_cutoff_matrix[i, j] = edge['data'].get('max_cutoff', float('inf'))
     
     return {
         "Transition Matrix": transition_matrix,
@@ -111,28 +110,64 @@ def create_state_machine(states):
     with col1:
         # Save interface
         st.write("Save Current State Machine")
-        save_name = st.text_input("State Machine Name", key="save_name")
-        save_description = st.text_area("Description", key="save_description")
+        
+        # Demographic inputs
+        st.write("Enter Demographic Values:")
+        demo_cols = st.columns(2)
+        
+        with demo_cols[0]:
+            sex = st.selectbox("Sex", options=["*", "M", "F"], key="save_sex")
+            age = st.text_input("Age", value="*", key="save_age")
+        
+        with demo_cols[1]:
+            vax_status = st.selectbox(
+                "Vaccination Status",
+                options=["*", "Vaccinated", "Unvaccinated"],
+                key="save_vax"
+            )
+            variant = st.selectbox(
+                "Variant",
+                options=["*", "Delta", "Omicron"],
+                key="save_variant"
+            )
+        
+        # Create name from demographic values
+        demo_values = []
+        if sex != "*": demo_values.append(f"Sex={sex}")
+        if age != "*": demo_values.append(f"Age={age}")
+        if vax_status != "*": demo_values.append(f"Vax={vax_status}")
+        if variant != "*": demo_values.append(f"Variant={variant}")
+        
+        state_machine_name = " | ".join(demo_values) if demo_values else "Default"
+        
         if st.button("Save State Machine"):
-            if save_name:
+            if state_machine_name:
+                # Create demographics dictionary
+                demographics = {
+                    "Sex": sex,
+                    "Age": age,
+                    "Vaccination Status": vax_status,
+                    "Variant": variant
+                }
+                
                 state_machine_id = db.save_state_machine(
-                    save_name,
-                    save_description,
+                    state_machine_name,
                     states,
-                    st.session_state.graph_edges
+                    st.session_state.graph_edges,
+                    demographics
                 )
-                st.success(f"State machine saved with ID: {state_machine_id}")
+                st.success(f"Saved state machine: {state_machine_name}")
             else:
-                st.error("Please provide a name for the state machine")
+                st.error("Please provide at least one demographic value")
     
     with col2:
         # Load interface
-        st.write("Load Saved State Machine")
+        st.write("My State Machines")
         saved_machines = db.list_state_machines()
         if saved_machines:
             machine_options = {f"{m[1]} (ID: {m[0]})": m[0] for m in saved_machines}
             selected_machine = st.selectbox(
-                "Select State Machine",
+                "Select A Saved State Machine",
                 options=list(machine_options.keys()),
                 key="load_machine"
             )
@@ -237,6 +272,12 @@ def create_state_machine(states):
                     "data": {
                         "source": source_state,
                         "target": target_state,
+                        "transition_prob": transition_prob,
+                        "mean_time": mean_value,
+                        "std_dev": std_dev,
+                        "distribution_type": dist_type,
+                        "min_cutoff": min_cutoff,
+                        "max_cutoff": max_cutoff,
                         "label": f"p={transition_prob:.2f}\nμ={mean_value}\nσ={std_dev:.1f}\n{dist_type}\nmin={min_cutoff:.1f}\nmax={max_cutoff:.1f}"
                     }
                 }
@@ -253,14 +294,32 @@ def create_state_machine(states):
         st.subheader("Remove Edge")
         edge_to_remove = st.selectbox(
             "Select Edge to Remove",
-            options=[f"{edge['data']['source']} → {edge['data']['target']} ({edge['data']['label']})" for edge in st.session_state.graph_edges],
+            options=[
+                f"{edge['data']['source']} → {edge['data']['target']} "
+                f"(p={edge['data'].get('transition_prob', 1.0):.2f}, "
+                f"μ={edge['data'].get('mean_time', 0)}, "
+                f"σ={edge['data'].get('std_dev', 0.0):.1f}, "
+                f"{edge['data'].get('distribution_type', 'normal')}, "
+                f"min={edge['data'].get('min_cutoff', 0.0):.1f}, "
+                f"max={edge['data'].get('max_cutoff', float('inf')):.1f})"
+                for edge in st.session_state.graph_edges
+            ],
             key="edge_to_remove"
         )
         
         if st.button("Remove Edge"):
             # Find and remove the selected edge
             for i, edge in enumerate(st.session_state.graph_edges):
-                if f"{edge['data']['source']} → {edge['data']['target']} ({edge['data']['label']})" == edge_to_remove:
+                edge_str = (
+                    f"{edge['data']['source']} → {edge['data']['target']} "
+                    f"(p={edge['data'].get('transition_prob', 1.0):.2f}, "
+                    f"μ={edge['data'].get('mean_time', 0)}, "
+                    f"σ={edge['data'].get('std_dev', 0.0):.1f}, "
+                    f"{edge['data'].get('distribution_type', 'normal')}, "
+                    f"min={edge['data'].get('min_cutoff', 0.0):.1f}, "
+                    f"max={edge['data'].get('max_cutoff', float('inf')):.1f})"
+                )
+                if edge_str == edge_to_remove:
                     st.session_state.graph_edges.pop(i)
                     st.success(f"Removed edge {edge_to_remove}")
                     st.rerun()

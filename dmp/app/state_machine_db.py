@@ -20,9 +20,9 @@ class StateMachineDB:
                 CREATE TABLE IF NOT EXISTS state_machines (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
-                    description TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    demographics TEXT
                 )
             ''')
             
@@ -55,113 +55,194 @@ class StateMachineDB:
             
             conn.commit()
 
-    def save_state_machine(self, name, description, states, edges):
-        """Save a state machine to the database."""
+    def get_state_machine_by_name(self, name):
+        """Get a state machine by its name."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            
-            # Insert state machine
             cursor.execute('''
-                INSERT INTO state_machines (name, description, updated_at)
-                VALUES (?, ?, ?)
-            ''', (name, description, datetime.now()))
+                SELECT id, name, created_at, updated_at
+                FROM state_machines
+                WHERE name = ?
+            ''', (name,))
+            return cursor.fetchone()
+
+    def save_state_machine(self, name, states, edges, demographics=None, update_existing=True):
+        """Save a state machine to the database.
+        
+        Args:
+            name: Name of the state machine
+            states: List of states
+            edges: List of edges
+            demographics: Optional demographics data
+            update_existing: If True, will update an existing state machine with the same name
+                           If False, will raise an error if a state machine with the same name exists
+        
+        Returns:
+            state_machine_id: ID of the saved state machine
+        
+        Raises:
+            ValueError: If a state machine with the same name exists and update_existing is False
+        """
+        # Check if state machine with same name exists
+        existing = self.get_state_machine_by_name(name)
+        if existing and not update_existing:
+            raise ValueError(f"A state machine named '{name}' already exists. Use update_existing=True to update it.")
+        
+        conn = None
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
             
-            state_machine_id = cursor.lastrowid
+            if existing and update_existing:
+                # Update existing state machine
+                state_machine_id = existing[0]
+                cursor.execute(
+                    """
+                    UPDATE state_machines 
+                    SET demographics = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                    """,
+                    (json.dumps(demographics or {}), state_machine_id)
+                )
+                
+                # Delete existing states and edges
+                cursor.execute('DELETE FROM edges WHERE state_machine_id = ?', (state_machine_id,))
+                cursor.execute('DELETE FROM states WHERE state_machine_id = ?', (state_machine_id,))
+            else:
+                # Insert new state machine
+                cursor.execute(
+                    """
+                    INSERT INTO state_machines (name, demographics)
+                    VALUES (?, ?)
+                    """,
+                    (name, json.dumps(demographics or {}))
+                )
+                state_machine_id = cursor.lastrowid
             
             # Insert states
             for state in states:
-                cursor.execute('''
+                cursor.execute(
+                    """
                     INSERT INTO states (state_machine_id, state_name)
                     VALUES (?, ?)
-                ''', (state_machine_id, state))
+                    """,
+                    (state_machine_id, state)
+                )
             
             # Insert edges
             for edge in edges:
-                edge_data = edge['data']
-                label_parts = edge_data['label'].split('\n')
-                cursor.execute('''
+                cursor.execute(
+                    """
                     INSERT INTO edges (
-                        state_machine_id, source_state, target_state,
-                        transition_prob, mean_time, std_dev, distribution_type,
-                        min_cutoff, max_cutoff
+                        state_machine_id, 
+                        source_state, 
+                        target_state, 
+                        transition_prob,
+                        mean_time,
+                        std_dev,
+                        distribution_type,
+                        min_cutoff,
+                        max_cutoff
                     )
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    state_machine_id,
-                    edge_data['source'],
-                    edge_data['target'],
-                    float(label_parts[0].split('=')[1]),
-                    int(label_parts[1].split('=')[1]),
-                    float(label_parts[2].split('=')[1]),
-                    label_parts[3],
-                    float(label_parts[4].split('=')[1]),
-                    float(label_parts[5].split('=')[1])
-                ))
+                    """,
+                    (
+                        state_machine_id,
+                        edge['data']['source'],
+                        edge['data']['target'],
+                        edge['data'].get('transition_prob', 1.0),
+                        edge['data'].get('mean_time', 0),
+                        edge['data'].get('std_dev', 0.0),
+                        edge['data'].get('distribution_type', 'normal'),
+                        edge['data'].get('min_cutoff', 0.0),
+                        edge['data'].get('max_cutoff', float('inf'))
+                    )
+                )
             
             conn.commit()
             return state_machine_id
+        except Exception as e:
+            if conn is not None:
+                conn.rollback()
+            raise e
+        finally:
+            if conn is not None:
+                conn.close()
 
     def load_state_machine(self, state_machine_id):
-        """Load a state machine from the database."""
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            
-            # Get state machine details
-            cursor.execute('''
-                SELECT name, description, created_at, updated_at
-                FROM state_machines
-                WHERE id = ?
-            ''', (state_machine_id,))
-            machine_details = cursor.fetchone()
-            
-            if not machine_details:
-                return None
-            
-            # Get states
-            cursor.execute('''
-                SELECT state_name
-                FROM states
-                WHERE state_machine_id = ?
-                ORDER BY id
-            ''', (state_machine_id,))
-            states = [row[0] for row in cursor.fetchall()]
-            
-            # Get edges
-            cursor.execute('''
-                SELECT source_state, target_state, transition_prob,
-                       mean_time, std_dev, distribution_type,
-                       min_cutoff, max_cutoff
-                FROM edges
-                WHERE state_machine_id = ?
-            ''', (state_machine_id,))
-            
-            edges = []
-            for row in cursor.fetchall():
-                source, target, prob, mean, std, dist_type, min_cut, max_cut = row
-                edges.append({
-                    "data": {
-                        "source": source,
-                        "target": target,
-                        "label": f"p={prob:.2f}\nμ={mean}\nσ={std:.1f}\n{dist_type}\nmin={min_cut:.1f}\nmax={max_cut:.1f}"
+        """Load a state machine from the database"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Get state machine details
+                cursor.execute(
+                    """
+                    SELECT name, demographics
+                    FROM state_machines
+                    WHERE id = ?
+                    """,
+                    (state_machine_id,)
+                )
+                machine_data = cursor.fetchone()
+                if not machine_data:
+                    return None
+                
+                # Get states
+                cursor.execute(
+                    """
+                    SELECT state_name
+                    FROM states
+                    WHERE state_machine_id = ?
+                    ORDER BY id
+                    """,
+                    (state_machine_id,)
+                )
+                states = [row[0] for row in cursor.fetchall()]
+                
+                # Get edges
+                cursor.execute(
+                    """
+                    SELECT source_state, target_state, transition_prob, mean_time, 
+                           std_dev, distribution_type, min_cutoff, max_cutoff
+                    FROM edges
+                    WHERE state_machine_id = ?
+                    """,
+                    (state_machine_id,)
+                )
+                edges = [
+                    {
+                        "data": {
+                            "source": row[0],
+                            "target": row[1],
+                            "transition_prob": row[2],
+                            "mean_time": row[3],
+                            "std_dev": row[4],
+                            "distribution_type": row[5],
+                            "min_cutoff": row[6],
+                            "max_cutoff": row[7],
+                            "label": f"p={row[2]:.2f}\nμ={row[3]}\nσ={row[4]:.1f}\n{row[5]}\nmin={row[6]:.1f}\nmax={row[7]:.1f}"
+                        }
                     }
-                })
-            
-            return {
-                "id": state_machine_id,
-                "name": machine_details[0],
-                "description": machine_details[1],
-                "created_at": machine_details[2],
-                "updated_at": machine_details[3],
-                "states": states,
-                "edges": edges
-            }
+                    for row in cursor.fetchall()
+                ]
+                
+                return {
+                    "id": state_machine_id,
+                    "name": machine_data[0],
+                    "demographics": json.loads(machine_data[1] or "{}"),
+                    "states": states,
+                    "edges": edges
+                }
+        except Exception as e:
+            raise e
 
     def list_state_machines(self):
         """List all saved state machines."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, name, description, created_at, updated_at
+                SELECT id, name, created_at, updated_at
                 FROM state_machines
                 ORDER BY updated_at DESC
             ''')
