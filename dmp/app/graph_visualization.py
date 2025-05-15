@@ -2,12 +2,16 @@ import streamlit as st
 import streamlit.components.v1 as components
 import os
 import json
+from state_machine_db import StateMachineDB
 
 # Set page to wide mode
 st.set_page_config(layout="wide")
 
 def create_state_machine(states):
     """Create a graph visualization of disease states using Cytoscape.js"""
+    # Initialize database
+    db = StateMachineDB()
+    
     # Initialize graph state in session state if not exists
     if 'graph_edges' not in st.session_state:
         st.session_state.graph_edges = []
@@ -19,6 +23,59 @@ def create_state_machine(states):
     # Create the graph
     st.markdown("---")  # Add a visual separator
     st.header("State Machine")
+    
+    # Add save/load interface
+    st.subheader("Save/Load State Machine")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Save interface
+        st.write("Save Current State Machine")
+        save_name = st.text_input("State Machine Name", key="save_name")
+        save_description = st.text_area("Description", key="save_description")
+        if st.button("Save State Machine"):
+            if save_name:
+                state_machine_id = db.save_state_machine(
+                    save_name,
+                    save_description,
+                    states,
+                    st.session_state.graph_edges
+                )
+                st.success(f"State machine saved with ID: {state_machine_id}")
+            else:
+                st.error("Please provide a name for the state machine")
+    
+    with col2:
+        # Load interface
+        st.write("Load Saved State Machine")
+        saved_machines = db.list_state_machines()
+        if saved_machines:
+            machine_options = {f"{m[1]} (ID: {m[0]})": m[0] for m in saved_machines}
+            selected_machine = st.selectbox(
+                "Select State Machine",
+                options=list(machine_options.keys()),
+                key="load_machine"
+            )
+            
+            col_load, col_delete = st.columns(2)
+            with col_load:
+                if st.button("Load Selected"):
+                    machine_id = machine_options[selected_machine]
+                    machine_data = db.load_state_machine(machine_id)
+                    if machine_data:
+                        # Update session state with loaded data
+                        st.session_state.graph_edges = machine_data["edges"]
+                        st.success(f"Loaded state machine: {machine_data['name']}")
+                        st.rerun()
+            
+            with col_delete:
+                if st.button("Delete Selected"):
+                    machine_id = machine_options[selected_machine]
+                    db.delete_state_machine(machine_id)
+                    st.success("State machine deleted")
+                    st.rerun()
+        else:
+            st.write("No saved state machines found")
     
     # Add edge creation interface
     st.subheader("Add Edge")
