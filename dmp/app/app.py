@@ -27,6 +27,7 @@ from demographic_management import (
 )
 from simulation_management import handle_simulation
 from simulation_analysis import analyze_simulations
+from graph_visualization import create_state_machine
 
 # Initialize session state variables
 if 'matrix_sets' not in st.session_state:
@@ -58,7 +59,7 @@ st.title("Disease Modeling Platform")
 st.sidebar.title("Input Method")
 input_method = st.sidebar.radio(
     "Choose input method:",
-    ["File Upload", "Manual Input"]
+    ["File Upload", "Manual Input", "Visual Graph"]
 )
 
 # Handle states management
@@ -126,7 +127,8 @@ if input_method == "File Upload":
         except Exception as e:
             st.error(f"Error processing files: {str(e)}")
             st.exception(e)
-
+elif input_method == "Visual Graph":
+    create_state_machine(st.session_state.states)
 else:  # Manual Input
     st.header("Matrix Set Management")
     
