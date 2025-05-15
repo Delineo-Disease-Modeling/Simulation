@@ -27,7 +27,9 @@ def create_state_machine(states):
     with col1:
         source_state = st.selectbox("From State", states, key="source_state")
     with col2:
-        target_state = st.selectbox("To State", states, key="target_state")
+        # Create a list of target states starting from the second element
+        target_states = states[1:] if len(states) > 1 else states
+        target_state = st.selectbox("To State", target_states, key="target_state")
     with col3:
         transition_prob = st.number_input(
             "Transition Probability",
