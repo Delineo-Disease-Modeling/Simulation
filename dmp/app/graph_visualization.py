@@ -5,6 +5,7 @@ import json
 import numpy as np
 import pandas as pd
 from state_machine_db import StateMachineDB
+from core.simulation_functions import run_simulation
 
 # Set page to wide mode
 st.set_page_config(layout="wide")
@@ -310,7 +311,36 @@ def create_state_machine(states):
     
     # Add start simulation button
     if st.button("Start Simulation"):
-        st.info("Simulation functionality will be implemented soon!")
+        if not st.session_state.graph_edges:
+            st.warning("Please add at least one edge to the state machine before running the simulation.")
+        else:
+            # Get the index of the selected initial state
+            initial_state_idx = states.index(initial_state)
+            
+            # Get matrices from the graph
+            matrices = convert_graph_to_matrices(states, st.session_state.graph_edges)
+            
+            # Run the simulation
+            timeline = run_simulation(
+                transition_matrix=matrices["Transition Matrix"],
+                mean_matrix=matrices["Mean Matrix"],
+                std_dev_matrix=matrices["Standard Deviation Matrix"],
+                min_cutoff_matrix=matrices["Min Cutoff Matrix"],
+                max_cutoff_matrix=matrices["Max Cutoff Matrix"],
+                distribution_matrix=matrices["Distribution Type Matrix"],
+                initial_state_idx=initial_state_idx,
+                states=states
+            )
+            
+            # Display the timeline
+            st.subheader("Simulation Timeline")
+            timeline_df = pd.DataFrame(timeline, columns=["State", "Time (hours)"])
+            st.dataframe(timeline_df)
+            
+            # Display a visual representation of the timeline
+            st.subheader("Timeline Visualization")
+            for state, time in timeline:
+                st.write(f"{time:.2f} hours: {state}")
 
     # Define the stylesheet
     stylesheet = [
