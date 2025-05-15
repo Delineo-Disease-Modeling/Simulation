@@ -22,7 +22,7 @@ def create_state_machine(states):
 
     # Create the graph
     st.markdown("---")  # Add a visual separator
-    st.header("State Machine")
+    st.header("Create A State Machine")
     
     # Add save/load interface
     st.subheader("Save/Load State Machine")
@@ -79,7 +79,7 @@ def create_state_machine(states):
     
     # Add edge creation interface
     st.subheader("Add Edge")
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
     
     with col1:
         source_state = st.selectbox("From State", states, key="source_state")
@@ -122,6 +122,26 @@ def create_state_machine(states):
             options=["normal", "uniform", "log-normal", "gamma"],
             key="dist_type"
         )
+    with col7:
+        min_cutoff = st.number_input(
+            "Min Cutoff",
+            min_value=0.0,
+            max_value=float(st.session_state.mean_value),
+            value=0.0,
+            step=0.1,
+            format="%.1f",
+            key="min_cutoff"
+        )
+    with col8:
+        max_cutoff = st.number_input(
+            "Max Cutoff",
+            min_value=float(st.session_state.mean_value),
+            max_value=30.0,
+            value=float(st.session_state.mean_value) + 1.0,
+            step=0.1,
+            format="%.1f",
+            key="max_cutoff"
+        )
     
     if st.button("Add Edge"):
         if source_state != target_state:  # Prevent self-loops
@@ -137,11 +157,11 @@ def create_state_machine(states):
                     "data": {
                         "source": source_state,
                         "target": target_state,
-                        "label": f"p={transition_prob:.2f}\nμ={mean_value}\nσ={std_dev:.1f}\n{dist_type}"
+                        "label": f"p={transition_prob:.2f}\nμ={mean_value}\nσ={std_dev:.1f}\n{dist_type}\nmin={min_cutoff:.1f}\nmax={max_cutoff:.1f}"
                     }
                 }
                 st.session_state.graph_edges.append(new_edge)
-                st.success(f"Added edge from {source_state} to {target_state} with probability {transition_prob:.2f}, mean time {mean_value}, std dev {std_dev:.1f}, and {dist_type} distribution")
+                st.success(f"Added edge from {source_state} to {target_state} with probability {transition_prob:.2f}, mean time {mean_value}, std dev {std_dev:.1f}, {dist_type} distribution, min cutoff {min_cutoff:.1f}, and max cutoff {max_cutoff:.1f}")
                 st.rerun()
             else:
                 st.warning("This edge already exists!")

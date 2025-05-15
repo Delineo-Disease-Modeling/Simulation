@@ -7,6 +7,7 @@ class StateMachineDB:
     def __init__(self, db_path="state_machines.db"):
         """Initialize the database connection and create tables if they don't exist."""
         self.db_path = db_path
+            
         self._create_tables()
 
     def _create_tables(self):
@@ -46,6 +47,8 @@ class StateMachineDB:
                     mean_time INTEGER NOT NULL,
                     std_dev REAL NOT NULL,
                     distribution_type TEXT NOT NULL,
+                    min_cutoff REAL NOT NULL,
+                    max_cutoff REAL NOT NULL,
                     FOREIGN KEY (state_machine_id) REFERENCES state_machines(id)
                 )
             ''')
@@ -75,20 +78,24 @@ class StateMachineDB:
             # Insert edges
             for edge in edges:
                 edge_data = edge['data']
+                label_parts = edge_data['label'].split('\n')
                 cursor.execute('''
                     INSERT INTO edges (
                         state_machine_id, source_state, target_state,
-                        transition_prob, mean_time, std_dev, distribution_type
+                        transition_prob, mean_time, std_dev, distribution_type,
+                        min_cutoff, max_cutoff
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     state_machine_id,
                     edge_data['source'],
                     edge_data['target'],
-                    float(edge_data['label'].split('\n')[0].split('=')[1]),
-                    int(edge_data['label'].split('\n')[1].split('=')[1]),
-                    float(edge_data['label'].split('\n')[2].split('=')[1]),
-                    edge_data['label'].split('\n')[3]
+                    float(label_parts[0].split('=')[1]),
+                    int(label_parts[1].split('=')[1]),
+                    float(label_parts[2].split('=')[1]),
+                    label_parts[3],
+                    float(label_parts[4].split('=')[1]),
+                    float(label_parts[5].split('=')[1])
                 ))
             
             conn.commit()
@@ -122,19 +129,20 @@ class StateMachineDB:
             # Get edges
             cursor.execute('''
                 SELECT source_state, target_state, transition_prob,
-                       mean_time, std_dev, distribution_type
+                       mean_time, std_dev, distribution_type,
+                       min_cutoff, max_cutoff
                 FROM edges
                 WHERE state_machine_id = ?
             ''', (state_machine_id,))
             
             edges = []
             for row in cursor.fetchall():
-                source, target, prob, mean, std, dist_type = row
+                source, target, prob, mean, std, dist_type, min_cut, max_cut = row
                 edges.append({
                     "data": {
                         "source": source,
                         "target": target,
-                        "label": f"p={prob:.2f}\nμ={mean}\nσ={std:.1f}\n{dist_type}"
+                        "label": f"p={prob:.2f}\nμ={mean}\nσ={std:.1f}\n{dist_type}\nmin={min_cut:.1f}\nmax={max_cut:.1f}"
                     }
                 })
             
