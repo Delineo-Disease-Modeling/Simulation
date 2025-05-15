@@ -361,94 +361,95 @@ else:  # Manual Input
     # Matrix Sets Overview section ends here
 
 # Move Simulation Input Section outside of input method conditions
-st.markdown("---")  # Add a visual separator
-st.header("Run Simulation")
+if input_method != "Visual Graph":  # Only show simulation section for non-visual graph input
+    st.markdown("---")  # Add a visual separator
+    st.header("Run Simulation")
 
-# Collect all unique demographics and their possible values
-demographic_options = collect_demographic_options()
+    # Collect all unique demographics and their possible values
+    demographic_options = collect_demographic_options()
 
-st.subheader("Enter Demographics for Simulation")
-simulation_demographics = {}
+    st.subheader("Enter Demographics for Simulation")
+    simulation_demographics = {}
 
-if demographic_options or get_valid_ages():  # Show if there are demographics or valid ages
-    num_columns = min(3, max(1, len(demographic_options) + 1))  # +1 for age
-    demo_cols = st.columns(num_columns)
-    
-    # Handle age input first
-    with demo_cols[0]:
-        valid_ages = get_valid_ages()
-        if valid_ages:
-            age_options = ["*"] + valid_ages  # Add wildcard option
-            age_selection = st.selectbox(
-                "Select Age",
-                options=age_options,
-                key="sim_age"
-            )
-            if age_selection != "*":
-                # Store the age as a number
-                simulation_demographics["Age"] = int(age_selection)
-            else:
-                simulation_demographics["Age"] = "*"
-    
-    # Handle other demographics
-    col_idx = 1
-    for demo_name, possible_values in demographic_options.items():
-        if demo_name != "Age":  # Skip age as we handle it separately
-            with demo_cols[col_idx % num_columns]:
-                valid_options = sorted([v for v in possible_values if v])
-                
-                if demo_name == "Sex":
-                    sex_options = ["*"] + [opt for opt in ["M", "F"] if opt in valid_options]
-                    selection = st.selectbox(
-                        f"Select {demo_name}",
-                        options=sex_options,
-                        key=f"sim_{demo_name}"
-                    )
-                    simulation_demographics[demo_name] = selection
-                elif demo_name == "Vaccination Status":
-                    vax_options = ["*"] + [opt for opt in ["Vaccinated", "Unvaccinated"] if opt in valid_options]
-                    selection = st.selectbox(
-                        f"Select {demo_name}",
-                        options=vax_options,
-                        key=f"sim_{demo_name}"
-                    )
-                    simulation_demographics[demo_name] = selection
-                elif demo_name == "Variant":
-                    variant_options = ["*"] + [opt for opt in ["Delta", "Omicron"] if opt in valid_options]
-                    selection = st.selectbox(
-                        f"Select {demo_name}",
-                        options=variant_options,
-                        key=f"sim_{demo_name}"
-                    )
-                    simulation_demographics[demo_name] = selection
+    if demographic_options or get_valid_ages():  # Show if there are demographics or valid ages
+        num_columns = min(3, max(1, len(demographic_options) + 1))  # +1 for age
+        demo_cols = st.columns(num_columns)
+        
+        # Handle age input first
+        with demo_cols[0]:
+            valid_ages = get_valid_ages()
+            if valid_ages:
+                age_options = ["*"] + valid_ages  # Add wildcard option
+                age_selection = st.selectbox(
+                    "Select Age",
+                    options=age_options,
+                    key="sim_age"
+                )
+                if age_selection != "*":
+                    # Store the age as a number
+                    simulation_demographics["Age"] = int(age_selection)
                 else:
-                    # For other demographics, use text input with wildcard option
-                    value = st.text_input(
-                        f"Enter {demo_name}",
-                        value="*",
-                        key=f"sim_{demo_name}"
-                    )
-                    simulation_demographics[demo_name] = value
-                col_idx += 1
+                    simulation_demographics["Age"] = "*"
+        
+        # Handle other demographics
+        col_idx = 1
+        for demo_name, possible_values in demographic_options.items():
+            if demo_name != "Age":  # Skip age as we handle it separately
+                with demo_cols[col_idx % num_columns]:
+                    valid_options = sorted([v for v in possible_values if v])
+                    
+                    if demo_name == "Sex":
+                        sex_options = ["*"] + [opt for opt in ["M", "F"] if opt in valid_options]
+                        selection = st.selectbox(
+                            f"Select {demo_name}",
+                            options=sex_options,
+                            key=f"sim_{demo_name}"
+                        )
+                        simulation_demographics[demo_name] = selection
+                    elif demo_name == "Vaccination Status":
+                        vax_options = ["*"] + [opt for opt in ["Vaccinated", "Unvaccinated"] if opt in valid_options]
+                        selection = st.selectbox(
+                            f"Select {demo_name}",
+                            options=vax_options,
+                            key=f"sim_{demo_name}"
+                        )
+                        simulation_demographics[demo_name] = selection
+                    elif demo_name == "Variant":
+                        variant_options = ["*"] + [opt for opt in ["Delta", "Omicron"] if opt in valid_options]
+                        selection = st.selectbox(
+                            f"Select {demo_name}",
+                            options=variant_options,
+                            key=f"sim_{demo_name}"
+                        )
+                        simulation_demographics[demo_name] = selection
+                    else:
+                        # For other demographics, use text input with wildcard option
+                        value = st.text_input(
+                            f"Enter {demo_name}",
+                            value="*",
+                            key=f"sim_{demo_name}"
+                        )
+                        simulation_demographics[demo_name] = value
+                    col_idx += 1
 
-# Store the collected demographics in session state
-st.session_state.simulation_demographics = simulation_demographics
+    # Store the collected demographics in session state
+    st.session_state.simulation_demographics = simulation_demographics
 
-# Add initial state selection
-st.subheader("Select Initial State")
-initial_state = st.selectbox(
-    "Initial State",
-    options=st.session_state.states,
-    key="initial_state"
-)
+    # Add initial state selection
+    st.subheader("Select Initial State")
+    initial_state = st.selectbox(
+        "Initial State",
+        options=st.session_state.states,
+        key="initial_state"
+    )
 
-# Add tabs for single simulation and analysis
-sim_tab, analysis_tab = st.tabs(["Single Simulation", "Analysis"])
+    # Add tabs for single simulation and analysis
+    sim_tab, analysis_tab = st.tabs(["Single Simulation", "Analysis"])
 
-with sim_tab:
-    # Handle single simulation
-    handle_simulation(initial_state)
+    with sim_tab:
+        # Handle single simulation
+        handle_simulation(initial_state)
 
-with analysis_tab:
-    # Handle multiple simulations and analysis
-    analyze_simulations(simulation_demographics, initial_state)
+    with analysis_tab:
+        # Handle multiple simulations and analysis
+        analyze_simulations(simulation_demographics, initial_state)
