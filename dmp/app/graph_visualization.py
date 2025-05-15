@@ -1,554 +1,89 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import os
-import json
-import numpy as np
-import pandas as pd
-from state_machine_db import StateMachineDB
-from core.simulation_functions import run_simulation
+import sys
+
+# Add the parent directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from state_machine.state_machine_creator import create_state_machine
+    from state_machine.state_machine_manager import manage_state_machines
+except ImportError as e:
+    st.error(f"Error importing state machine modules: {str(e)}")
+    st.stop()
 
 # Set page to wide mode
 st.set_page_config(layout="wide")
 
-def convert_graph_to_matrices(states, edges):
-    """Convert graph representation to six matrices."""
-    n = len(states)
-    state_to_idx = {state: i for i, state in enumerate(states)}
-    
-    # Initialize matrices with zeros
-    transition_matrix = np.zeros((n, n))
-    distribution_matrix = np.zeros((n, n), dtype=int)
-    mean_matrix = np.zeros((n, n))
-    std_dev_matrix = np.zeros((n, n))
-    min_cutoff_matrix = np.zeros((n, n))
-    max_cutoff_matrix = np.zeros((n, n))
-    
-    # Distribution type mapping
-    dist_type_to_num = {
-        "normal": 1,
-        "uniform": 2,
-        "log-normal": 3,
-        "gamma": 4
-    }
-    
-    # Fill matrices based on edges
-    for edge in edges:
-        source = edge['data']['source']
-        target = edge['data']['target']
-        i = state_to_idx[source]
-        j = state_to_idx[target]
-        
-        # Get edge properties with defaults
-        transition_matrix[i, j] = edge['data'].get('transition_prob', 1.0)
-        mean_matrix[i, j] = edge['data'].get('mean_time', 0)
-        std_dev_matrix[i, j] = edge['data'].get('std_dev', 0.0)
-        dist_type = edge['data'].get('distribution_type', 'normal')
-        distribution_matrix[i, j] = dist_type_to_num.get(dist_type, 0)
-        min_cutoff_matrix[i, j] = edge['data'].get('min_cutoff', 0.0)
-        max_cutoff_matrix[i, j] = edge['data'].get('max_cutoff', float('inf'))
-    
-    return {
-        "Transition Matrix": transition_matrix,
-        "Distribution Type Matrix": distribution_matrix,
-        "Mean Matrix": mean_matrix,
-        "Standard Deviation Matrix": std_dev_matrix,
-        "Min Cutoff Matrix": min_cutoff_matrix,
-        "Max Cutoff Matrix": max_cutoff_matrix
-    }
-
-def display_matrices(matrices, states):
-    """Display the six matrices in a grid layout."""
-    st.subheader("Matrix Representation")
-    
-    # Create a 2x3 grid for the matrices
-    cols = st.columns(3)
-    matrix_names = list(matrices.keys())
-    
-    for i, (col, matrix_name) in enumerate(zip(cols, matrix_names[:3])):
-        with col:
-            st.write(f"**{matrix_name}**")
-            df = pd.DataFrame(
-                matrices[matrix_name],
-                index=states,
-                columns=states
-            )
-            st.dataframe(df, use_container_width=True)
-    
-    cols = st.columns(3)
-    for i, (col, matrix_name) in enumerate(zip(cols, matrix_names[3:])):
-        with col:
-            st.write(f"**{matrix_name}**")
-            df = pd.DataFrame(
-                matrices[matrix_name],
-                index=states,
-                columns=states
-            )
-            st.dataframe(df, use_container_width=True)
-
-def create_state_machine(states):
-    """Create a graph visualization of disease states using Cytoscape.js"""
-    # Initialize database
-    db = StateMachineDB()
-    
-    # Initialize graph state in session state if not exists
-    if 'graph_edges' not in st.session_state:
-        st.session_state.graph_edges = []
-    if 'node_positions' not in st.session_state:
-        st.session_state.node_positions = {}
-    if 'clicked_element' not in st.session_state:
-        st.session_state.clicked_element = None
-
-    # Create the graph
-    st.markdown("---")  # Add a visual separator
-    st.header("Create A State Machine")
-    st.write("Use the interface below to create a state machine for your simulation.")
-    
-    # Add save/load interface
-    st.subheader("Save/Load State Machine")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Save interface
-        st.write("Save Current State Machine")
-        
-        # Demographic inputs
-        st.write("Enter Demographic Values:")
-        demo_cols = st.columns(2)
-        
-        with demo_cols[0]:
-            sex = st.selectbox("Sex", options=["*", "M", "F"], key="save_sex")
-            age = st.text_input("Age", value="*", key="save_age")
-        
-        with demo_cols[1]:
-            vax_status = st.selectbox(
-                "Vaccination Status",
-                options=["*", "Vaccinated", "Unvaccinated"],
-                key="save_vax"
-            )
-            variant = st.selectbox(
-                "Variant",
-                options=["*", "Delta", "Omicron"],
-                key="save_variant"
-            )
-        
-        # Create name from demographic values
-        demo_values = []
-        if sex != "*": demo_values.append(f"Sex={sex}")
-        if age != "*": demo_values.append(f"Age={age}")
-        if vax_status != "*": demo_values.append(f"Vax={vax_status}")
-        if variant != "*": demo_values.append(f"Variant={variant}")
-        
-        state_machine_name = " | ".join(demo_values) if demo_values else "Default"
-        
-        if st.button("Save State Machine"):
-            if state_machine_name:
-                # Create demographics dictionary
-                demographics = {
-                    "Sex": sex,
-                    "Age": age,
-                    "Vaccination Status": vax_status,
-                    "Variant": variant
-                }
-                
-                state_machine_id = db.save_state_machine(
-                    state_machine_name,
-                    states,
-                    st.session_state.graph_edges,
-                    demographics
-                )
-                st.success(f"Saved state machine: {state_machine_name}")
-            else:
-                st.error("Please provide at least one demographic value")
-    
-    with col2:
-        # Load interface
-        st.write("My State Machines")
-        saved_machines = db.list_state_machines()
-        if saved_machines:
-            machine_options = {f"{m[1]} (ID: {m[0]})": m[0] for m in saved_machines}
-            selected_machine = st.selectbox(
-                "Select A Saved State Machine",
-                options=list(machine_options.keys()),
-                key="load_machine"
-            )
-            
-            col_load, col_delete = st.columns(2)
-            with col_load:
-                if st.button("Load Selected"):
-                    machine_id = machine_options[selected_machine]
-                    machine_data = db.load_state_machine(machine_id)
-                    if machine_data:
-                        # Update session state with loaded data
-                        st.session_state.graph_edges = machine_data["edges"]
-                        st.success(f"Loaded state machine: {machine_data['name']}")
-                        st.rerun()
-            
-            with col_delete:
-                if st.button("Delete Selected"):
-                    machine_id = machine_options[selected_machine]
-                    db.delete_state_machine(machine_id)
-                    st.success("State machine deleted")
-                    st.rerun()
-        else:
-            st.write("No saved state machines found")
-    
-    # Add edge creation interface
-    st.subheader("Add Edge")
-    col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
-    
-    with col1:
-        source_state = st.selectbox("From State", states, key="source_state")
-    with col2:
-        # Create a list of target states starting from the second element
-        target_states = states[1:] if len(states) > 1 else states
-        target_state = st.selectbox("To State", target_states, key="target_state")
-    with col3:
-        transition_prob = st.number_input(
-            "Transition Probability",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.5,
-            step=0.05,
-            format="%.2f",
-            key="transition_prob"
-        )
-    with col4:
-        mean_value = st.number_input(
-            "Mean Time",
-            min_value=1,
-            max_value=20,
-            value=5,
-            step=1,
-            key="mean_value"
-        )
-    with col5:
-        std_dev = st.number_input(
-            "Standard Deviation",
-            min_value=0.1,
-            max_value=10.0,
-            value=1.0,
-            step=0.1,
-            format="%.1f",
-            key="std_dev"
-        )
-    with col6:
-        dist_type = st.selectbox(
-            "Distribution Type",
-            options=["normal", "uniform", "log-normal", "gamma"],
-            key="dist_type"
-        )
-    with col7:
-        min_cutoff = st.number_input(
-            "Min Cutoff",
-            min_value=0.0,
-            max_value=float(st.session_state.mean_value),
-            value=0.0,
-            step=0.1,
-            format="%.1f",
-            key="min_cutoff"
-        )
-    with col8:
-        max_cutoff = st.number_input(
-            "Max Cutoff",
-            min_value=float(st.session_state.mean_value),
-            max_value=30.0,
-            value=float(st.session_state.mean_value) + 1.0,
-            step=0.1,
-            format="%.1f",
-            key="max_cutoff"
-        )
-    
-    if st.button("Add Edge"):
-        if source_state != target_state:  # Prevent self-loops
-            # Check if edge already exists
-            edge_exists = any(
-                edge["data"]["source"] == source_state and 
-                edge["data"]["target"] == target_state 
-                for edge in st.session_state.graph_edges
-            )
-            
-            if not edge_exists:
-                new_edge = {
-                    "data": {
-                        "source": source_state,
-                        "target": target_state,
-                        "transition_prob": transition_prob,
-                        "mean_time": mean_value,
-                        "std_dev": std_dev,
-                        "distribution_type": dist_type,
-                        "min_cutoff": min_cutoff,
-                        "max_cutoff": max_cutoff,
-                        "label": f"p={transition_prob:.2f}\nμ={mean_value}\nσ={std_dev:.1f}\n{dist_type}\nmin={min_cutoff:.1f}\nmax={max_cutoff:.1f}"
-                    }
-                }
-                st.session_state.graph_edges.append(new_edge)
-                st.success(f"Added edge from {source_state} to {target_state} with probability {transition_prob:.2f}, mean time {mean_value}, std dev {std_dev:.1f}, {dist_type} distribution, min cutoff {min_cutoff:.1f}, and max cutoff {max_cutoff:.1f}")
-                st.rerun()
-            else:
-                st.warning("This edge already exists!")
-        else:
-            st.warning("Cannot create self-loops!")
-    
-    # Add edge removal interface
-    if st.session_state.graph_edges:
-        st.subheader("Remove Edge")
-        edge_to_remove = st.selectbox(
-            "Select Edge to Remove",
-            options=[
-                f"{edge['data']['source']} → {edge['data']['target']} "
-                f"(p={edge['data'].get('transition_prob', 1.0):.2f}, "
-                f"μ={edge['data'].get('mean_time', 0)}, "
-                f"σ={edge['data'].get('std_dev', 0.0):.1f}, "
-                f"{edge['data'].get('distribution_type', 'normal')}, "
-                f"min={edge['data'].get('min_cutoff', 0.0):.1f}, "
-                f"max={edge['data'].get('max_cutoff', float('inf')):.1f})"
-                for edge in st.session_state.graph_edges
-            ],
-            key="edge_to_remove"
-        )
-        
-        if st.button("Remove Edge"):
-            # Find and remove the selected edge
-            for i, edge in enumerate(st.session_state.graph_edges):
-                edge_str = (
-                    f"{edge['data']['source']} → {edge['data']['target']} "
-                    f"(p={edge['data'].get('transition_prob', 1.0):.2f}, "
-                    f"μ={edge['data'].get('mean_time', 0)}, "
-                    f"σ={edge['data'].get('std_dev', 0.0):.1f}, "
-                    f"{edge['data'].get('distribution_type', 'normal')}, "
-                    f"min={edge['data'].get('min_cutoff', 0.0):.1f}, "
-                    f"max={edge['data'].get('max_cutoff', float('inf')):.1f})"
-                )
-                if edge_str == edge_to_remove:
-                    st.session_state.graph_edges.pop(i)
-                    st.success(f"Removed edge {edge_to_remove}")
-                    st.rerun()
-                    break
-
-    # Build nodes list with persisted positions
-    nodes = []
-    for i, state in enumerate(states):
-        default_pos = {
-            "x": (i - (len(states)-1)/2)*200,
-            "y": 0
-        }
-        pos = st.session_state.node_positions.get(state, default_pos)
-        nodes.append({
-            "data": {"id": state, "label": state},
-            "position": pos
-        })
-
-    elements = nodes + st.session_state.graph_edges
-
-    # Convert graph to matrices and display them
-    matrices = convert_graph_to_matrices(states, st.session_state.graph_edges)
-    with st.expander("Matrix Representation", expanded=False):
-        display_matrices(matrices, states)
-
-    # Add simulation section
-    st.markdown("---")  # Add a visual separator
-    st.header("Start Simulation")
-    
-    # Get states with outgoing edges for initial state selection
-    states_with_outgoing = set()
-    for edge in st.session_state.graph_edges:
-        states_with_outgoing.add(edge['data']['source'])
-    
-    # Filter initial state options to only include states with outgoing edges
-    initial_state_options = [state for state in states if state in states_with_outgoing]
-    
-    # If no states have outgoing edges yet, show all states
-    if not initial_state_options:
-        initial_state_options = states
-    
-    # Add initial state selection
-    st.subheader("Select Initial State")
-    initial_state = st.selectbox(
-        "Initial State",
-        options=initial_state_options,
-        key="graph_sim_initial_state"
-    )
-    
-    # Add start simulation button
-    if st.button("Start Simulation"):
-        if not st.session_state.graph_edges:
-            st.warning("Please add at least one edge to the state machine before running the simulation.")
-        else:
-            # Get the index of the selected initial state
-            initial_state_idx = states.index(initial_state)
-            
-            # Get matrices from the graph
-            matrices = convert_graph_to_matrices(states, st.session_state.graph_edges)
-            
-            # Run the simulation
-            timeline = run_simulation(
-                transition_matrix=matrices["Transition Matrix"],
-                mean_matrix=matrices["Mean Matrix"],
-                std_dev_matrix=matrices["Standard Deviation Matrix"],
-                min_cutoff_matrix=matrices["Min Cutoff Matrix"],
-                max_cutoff_matrix=matrices["Max Cutoff Matrix"],
-                distribution_matrix=matrices["Distribution Type Matrix"],
-                initial_state_idx=initial_state_idx,
-                states=states
-            )
-            
-            # Display the timeline
-            st.subheader("Simulation Timeline")
-            timeline_df = pd.DataFrame(timeline, columns=["State", "Time (hours)"])
-            st.dataframe(timeline_df)
-            
-            # Display a visual representation of the timeline
-            st.subheader("Timeline Visualization")
-            for state, time in timeline:
-                st.write(f"{time:.2f} hours: {state}")
-
-    # Define the stylesheet
-    stylesheet = [
-        {
-            "selector": "node",
-            "style": {
-                "background-color": "#BEE",
-                "label": "data(label)",
-                "text-valign": "center",
-                "text-halign": "center",
-                "width": 100,
-                "height": 100,
-                "shape": "ellipse"
-            }
-        },
-        {
-            "selector": "edge",
-            "style": {
-                "width": 1,
-                "line-color": "#ccc",
-                "target-arrow-color": "#ccc",
-                "target-arrow-shape": "triangle",
-                "curve-style": "bezier",
-                "label": "data(label)",
-                "text-rotation": "none",
-                "text-margin-y": -10,
-                "font-size": 11,
-                "text-background-color": "#fff",
-                "text-background-opacity": 0.7,
-                "text-background-padding": 3,
-                "text-border-color": "#ccc",
-                "text-border-width": 1,
-                "text-border-opacity": 0.5,
-                "text-wrap": "wrap",
-                "text-max-width": 80
-            }
-        }
+def load_default_states():
+    """Load default states from file or return default list if file doesn't exist."""
+    default_states = [
+        "Infected",
+        "Infectious_Asymptomatic",
+        "Infectious_Symptomatic",
+        "Hospitalized",
+        "ICU",
+        "Deceased",
+        "Recovered"
     ]
+    
+    states_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "custom_states.txt")
+    
+    if os.path.exists(states_file):
+        with open(states_file, 'r') as f:
+            states = [line.strip() for line in f.readlines() if line.strip()]
+        return states if states else default_states
+    return default_states
 
-    # Create the HTML for the Cytoscape graph
-    html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Cytoscape Graph</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
-        <style>
-            body {{
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                height: 100%;
-            }}
-            #cy {{
-                width: 100%;
-                height: 600px;
-                position: relative;
-                left: 0;
-                top: 0;
-                background-color: #f0f2f6;
-                border-radius: 0.5rem;
-            }}
-            .reset-button {{
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                z-index: 1000;
-                background-color: white;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                padding: 5px 10px;
-                cursor: pointer;
-                font-size: 12px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }}
-            .reset-button:hover {{
-                background-color: #f0f0f0;
-            }}
-        </style>
-    </head>
-    <body>
-        <div id="cy"></div>
-        <button class="reset-button" onclick="resetView()">Reset View</button>
-        <script>
-            var cy = cytoscape({{
-                container: document.getElementById('cy'),
-                elements: {json.dumps(elements)},
-                style: {json.dumps(stylesheet)},
-                layout: {{
-                    name: 'preset'
-                }}
-            }});
+def save_states(states):
+    """Save states to file."""
+    states_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "custom_states.txt")
+    os.makedirs(os.path.dirname(states_file), exist_ok=True)
+    with open(states_file, 'w') as f:
+        f.write('\n'.join(states))
 
-            // Handle node dragging
-            cy.on('dragfree', 'node', function(evt) {{
-                var node = evt.target;
-                var pos = node.position();
-                window.parent.postMessage({{
-                    type: 'node_position',
-                    id: node.id(),
-                    x: pos.x,
-                    y: pos.y
-                }}, '*');
-            }});
+def main():
+    # Load states
+    states = load_default_states()
+    
+    # Create tabs for different sections
+    create_tab, manage_tab, states_tab = st.tabs(["Create State Machine", "Manage State Machines", "Edit States"])
+    
+    with states_tab:
+        st.header("Edit Disease States")
+        st.write("Add, remove, or reorder states for your state machines.")
+        
+        # Display current states
+        st.subheader("Current States")
+        for i, state in enumerate(states):
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                states[i] = st.text_input(f"State {i+1}", value=state, key=f"state_{i}")
+            with col2:
+                if st.button("Remove", key=f"remove_{i}"):
+                    states.pop(i)
+                    st.rerun()
+        
+        # Add new state
+        if st.button("Add New State"):
+            states.append("")
+            st.rerun()
+        
+        # Save states
+        if st.button("Save States"):
+            # Remove any empty states
+            states = [state for state in states if state.strip()]
+            if len(states) < 2:
+                st.error("You must have at least 2 states!")
+            else:
+                save_states(states)
+                st.success("States saved successfully!")
+    
+    with create_tab:
+        create_state_machine(states)
+    
+    with manage_tab:
+        manage_state_machines(states)
 
-            // Handle node/edge clicks
-            cy.on('tap', 'node, edge', function(evt) {{
-                var element = evt.target;
-                window.parent.postMessage({{
-                    type: 'element_click',
-                    id: element.id(),
-                    isNode: element.isNode()
-                }}, '*');
-            }});
-
-            // Listen for messages from Streamlit
-            window.addEventListener('message', function(event) {{
-                if (event.data.type === 'node_position') {{
-                    var node = cy.getElementById(event.data.id);
-                    if (node.length > 0) {{
-                        node.position({{
-                            x: event.data.x,
-                            y: event.data.y
-                        }});
-                    }}
-                }}
-            }});
-
-            // Reset view function
-            function resetView() {{
-                cy.fit();
-                cy.center();
-            }}
-
-            // Add keyboard shortcut for reset view (R key)
-            document.addEventListener('keydown', function(event) {{
-                if (event.key === 'r' || event.key === 'R') {{
-                    resetView();
-                }}
-            }});
-        </script>
-    </body>
-    </html>
-    """
-
-    # Display the graph using Streamlit's components
-    components.html(html, height=600)
-
-    # Display clicked element info if available
-    if st.session_state.clicked_element:
-        st.write("Selected element:", st.session_state.clicked_element) 
+if __name__ == "__main__":
+    main() 

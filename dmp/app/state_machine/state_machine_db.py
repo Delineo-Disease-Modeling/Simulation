@@ -4,8 +4,12 @@ from datetime import datetime
 import os
 
 class StateMachineDB:
-    def __init__(self, db_path="state_machines.db"):
+    def __init__(self, db_path=None):
         """Initialize the database connection and create tables if they don't exist."""
+        if db_path is None:
+            # Get the directory of the current file
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            db_path = os.path.join(current_dir, "state_machines.db")
         self.db_path = db_path
             
         self._create_tables()
@@ -15,14 +19,14 @@ class StateMachineDB:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             
-            # Create state machines table
+            # Create state machines table with demographics as JSON
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS state_machines (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    demographics TEXT
+                    demographics TEXT NOT NULL DEFAULT '{}'
                 )
             ''')
             
@@ -60,7 +64,7 @@ class StateMachineDB:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, name, created_at, updated_at
+                SELECT id, name, created_at, updated_at, demographics
                 FROM state_machines
                 WHERE name = ?
             ''', (name,))
@@ -73,7 +77,7 @@ class StateMachineDB:
             name: Name of the state machine
             states: List of states
             edges: List of edges
-            demographics: Optional demographics data
+            demographics: Optional demographics data as a dictionary
             update_existing: If True, will update an existing state machine with the same name
                            If False, will raise an error if a state machine with the same name exists
         
@@ -87,6 +91,9 @@ class StateMachineDB:
         existing = self.get_state_machine_by_name(name)
         if existing and not update_existing:
             raise ValueError(f"A state machine named '{name}' already exists. Use update_existing=True to update it.")
+        
+        # Ensure demographics is a valid JSON string
+        demographics_json = json.dumps(demographics or {})
         
         conn = None
         try:
@@ -102,7 +109,7 @@ class StateMachineDB:
                     SET demographics = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                     """,
-                    (json.dumps(demographics or {}), state_machine_id)
+                    (demographics_json, state_machine_id)
                 )
                 
                 # Delete existing states and edges
@@ -115,7 +122,7 @@ class StateMachineDB:
                     INSERT INTO state_machines (name, demographics)
                     VALUES (?, ?)
                     """,
-                    (name, json.dumps(demographics or {}))
+                    (name, demographics_json)
                 )
                 state_machine_id = cursor.lastrowid
             
@@ -227,10 +234,13 @@ class StateMachineDB:
                     for row in cursor.fetchall()
                 ]
                 
+                # Parse demographics JSON
+                demographics = json.loads(machine_data[1] or "{}")
+                
                 return {
                     "id": state_machine_id,
                     "name": machine_data[0],
-                    "demographics": json.loads(machine_data[1] or "{}"),
+                    "demographics": demographics,
                     "states": states,
                     "edges": edges
                 }
@@ -242,7 +252,7 @@ class StateMachineDB:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, name, created_at, updated_at
+                SELECT id, name, created_at, updated_at, demographics
                 FROM state_machines
                 ORDER BY updated_at DESC
             ''')
