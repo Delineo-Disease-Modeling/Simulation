@@ -70,18 +70,32 @@ def handle_default_states():
 
 def validate_and_update_states(new_states):
     """Validate and update states, checking matrix compatibility"""
-    if st.session_state.matrix_sets:
-        matrix_size = None
-        for matrix_set in st.session_state.matrix_sets.values():
-            transition_matrix = matrix_set["matrices"]["Transition Matrix"]
-            matrix_size = transition_matrix.shape[0]
-            break
-        
-        if len(new_states) != matrix_size:
-            raise ValueError(f"Number of states ({len(new_states)}) must match matrix dimensions ({matrix_size}x{matrix_size})")
-    
+    # Check if states are actually changing
     if new_states != st.session_state.states:
+        # Store previous states for reference
         st.session_state.previous_states = st.session_state.states.copy()
-        st.session_state.matrix_sets = {}
+        
+        # Show warning about state changes
+        st.sidebar.warning("""
+        ⚠️ Changing states will:
+        - Clear all existing edges
+        - Clear all matrix data
+        - Reset any saved state machines
+        
+        This action cannot be undone.
+        """)
+        
+        # Clear all related data
+        if 'graph_edges' in st.session_state:
+            st.session_state.graph_edges = []
+        if 'matrix_sets' in st.session_state:
+            st.session_state.matrix_sets = {}
+        if 'selected_machine' in st.session_state:
+            st.session_state.selected_machine = None
+        
+        # Update states
         st.session_state.states = new_states
-        st.sidebar.success("States updated successfully!") 
+        st.sidebar.success("States updated successfully! All edges and matrices have been cleared.")
+        
+        # Force a rerun to update the UI
+        st.rerun() 

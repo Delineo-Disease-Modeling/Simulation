@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from .state_machine_db import StateMachineDB
 from core.simulation_functions import run_simulation
+from .state_editor import validate_matrices
 
 def convert_graph_to_matrices(states, edges):
     """Convert graph representation to six matrices."""
@@ -95,7 +96,13 @@ def create_state_machine(states):
         st.session_state.clicked_element = None
 
     st.header("Create A State Machine")
-    st.write("Use the interface below to create a state machine for your simulation.")
+    st.write("""
+    First, edit the states for your state machine above. Then, use the interface below to:
+    1. Add edges between states
+    2. Configure transition probabilities and timing
+    3. Visualize your state machine
+    4. Save your state machine with a set of demographics and their values
+    """)
     
     # Add edge creation interface
     st.subheader("Add Edge")
@@ -187,7 +194,7 @@ def create_state_machine(states):
                     }
                 }
                 st.session_state.graph_edges.append(new_edge)
-                st.success(f"Added edge from {source_state} to {target_state} with probability {transition_prob:.2f}, mean time {mean_value}, std dev {std_dev:.1f}, {dist_type} distribution, min cutoff {min_cutoff:.1f}, and max cutoff {max_cutoff:.1f}")
+                st.success(f"Added edge from {source_state} to {target_state}")
                 st.rerun()
             else:
                 st.warning("This edge already exists!")
@@ -386,13 +393,6 @@ def create_state_machine(states):
                 cy.fit();
                 cy.center();
             }}
-
-            // Add keyboard shortcut for reset view (R key)
-            document.addEventListener('keydown', function(event) {{
-                if (event.key === 'r' || event.key === 'R') {{
-                    resetView();
-                }}
-            }});
         </script>
     </body>
     </html>
@@ -457,13 +457,21 @@ def create_state_machine(states):
                 for demo in st.session_state.demographics
                 if demo["key"] and demo["value"]
             }
-            
-            state_machine_id = db.save_state_machine(
-                state_machine_name,
-                states,
-                st.session_state.graph_edges,
-                demographics
-            )
-            st.success(f"Saved state machine: {state_machine_name}")
+
+            # Run validation
+            validation_issues = validate_matrices(states, st.session_state.graph_edges)
+            if validation_issues:
+                st.error("❌ Validation failed. Please fix the following issues before saving:")
+                for issue in validation_issues:
+                    st.error(f"- {issue}")
+            else:
+                # If valid, save the state machine
+                state_machine_id = db.save_state_machine(
+                    state_machine_name,
+                    states,
+                    st.session_state.graph_edges,
+                    demographics
+                )
+                st.success(f"✅ Saved state machine: {state_machine_name}")
         else:
             st.error("Please provide at least one demographic value") 

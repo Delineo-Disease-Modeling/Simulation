@@ -95,7 +95,7 @@ def manage_state_machines(states):
         st.session_state.clicked_element = None
 
     st.header("Manage State Machines")
-    st.write("View, load, and manage your saved state machines.")
+    st.write("View your saved state machines, load them, and run simulations.")
     
     # List all saved state machines
     saved_machines = db.list_state_machines()
@@ -121,6 +121,7 @@ def manage_state_machines(states):
                         machine_data = db.load_state_machine(machine[0])
                         if machine_data:
                             # Update session state with loaded data
+                            st.session_state.states = machine_data["states"]
                             st.session_state.graph_edges = machine_data["edges"]
                             st.session_state.demographics = [
                                 {"key": k, "value": v}
@@ -138,13 +139,18 @@ def manage_state_machines(states):
         # Display the loaded state machine if one is selected
         if st.session_state.selected_machine:
             st.markdown("---")
-            st.subheader(f"State Machine: {st.session_state.selected_machine['name']}")
+            st.subheader(f"Loaded State Machine: {st.session_state.selected_machine['name']}")
+            
+            # Display states in a collapsible view
+            with st.expander("States", expanded=False):
+                for state in st.session_state.states:
+                    st.write(f"- {state}")
             
             # Build nodes list with persisted positions
             nodes = []
-            for i, state in enumerate(states):
+            for i, state in enumerate(st.session_state.states):
                 default_pos = {
-                    "x": (i - (len(states)-1)/2)*200,
+                    "x": (i - (len(st.session_state.states)-1)/2)*200,
                     "y": 0
                 }
                 pos = st.session_state.node_positions.get(state, default_pos)
@@ -156,10 +162,13 @@ def manage_state_machines(states):
             elements = nodes + st.session_state.graph_edges
 
             # Convert graph to matrices and display them
-            matrices = convert_graph_to_matrices(states, st.session_state.graph_edges)
+            matrices = convert_graph_to_matrices(st.session_state.states, st.session_state.graph_edges)
             with st.expander("Matrix Representation", expanded=False):
-                display_matrices(matrices, states)
-
+                display_matrices(matrices, st.session_state.states)
+            
+            # Add visual state machine representation
+            st.subheader("Visual State Machine")
+            
             # Define the stylesheet
             stylesheet = [
                 {
@@ -292,13 +301,6 @@ def manage_state_machines(states):
                         cy.fit();
                         cy.center();
                     }}
-
-                    // Add keyboard shortcut for reset view (R key)
-                    document.addEventListener('keydown', function(event) {{
-                        if (event.key === 'r' || event.key === 'R') {{
-                            resetView();
-                        }}
-                    }});
                 </script>
             </body>
             </html>
@@ -310,29 +312,16 @@ def manage_state_machines(states):
             # Display clicked element info if available
             if st.session_state.clicked_element:
                 st.write("Selected element:", st.session_state.clicked_element)
-
-            # Add simulation section
-            st.markdown("---")  # Add a visual separator
-            st.header("Start Simulation")
             
-            # Get states with outgoing edges for initial state selection
-            states_with_outgoing = set()
-            for edge in st.session_state.graph_edges:
-                states_with_outgoing.add(edge['data']['source'])
-            
-            # Filter initial state options to only include states with outgoing edges
-            initial_state_options = [state for state in states if state in states_with_outgoing]
-            
-            # If no states have outgoing edges yet, show all states
-            if not initial_state_options:
-                initial_state_options = states
+            # Add simulation controls
+            st.markdown("---")
+            st.subheader("Simulation Controls")
             
             # Add initial state selection
-            st.subheader("Select Initial State")
             initial_state = st.selectbox(
                 "Initial State",
-                options=initial_state_options,
-                key="graph_sim_initial_state"
+                options=st.session_state.states,
+                key="initial_state"
             )
             
             # Add start simulation button
@@ -341,10 +330,10 @@ def manage_state_machines(states):
                     st.warning("Please add at least one edge to the state machine before running the simulation.")
                 else:
                     # Get the index of the selected initial state
-                    initial_state_idx = states.index(initial_state)
+                    initial_state_idx = st.session_state.states.index(initial_state)
                     
                     # Get matrices from the graph
-                    matrices = convert_graph_to_matrices(states, st.session_state.graph_edges)
+                    matrices = convert_graph_to_matrices(st.session_state.states, st.session_state.graph_edges)
                     
                     # Run the simulation
                     timeline = run_simulation(
@@ -355,7 +344,7 @@ def manage_state_machines(states):
                         max_cutoff_matrix=matrices["Max Cutoff Matrix"],
                         distribution_matrix=matrices["Distribution Type Matrix"],
                         initial_state_idx=initial_state_idx,
-                        states=states
+                        states=st.session_state.states
                     )
                     
                     # Display the timeline
