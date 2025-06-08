@@ -5,7 +5,7 @@ from io import StringIO
 import pandas as pd
 import json
 import os
-from .data_interface import load_movement_pap_data
+from .data_interface import stream_data
 import requests
 
 import random
@@ -77,7 +77,6 @@ def move_people(simulator, items, is_household):
             person.location = place
 
 def run_simulator(location=None, max_length=None, interventions=None, save_file=False):
-    # Use defaults from config if parameters not provided
     location = location or SIMULATION["default_location"]
     max_length = max_length or SIMULATION["default_max_length"]
     
@@ -91,20 +90,25 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     if not interventions['randseed']:
         random.seed(0)
     
-    #with open(curdir + f'/{location}/papdata.json') as file:
-        #pap = json.load(file)
+    # Load people and places using the new streaming method
+    data_stream = stream_data()
     
-    # Load people and places from the DMP API
-    # pap = load_sample_data() # replace with pap = load_places() 
-    data = load_movement_pap_data(); 
-    patterns = data.get("data", {}).get("patterns", {})
+    
+    # Extract initial data
+    
+    people_data = data_stream.get("people", {})
+    homes_data = people_data.get("homes", {})
+    places_data = people_data.get("places", {})
+    
+
+    """ patterns = data.get("data", {}).get("patterns", {})
     pap = data.get("data", {}).get("papdata", {})
     # people_data = pap['people']
     people_data = pap.get("people", {})
 
     homes_data = pap.get("homes", {})
     #places_data = pap['places']
-    places_data = pap.get("places", {})
+    places_data = pap.get("places", {}) """
     
     simulator = DiseaseSimulator(intervention_weights=interventions)
     

@@ -1,0 +1,107 @@
+2025-05-12 09:19:30,156 - INFO - Attempting to stream data from: https://db.delineo.me/patterns/1?stream=true
+2025-05-12 09:19:30,161 - DEBUG - Starting new HTTPS connection (1): db.delineo.me:443
+2025-05-12 09:19:31,267 - DEBUG - https://db.delineo.me:443 "GET /patterns/1?stream=true HTTP/11" 200 None
+2025-05-12 09:19:31,268 - INFO - Connection established. Streaming data...
+2025-05-12 09:19:31,670 - INFO - Received PAP Data:
+2025-05-12 09:19:31,819 - INFO - Processed item 1
+2025-05-12 09:19:31,824 - INFO - Received Timestep:
+2025-05-12 09:19:31,851 - INFO - Processed item 2
+2025-05-12 09:19:31,860 - INFO - Received Timestep:
+2025-05-12 09:19:31,870 - INFO - Processed item 3
+2025-05-12 09:19:31,876 - INFO - Received Timestep:
+2025-05-12 09:19:31,889 - INFO - Processed item 4
+2025-05-12 09:19:31,894 - INFO - Received Timestep:
+2025-05-12 09:19:31,904 - INFO - Processed item 5
+2025-05-12 09:19:31,909 - INFO - Received Timestep:
+2025-05-12 09:19:31,919 - INFO - Processed item 6
+2025-05-12 09:19:31,925 - INFO - Received Timestep:
+2025-05-12 09:19:31,938 - INFO - Processed item 7
+2025-05-12 09:19:31,946 - INFO - Received Timestep:
+2025-05-12 09:19:31,957 - INFO - Processed item 8
+2025-05-12 09:19:31,963 - INFO - Received Timestep:
+2025-05-12 09:19:31,975 - INFO - Processed item 9
+2025-05-12 09:19:31,981 - INFO - Received Timestep:
+2025-05-12 09:19:31,991 - INFO - Processed item 10
+2025-05-12 09:19:31,998 - INFO - Received Timestep:
+2025-05-12 09:19:32,008 - INFO - Processed item 11
+2025-05-12 09:19:32,015 - INFO - Received Timestep:
+2025-05-12 09:19:32,028 - INFO - Processed item 12
+2025-05-12 09:19:32,034 - INFO - Received Timestep:
+2025-05-12 09:19:32,045 - INFO - Processed item 13
+2025-05-12 09:19:32,051 - INFO - Received Timestep:
+2025-05-12 09:19:32,064 - INFO - Processed item 14
+2025-05-12 09:19:32,086 - INFO - Received Timestep:
+2025-05-12 09:19:32,097 - INFO - Processed item 15
+2025-05-12 09:19:32,108 - INFO - Received Timestep:
+2025-05-12 09:19:32,118 - INFO - Processed item 16
+2025-05-12 09:19:32,125 - INFO - Received Timestep:
+2025-05-12 09:19:32,136 - INFO - Processed item 17
+2025-05-12 09:19:32,143 - INFO - Received Timestep:
+2025-05-12 09:19:32,155 - INFO - Processed item 18
+2025-05-12 09:19:32,161 - INFO - Received Timestep:
+2025-05-12 09:19:32,173 - INFO - Processed item 19
+2025-05-12 09:19:32,180 - INFO - Received Timestep:
+2025-05-12 09:19:32,191 - INFO - Processed item 20
+2025-05-12 09:19:32,197 - INFO - Received Timestep:
+2025-05-12 09:19:32,208 - INFO - Processed item 21
+2025-05-12 09:19:32,214 - INFO - Received Timestep:
+2025-05-12 09:19:32,225 - INFO - Processed item 22
+2025-05-12 09:19:32,236 - INFO - Received Timestep:
+2025-05-12 09:19:32,247 - INFO - Processed item 23
+2025-05-12 09:19:32,253 - INFO - Received Timestep:
+2025-05-12 09:19:32,263 - INFO - Processed item 24
+2025-05-12 09:19:32,269 - INFO - Received Timestep:
+2025-05-12 09:19:32,284 - INFO - Processed item 25
+2025-05-12 09:19:32,290 - INFO - Received Timestep:
+2025-05-12 09:19:32,303 - INFO - Processed item 26
+2025-05-12 09:19:32,308 - INFO - Received Timestep:
+2025-05-12 09:19:32,321 - INFO - Processed item 27
+2025-05-12 09:19:32,327 - INFO - Received Timestep:
+2025-05-12 09:19:32,340 - INFO - Processed item 28
+2025-05-12 09:19:32,345 - INFO - Received Timestep:
+2025-05-12 09:19:32,358 - INFO - Processed item 29
+2025-05-12 09:19:32,379 - INFO - Received Timestep:
+2025-05-12 09:19:32,390 - INFO - Processed item 30
+2025-05-12 09:19:32,396 - INFO - Received Timestep:
+2025-05-12 09:19:32,409 - INFO - Processed item 31
+2025-05-12 09:19:32,421 - INFO - Received Timestep:
+2025-05-12 09:19:32,431 - INFO - Processed item 32
+2025-05-12 09:19:32,437 - INFO - Received Timestep:
+2025-05-12 09:19:32,450 - INFO - Processed item 33
+2025-05-12 09:19:32,456 - INFO - Received Timestep:
+2025-05-12 09:19:32,468 - INFO - Processed item 34
+2025-05-12 09:19:32,474 - INFO - Received Timestep:
+2025-05-12 09:19:32,485 - INFO - Processed item 35
+2025-05-12 09:19:32,491 - INFO - Received Timestep:
+2025-05-12 09:19:32,502 - INFO - Processed item 36
+2025-05-12 09:19:32,509 - INFO - Received Timestep:
+2025-05-12 09:19:32,521 - INFO - Processed item 37
+2025-05-12 09:19:32,527 - INFO - Received Timestep:
+2025-05-12 09:19:32,538 - INFO - Processed item 38
+2025-05-12 09:19:32,545 - INFO - Received Timestep:
+2025-05-12 09:19:32,556 - INFO - Processed item 39
+2025-05-12 09:19:32,569 - INFO - Received Timestep:
+2025-05-12 09:19:32,580 - INFO - Processed item 40
+2025-05-12 09:19:32,587 - INFO - Received Timestep:
+2025-05-12 09:19:32,598 - INFO - Processed item 41
+2025-05-12 09:19:32,605 - INFO - Received Timestep:
+2025-05-12 09:19:32,615 - INFO - Processed item 42
+2025-05-12 09:19:32,622 - INFO - Received Timestep:
+2025-05-12 09:19:32,633 - INFO - Processed item 43
+2025-05-12 09:19:32,639 - INFO - Received Timestep:
+2025-05-12 09:19:32,649 - INFO - Processed item 44
+2025-05-12 09:19:32,674 - INFO - Received Timestep:
+2025-05-12 09:19:32,685 - INFO - Processed item 45
+2025-05-12 09:19:32,691 - INFO - Received Timestep:
+2025-05-12 09:19:32,702 - INFO - Processed item 46
+2025-05-12 09:19:32,709 - INFO - Received Timestep:
+2025-05-12 09:19:32,720 - INFO - Processed item 47
+2025-05-12 09:19:32,734 - INFO - Received Timestep:
+2025-05-12 09:19:32,744 - INFO - Processed item 48
+2025-05-12 09:19:32,750 - INFO - Received Timestep:
+2025-05-12 09:19:32,764 - INFO - Processed item 49
+2025-05-12 09:19:32,770 - INFO - Received Timestep:
+2025-05-12 09:19:32,781 - INFO - Processed item 50
+2025-05-12 09:19:32,781 - INFO - Reached maximum items, stopping stream
+2025-05-12 09:19:32,781 - INFO - Total items received: 50
+2025-05-12 09:19:32,782 - INFO - First few items:

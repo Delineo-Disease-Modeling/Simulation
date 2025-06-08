@@ -1,36 +1,39 @@
-from data_interface import *
+import requests
+
+import requests
 import json
 
-data = load_movement_pap_data()
-patterns = data.get("data", {}).get("patterns", {})
-papdata = data.get("data", {}).get("papdata", {})
-people_data = papdata.get("people", {})
-places_data = papdata.get("places", {})
-homes_data = papdata.get("homes", {})
+def stream_data(url):
+    with requests.get(url, stream=True) as response:
+        response.raise_for_status()
+        print("Connected to stream!")
 
-print("Movement Patterns: ")
-print(patterns)
-print("Patterns printed successfully")
-print("-------------------------------")
+        first = True  
+        linecount = 0
+        for line in response.iter_lines(decode_unicode=True):
+            linecount = linecount + 1
+            if line:
+                try:
+                    data = json.loads(line)
+                except json.JSONDecodeError:
+                    print("Warning: Could not parse line:", line)
+                    continue
 
-print("People and places data")
-print(papdata)
-print("pap data printed successfully")
-print("-------------------------------")
+                if first:
+                    print("Papdata received:")
+                    print(line)
+                    first = False
+                else:
+                    print("Timestep update:")
+                    print(line)
+               
+        print(f"Line count: {linecount}")
 
-print("People data")
-print(people_data)
-print("People data printed successfully")   
-print("-------------------------------")
-
-print("Homes data")
-print(homes_data)
-print("-------------------------------")
+def main(): 
+    stream_data("https://db.delineo.me/patterns/1?stream=true")
 
 
-print("Places data")
-print(places_data)
-print("-------------------------------")
-
+if __name__ == "__main__":
+    main()
 
 
