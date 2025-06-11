@@ -5,7 +5,7 @@ from io import StringIO
 import pandas as pd
 import json
 import os
-from .data_interface import stream_data
+from .data_interface import StreamDataLoader
 import requests
 
 import random
@@ -23,7 +23,7 @@ class DiseaseSimulator:
         self.facilities = {}
     
     def add_person(self, person):
-        self.people.append(person)
+        self.people[person.id] = person  
         
     def get_person(self, id):
         #return next((p for p in self.people if p.id == id), None)
@@ -91,32 +91,62 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         random.seed(0)
     
     # Load people and places using the new streaming method
-    data_stream = stream_data()
+    data_stream = StreamDataLoader.stream_data("https://db.delineo.me/patterns/1?stream=true")
     
     
     # Extract initial data
     
-    people_data = data_stream.get("people", {})
-    homes_data = people_data.get("homes", {})
-    places_data = people_data.get("places", {})
-    
-
-    """ patterns = data.get("data", {}).get("patterns", {})
-    pap = data.get("data", {}).get("papdata", {})
-    # people_data = pap['people']
-    people_data = pap.get("people", {})
-
-    homes_data = pap.get("homes", {})
-    #places_data = pap['places']
-    places_data = pap.get("places", {}) """
+    people_data = {}
+    homes_data = {}
+    places_data = {}
+    patterns = {}
+    for data in data_stream:
+        print(f"Received data chunk with keys: {data.keys()}")
+        
+        # Merge data from each chunk
+        if "people" in data:
+            people_data.update(data["people"])
+        if "homes" in data:
+            homes_data.update(data["homes"])
+        if "places" in data:
+            places_data.update(data["places"])
+        if "patterns" in data:
+            patterns.update(data["patterns"])
     
     simulator = DiseaseSimulator(intervention_weights=interventions)
     
     for id, data in homes_data.items():
-        simulator.add_household(Household(data['cbg'], id))
+        if isinstance(data, dict):
+            cbg = data.get("cbg")
+        elif isinstance(data, list):
+            cbg = data[0] if len(data) > 0 else None
+        else:
+            cbg = data  # Assume it's the CBG value directly
+        
+        simulator.add_household(Household(cbg, id))
 
     for id, data in places_data.items():
-        simulator.add_facility(Facility(id, data['cbg'], data['label'], data.get('capacity', -1)))
+        if isinstance(data, dict):
+            cbg = data.get('cbg')
+            label = data.get('label', f"Place_{id}")
+            capacity = data.get('capacity', -1)
+        elif isinstance(data, list):
+            cbg = data[0] if len(data) > 0 else None
+            label = data[1] if len(data) > 1 else f"Place_{id}"
+            capacity = data[2] if len(data) > 2 else -1
+            # Convert capacity to int if it's a string
+            if isinstance(capacity, str):
+                try:
+                    capacity = int(capacity)
+                except ValueError:
+                    capacity = -1
+        else:
+            # Assume it's just the cbg value
+            cbg = data
+            label = f"Place_{id}"
+            capacity = -1
+        
+        simulator.add_facility(Facility(id, cbg, label, capacity))
 
     # Get default infected IDs and variants from config
     default_infected = SIMULATION["default_infected_ids"]
@@ -165,7 +195,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         household.add_member(person)
     
     # Create infection manager with DMP API
-    infectionmgr = InfectionManager({}, people=simulator.people)
+    infectionmgr = InfectionManager({}, people=simulator.people.values())
     
     #with open(curdir + f'/{location}/patterns.json') as file:
         #patterns = json.load(file)

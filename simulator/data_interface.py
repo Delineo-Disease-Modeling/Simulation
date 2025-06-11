@@ -178,4 +178,7 @@ def load_movement_pap_data_streaming(url: str = 'https://db.delineo.me/patterns/
         logging.error(f"Failed to load streaming data: {e}")
         raise
 
+if __name__ == "__main__":
+    for data_chunk in StreamDataLoader.stream_data("https://db.delineo.me/patterns/1?stream=true"):
+        print(f"Received data: {data_chunk}")
     
