@@ -26,30 +26,24 @@ class DiseaseSimulator:
         self.people[person.id] = person  
         
     def get_person(self, id):
-        #return next((p for p in self.people if p.id == id), None)
         return self.people.get(id) 
 
     def add_household(self, household):
-        #self.households.append(household)
         self.households[household.id] = household
 
     
     def get_household(self, id):
-        #return next((h for h in self.households if h.id == id), None)
         return self.households.get(id)
 
 
     def add_facility(self, facility):
-        #self.facilities.append(facility)
         self.facilities[facility.id] = facility
 
     
     def get_facility(self, id):
-        #return next((f for f in self.facilities if f.id == id), None)
         return self.facilities.get(id)
 
 def move_people(simulator, items, is_household):
-
     for id, people in items:
         place = simulator.get_household(str(id)) if is_household else simulator.get_facility(str(id))
         if place is None:
@@ -101,7 +95,6 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     places_data = {}
     patterns = {}
     for data in data_stream:
-        print(f"Received data chunk with keys: {data.keys()}")
         
         # Merge data from each chunk
         if "people" in data:
@@ -113,6 +106,16 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         if "patterns" in data:
             patterns.update(data["patterns"])
     
+    if patterns:
+    # Check first pattern
+        first_key = list(patterns.keys())[0]
+        print(f"First pattern key: {first_key} (type: {type(first_key)})")
+        print(f"First pattern data: {patterns[first_key]}")
+        
+        # Check if it has the expected structure
+        if isinstance(patterns[first_key], dict):
+            print(f"First pattern has keys: {patterns[first_key].keys()}")
+                
     simulator = DiseaseSimulator(intervention_weights=interventions)
     
     for id, data in homes_data.items():
