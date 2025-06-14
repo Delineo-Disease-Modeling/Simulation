@@ -320,6 +320,31 @@ class SimulationLogger:
             chains_df.rename(columns={'index': 'infected_person_id'}, inplace=True)
             chains_df.to_csv(f'{self.log_dir}/infection_chains.csv', index=False)
 
+
+    def generate_summary_report(self):
+        if not self.enable_file_logging:
+            return 
+
+        report = []
+        report.append("=== Simulation Summary Report ===\n")
+
+        total_people = len(set(log['person_id'] for log in self.person_logs))
+        total_infections = len(self.infection_logs)
+        total_movements = len(self.movement_logs)
+
+        report.append(f"Total people: {total_people}") 
+        report.append(f"Total infections: {total_infections}")
+        report.append(f"Total movements: {total_movements}")
+
+        if self.intervention_logs: 
+            interventions = pd.DataFrame(self.intervention_logs)
+            intervention_summary = interventions.groupby('intervention_type').size()
+            report.append("\nIntervention Events:") 
+            for intervention, count in intervention_summary.items():
+                report.append(f"  {intervention}: {count} events")
+
+        with open(f'{self.log_dir}/summary_report.txt', 'w') as f:
+            f.write("\n".join(report))
             
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
