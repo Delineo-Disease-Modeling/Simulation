@@ -83,6 +83,26 @@ class SimulationLogger:
             location_capacity = getattr(person.location, 'capacity', -1) if person.location else -1
             location_occupancy = len(person.location.population) if person.location else 0 
 
+            person_log = {
+                'timestep': timestep, 
+                'person_id': person.id,
+                'age': person.age,
+                'sex': person.sex, 
+                'household_id': person.household.id if person.household else None,
+                'current_location_id': location_id,
+                'current_location_type': location_type,
+                'location_capacity': location_capacity,
+                'location_occupancy': location_occupancy,
+                'location_utilization': location_occupancy / location_capacity if location_capacity > 0 else 0,
+                'is_masked': getattr(person, 'masked', False), 
+                'vaccination_status': vax_status,
+                'vaccination_doses': vax_doses,
+                'infectious_variants': infectious_variants,
+                'symptomatic_variants': symptomatic_variants,
+                'total_variants_infected': len([v for v in infection_status.values() if v['infected']]),
+                'infection_status': infection_status
+            }
+
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
