@@ -118,8 +118,48 @@ class SimulationLogger:
             'person_age': person.age, 
             'person_sex': person.sex, 
             'is_infectious': any(person.states[v] & InfectionState.INFECTIOUS for v in person.states.keys()),
-            'is_symptomatic': 
+            'is_symptomatic': any(person.states[v] & InfectionState.SYMPTOMATIC for v in person.states.keys()),
+            'is_masked': getattr(person, 'masked', False),
+            'from_occupancy': len(from_location.population) if from_location else 0,
+            'to_occupancy': len(to_location.population) if to_location else 0, 
+            'to_capacity': getattr(to_location, 'capacity', -1) if to_location else -1
         }
+
+        self.movement_logs.append(movement_log)
+
+    def log_infection_event(self, infected_person, infector_person, location, variant, timestep): 
+        """Log an infection event"""
+        infection_log = {
+            'timestep': timestep,
+            'infected_person_id': infected_person.id,
+            'infected_age': infected_person.age,
+            'infected_sex': infected_person.sex, 
+            'infected_masked': getattr(infected_person, 'masked', False),
+            'infected_vaccination_doses': getattr(infected_person.vaccination_state, 'value', 0) if hasattr(infected_person, 'vaccination_state') and infected_person.vaccination_state else 0, 
+            'infector_person_id': infector_person.id if infector_person else None,
+            'infector_age': infector_person.age if infector_person else None,
+            'infector_sex': infector_person.sex if infector_person else None, 
+            'infector_masked': getattr(infector_person, 'masked', False) if infector_person else False,
+            'infector_vaccination_doses': getattr(infector_person.vaccination_state, 'value', 0) if hasattr(infector_person, 'vaccination_state') and infector_person.vaccination_state else 0 if infector_person else 0,
+            'infection_location_id': location.id if location else None,
+            'infection_location_type': "household" if isinstance(location, Household) else "facility" if isinstance(location, Facility) else None,
+            'location_occupancy': len(location.population) if location else 0,
+            'location_capacity': getattr(location, 'capacity', -1) if location else -1,
+            'variant': variant,
+            'transmission_pair_age_diff': abs(infected_person.age - infector_person.age) if infector_person else None,
+            'transmission_risk_score': self.calculate_transmission_risk(infected_person, infector_person, location)
+        }
+        self.infection_logs.append(infection_log)
+
+        # tracking infection chains 
+        if infector_person: 
+            self.infection_chains[infected_person.id] = {
+                'infector_id': infector_person.id,
+                'location_id': location.id if location else None,
+                'variant': variant,
+                'timestep': timestep
+            }
+
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
