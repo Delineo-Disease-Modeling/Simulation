@@ -208,6 +208,26 @@ class SimulationLogger:
 
         self.location_logs.append(location_log)
 
+    def log_contact_event(self, person1, person2, location, timestep, contact_duration = 1): 
+        contact_log = {
+            'timestep': timestep,
+            'person1_id': person1.id,
+            'person2_id': person2.id,
+            'location_id': location.id if location else None,
+            'location_type': "household" if isinstance(location, Household) else "facility" if isinstance(location, Facility) else None,
+            'contact_duration': contact_duration,  # in minutes
+            'person1_infectious': any(person1.states[v] & InfectionState.INFECTIOUS for v in person1.states.keys()),
+            'person2_infectious': any(person2.states[v] & InfectionState.INFECTIOUS for v in person2.states.keys()),
+            'person1_masked': getattr(person1, 'masked', False),
+            'person2_masked': getattr(person2, 'masked', False),
+            'both_masked': getattr(person1, 'masked', False) and getattr(person2, 'masked', False),
+            'age_diff': abs(person1.age - person2.age) if person1 and person2 else None,
+            'same_household': person1.household.id == person2.household.id if person1 and person2 else False,
+            'transmission_risk': self.calculate_transmission_risk(person1, person2, location)
+        }
+        
+        self.contact_logs.append(contact_log)
+        
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
