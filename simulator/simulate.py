@@ -265,6 +265,26 @@ class SimulationLogger:
         risk *= (1-masked_rate * 0.3)  # Reduce risk based on masking rate
 
         return risk
+    
+    def calculate_contact_risk(self, person1, person2, location): 
+        p1_infection = any(person1.states[v] & InfectionState.INFECTIOUS for v in person1.states.keys())
+        p2_infection = any(person2.states[v] & InfectionState.INFECTIOUS for v in person2.states.keys())
+
+        if not p1_infection and not p2_infection:
+            return 0
+        
+        risk = 1.0 
+
+        if getattr(person1, 'masked', False):
+            risk *= 0.7
+        if getattr(person2, 'masked', False):
+            risk *= 0.7
+
+        if hasattr(location, 'capacity') and location.capacity > 0:
+            utilization = len(location.population) / location.capacity
+            risk *= (1 + utilization * 0.5)
+            
+        return risk
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
