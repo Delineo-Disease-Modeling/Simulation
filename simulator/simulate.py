@@ -283,8 +283,44 @@ class SimulationLogger:
         if hasattr(location, 'capacity') and location.capacity > 0:
             utilization = len(location.population) / location.capacity
             risk *= (1 + utilization * 0.5)
-            
+
         return risk
+    
+    def export_logs_to_csv(self): 
+        if not self.enable_file_logging: 
+            return 
+        
+        if self.person_logs: 
+            df = pd.DataFrame(self.person_logs)
+            df.to_csv(f'{self.log_dir}/person_logs.csv', index=False)
+
+        if self.movement_logs:
+            df = pd.DataFrame(self.movement_logs)
+            df.to_csv(f'{self.log_dir}/movement_logs.csv', index=False)
+        
+        if self.infection_logs:
+            df = pd.DataFrame(self.infection_logs)
+            df.to_csv(f'{self.log_dir}/infection_logs.csv', index=False)
+
+        if self.intervention_logs:
+            df = pd.DataFrame(self.intervention_logs)
+            df.to_csv(f'{self.log_dir}/intervention_logs.csv', index=False)
+
+        if self.location_logs:
+            df = pd.DataFrame(self.location_logs)
+            df.to_csv(f'{self.log_dir}/location_logs.csv', index=False)
+        
+        if self.contact_logs:
+            df = pd.DataFrame(self.contact_logs)
+            df.to_csv(f'{self.log_dir}/contact_logs.csv', index=False)
+
+        if self.infection_chains: 
+            chains_df = pd.DataFrame.from_dict(self.infection_chains, orient='index')
+            chains_df.reset_index(inplace=True)
+            chains_df.rename(columns={'index': 'infected_person_id'}, inplace=True)
+            chains_df.to_csv(f'{self.log_dir}/infection_chains.csv', index=False)
+
+            
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
