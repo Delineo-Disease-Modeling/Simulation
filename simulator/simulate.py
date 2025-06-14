@@ -103,6 +103,23 @@ class SimulationLogger:
                 'infection_status': infection_status
             }
 
+            self.person_logs.append(person_log)
+            self.person_states[person.id] = person_log.copy()
+
+    def log_movement(self, person, from_location, to_location, timestep, reason = "normal") :
+        movement_log = {
+            'timestep': timestep,
+            'person_id': person.id,
+            'from_location_id': from_location.id if from_location else None,
+            'from_location_type': "household" if isinstance(from_location, Household) else "facility" if isinstance(from_location, Facility) else None,
+            'to_location_id': to_location.id if to_location else None,
+            'to_location_type': "household" if isinstance(to_location, Household) else "facility" if isinstance(to_location, Facility) else None,
+            'movement_reason': reason,
+            'person_age': person.age, 
+            'person_sex': person.sex, 
+            'is_infectious': any(person.states[v] & InfectionState.INFECTIOUS for v in person.states.keys()),
+            'is_symptomatic': 
+        }
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
