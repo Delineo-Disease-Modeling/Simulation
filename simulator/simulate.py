@@ -159,6 +159,17 @@ class SimulationLogger:
                 'variant': variant,
                 'timestep': timestep
             }
+    
+    def log_intervention_effect(self, person, intervention_type, effect, timestep, location=None): 
+        """Log when interventions affect person behavior"""
+        intervention_log = {
+            'timestep': timestep,
+            'person_id': person.id,
+            'intervention_type': intervention_type, # for example, lockdown, capacity limit, self isolation, mask, vaccine 
+            'effect': effect,
+            'person_age': person.age, 
+            'person_sex': person.sex, 
+        }
 
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
