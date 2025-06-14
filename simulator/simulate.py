@@ -349,12 +349,14 @@ class SimulationLogger:
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
-    def __init__(self, timestep=None, intervention_weights={}):
+    def __init__(self, timestep=None, intervention_weights={}, enable_logging = True, log_dir = "simulation_logs"):
         self.timestep = timestep or SIMULATION["default_timestep"]  # in minutes
         self.iv_weights = intervention_weights
         self.people = {}
         self.households = {}          # list of all houses
         self.facilities = {}
+        self.logger = SimulationLogger(log_dir, enable_logging) if enable_logging else None
+        self.enable_logging = enable_logging 
     
     def add_person(self, person):
         self.people[person.id] = person  
@@ -377,7 +379,7 @@ class DiseaseSimulator:
     def get_facility(self, id):
         return self.facilities.get(id)
 
-def move_people(simulator, items, is_household):
+def move_people(simulator, items, is_household, current_timestep):
     for id, people in items:
         place = simulator.get_household(str(id)) if is_household else simulator.get_facility(str(id))
         if place is None:
@@ -388,23 +390,43 @@ def move_people(simulator, items, is_household):
             if person is None:
                 raise Exception(f"Person {person_id} was not found in the simulator data")
 
+            original_location = person.location 
+
             # If we hit capacity limit, then we are going to send the person home instead
             # Otherwise, if we are enforcing a lockdown, they may randomly decide to head home
             if not is_household:
                 at_capacity = place.total_count >= place.capacity * simulator.iv_weights['capacity'] if place.capacity != -1 else False
                 hit_lockdown = place != person.location and random.random() < simulator.iv_weights['lockdown']
                 self_iso = person.get_state(InfectionState.SYMPTOMATIC) and random.random() < simulator.iv_weights['selfiso']
+                
+                if simulator.enable_logging and simulator.logger: 
+                    if at_capacity: 
+                        simulator.logger.log_intervention_effect(person, 'capacity_limit', 'redirected_home',current_timestep, place)
+                    if hit_lockdown: 
+                        simulator.logger.log_intervention_effect(person, 'lockdown', 'stayed_home', current_timestep, place)
+                    if self_iso: 
+                        simulator.logger.log_intervention_effect(person, 'self_isolation', 'stayed_home', current_timestep, place)
                 if at_capacity or hit_lockdown or self_iso:
                     person.location.remove_member(person_id)
                     person.household.add_member(person)
+
+                    if simulator.enable_logging and simulator.logger: 
+                        reason = 'capacity_limit' if at_capacity else ('lockdown' if hit_lockdown else 'self_isolation')
+                        simulator.logger.log_movement(person, original_location, person.household, current_timestep, reason)
+
                     person.location = person.household
                     continue
 
             person.location.remove_member(person_id)
             place.add_member(person)
+            
+
+            if simulator.enable_logging and simulator.logger: 
+                simulator.logger.log_movement(person, original_location, place, current_timestep, 'normal')
+
             person.location = place
 
-def run_simulator(location=None, max_length=None, interventions=None, save_file=False):
+def run_simulator(location=None, max_length=None, interventions=None, save_file=False, enable_logging = True, log_dir = "simulation_logs"):
     location = location or SIMULATION["default_location"]
     max_length = max_length or SIMULATION["default_max_length"]
     
@@ -557,19 +579,30 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                 }
             }
             print(f"Infected person {id} with variant {variant}")
-        
+
+            if simulator.enable_logging and simulator.logger:
+                simulator.logger.log_infection_event(person, None, person.household, variant, 0)
+
         # Assign masked and vaccination states
         if random.random() < simulator.iv_weights['mask']:
             person.set_masked(True)
+            if simulator.enable_logging and simulator.logger: 
+                simulator.logger.log_intervention_effect(person, 'mask', 'complied', 0)
+
         
         if random.random() < simulator.iv_weights['vaccine']:
             min_doses = SIMULATION["vaccination_options"]["min_doses"]
             max_doses = SIMULATION["vaccination_options"]["max_doses"]
             person.set_vaccinated(VaccinationState(random.randint(min_doses, max_doses)))
-        
+            if simulator.enable_logging and simulator.logger: 
+                simulator.logger.log_intervention_effect(person, 'vaccine', f'received_{doses}_doses', 0)
+
         simulator.add_person(person)
         household.add_member(person)
         people_added += 1
+
+        if simulator.enable_logging and simulator.logger: 
+            simulator.logger.log_person_demographics(person, 0)
     
     print(f"Added {people_added} people")
     
@@ -626,6 +659,25 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                 print(f"  ERROR: Timestamp {current_timestamp} not found in patterns")
             
             timestamps.pop(0)
+
+            if simulator.enable_logging and simulator.logger: 
+                for person in simulator.people.values(): 
+                    simulator.logger.log_person_demographics(person, last_timestep)
+                
+                for household in simulator.households.values(): 
+                    if len(household.participation) > 0: 
+                        simulator.logger.log_location_state(household, last_timestep)
+
+                for facility in simulator.facilities.values(): 
+                    if len(facility.population) > 0: 
+                        simulator.logger.log_location_state(facility, last_timestep)
+
+                        population = list(facility.population)
+                        for i, person1 in enumerate(population): 
+                            for person2 in population[i+1:]: 
+                                simulator.logger.log_contact_event(person1, person2, facility, last_timestep)
+
+            
         
         # Record movement
         movement_json[last_timestep] = {
