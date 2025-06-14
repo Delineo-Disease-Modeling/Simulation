@@ -51,6 +51,38 @@ class SimulationLogger:
         )
         self.logger = logging.getLogger('DiseaseSimulator')
 
+    def log_person_demographics(self, person, timestep):
+        """Log person demographics and current state"""
+        vax_status = person.vaccination_status if person.vaccination_status else "Unvaccinated"
+        vax_doses = 0
+        if hasattr(person, 'vaccination_state') and person.vaccination_state: 
+            vax_doses = person.vaccination_state.value if hasattr(person.vaccination_state, 'value') else 0
+            vax_status = f"Vaccinated ({vax_doses} doses)"
+
+        infection_status = {}
+        infectious_variants = []
+        symptomatic_variants = []
+
+        for variant in person.states.keys(): 
+            state = person.states[variant]
+            infection_status[variant] = {
+                'infected': bool(state & InfectionState.INFECTED),
+                'infectious': bool(state & InfectionState.INFECTIOUS),
+                'symptomatic': bool(state & InfectionState.SYMPTOMATIC), 
+                'recovered': bool(state & InfectionState.RECOVERED), 
+                'deceased': bool(state & InfectionState.DECEASED)
+            }
+
+            if state & InfectionState.INFECTIOUS:
+                infectious_variants.append(variant)
+            if state & InfectionState.SYMPTOMATIC:
+                symptomatic_variants.append(variant)
+            
+            location_id = person.location.id if person.location else None 
+            location_type = "household" if isinstance(person.location, Household) else "facility" if isinstance(person.location, Facility) else "unknown"
+            location_capacity = getattr(person.location, 'capacity', -1) if person.location else -1
+            location_occupancy = len(person.location.population) if person.location else 0 
+
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
