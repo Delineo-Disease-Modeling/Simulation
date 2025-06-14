@@ -169,7 +169,44 @@ class SimulationLogger:
             'effect': effect,
             'person_age': person.age, 
             'person_sex': person.sex, 
+            'person_infectious': any(person.states[v] & InfectionState.INFECTIOUS for v in person.states.keys()),
+            'person_symptomatic': any(person.states[v] & InfectionState.SYMPTOMATIC for v in person.states.keys()),
+            'location_id': location.id if location else None,
+            'location_type': "household" if isinstance(location, Household) else "facility" if isinstance(location, Facility) else None,
+            'location_occupancy': len(location.population) if location else 0,
+            'location_capacity': getattr(location, 'capacity', -1) if location else -1
         }
+
+        self.intervention_logs.append(intervention_log)
+
+    def log_location_state(self, location, timestep):
+        population = location.population if hasattr(location, 'population') else []
+        infectious_count = sum(1 for p in population if any(p.states[v] & InfectionState.INFECTIOUS for v in p.states.keys()))
+        symptomatic_count = sum(1 for p in population if any(p.states[v] & InfectionState.SYMPTOMATIC for v in p.states.keys()))
+        masked_count = sum(1 for p in population if getattr(p, 'masked', False))
+        vaccinated_count = sum(1 for p in population if hasattr(p, 'vaccination_state') and p.vaccination_state and p.vaccination_state.value > 0)
+
+        ages = [p.age for p in population]
+        avg_age = sum(ages) / len(ages) if ages else 0
+
+        location_log = {
+            'timestep': timestep,
+            'location_id': location.id,
+            'location_type': "household" if isinstance(location, Household) else "facility" if isinstance(location, Facility) else None,
+            'capacity': getattr(location, 'capacity', -1),
+            'occupancy': len(population),
+            'utilization_rate': len(population) / getattr(location, 'capacity', 1),  # Avoid division by zero
+            'infectious_count': infectious_count,
+            'symptomatic_count': symptomatic_count,
+            'masked_count': masked_count,
+            'vaccinated_count': vaccinated_count,
+            'avg_age': avg_age,
+            'infection_risk_score': self.calculate_infection_risk(location),
+            'male_count': sum(1 for p in population if p.sex == 'M'),
+            'female_count': sum(1 for p in population if p.sex == 'F')
+        }
+
+        self.location_logs.append(location_log)
 
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
