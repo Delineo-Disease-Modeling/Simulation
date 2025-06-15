@@ -743,7 +743,20 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     print(f"Movement timesteps: {len(movement_json)}")
 
     if simulator.enable_logging and simulator.logger: 
-        
+        print("=== EXPORTING LOGS ===")
+        simulator.logger.export_logs_to_csv()
+        simulator.logger.generate_summary_report()
+        print(f"Logs exported to {log_dir}/")
+        print(f"Generated files:")
+        print(f"  - person_logs.csv: {len(simulator.logger.person_logs)} records")
+        print(f"  - movement_logs.csv: {len(simulator.logger.movement_logs)} records")
+        print(f"  - infection_logs.csv: {len(simulator.logger.infection_logs)} records")
+        print(f"  - intervention_logs.csv: {len(simulator.logger.intervention_logs)} records")
+        print(f"  - location_logs.csv: {len(simulator.logger.location_logs)} records")
+        print(f"  - contact_logs.csv: {len(simulator.logger.contact_logs)} records")
+        print(f"  - infection_chains.csv: Chain data for {len(simulator.logger.infection_chains)} infections")
+        print(f"  - simulation_summary.txt: Summary report")
+
     
     # Debug final results
     non_empty_results = {k: v for k, v in result.items() if v and any(v.values())}
