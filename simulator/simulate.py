@@ -694,7 +694,34 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         # Run infection model
         newlyInfected = {}
         try:
+            pre_infection_states = {}
+            if simulator.enable_logging and simulator.logger: 
+                for person in simulator.people.values(): 
+                    pre_infection_states[person.id] = {variant: person.states.get(variant, 0) for variant in variants}
+
+                
             infectionmgr.run_model(1, None, last_timestep, variantInfected, newlyInfected)
+
+            if simulator.enable_logging and simulator.logger: 
+                for person in simulator.people.values(): 
+                    for variant in variants: 
+                        old_state = pre_infection_states[person.id][variant]
+                        new_state = person.states.get(variant, 0)
+                        if not (old_state & InfectionState.INFECTED) and (new_state & InfectionState.INFECTED):
+                            # Try to identify the infector (simplified - could be enhanced)
+                            infector = None
+                            location = person.location
+                            
+                            # Look for infectious people in the same location
+                            if location and hasattr(location, 'population'):
+                                for potential_infector in location.population:
+                                    if (potential_infector != person and 
+                                        potential_infector.states.get(variant, 0) & InfectionState.INFECTIOUS):
+                                        infector = potential_infector
+                                        break
+                            simulator.logger.log_infection_event(person, infector, location, variant, last_timestep)
+
+                        
         except Exception as e:
             print(f"Error during infection modeling at timestep {last_timestep}: {e}")
             newlyInfected = {}
@@ -714,6 +741,9 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     print(f"Final timestep: {last_timestep}")
     print(f"Result timesteps: {len(result)}")
     print(f"Movement timesteps: {len(movement_json)}")
+
+    if simulator.enable_logging and simulator.logger: 
+        
     
     # Debug final results
     non_empty_results = {k: v for k, v in result.items() if v and any(v.values())}
