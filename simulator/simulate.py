@@ -147,7 +147,6 @@ class SimulationLogger:
             'location_capacity': getattr(location, 'capacity', -1) if location else -1,
             'variant': variant,
             'transmission_pair_age_diff': abs(infected_person.age - infector_person.age) if infector_person else None,
-            'transmission_risk_score': self.calculate_transmission_risk(infected_person, infector_person, location)
         }
         self.infection_logs.append(infection_log)
 
@@ -201,8 +200,8 @@ class SimulationLogger:
             'masked_count': masked_count,
             'vaccinated_count': vaccinated_count,
             'avg_age': avg_age,
-            'male_count': sum(1 for p in population if p.sex == 'M'),
-            'female_count': sum(1 for p in population if p.sex == 'F')
+            'male_count': sum(1 for p in population if p.sex == '0'),
+            'female_count': sum(1 for p in population if p.sex == '1')
         }
 
         self.location_logs.append(location_log)
@@ -222,7 +221,6 @@ class SimulationLogger:
             'both_masked': getattr(person1, 'masked', False) and getattr(person2, 'masked', False),
             'age_diff': abs(person1.age - person2.age) if person1 and person2 else None,
             'same_household': person1.household.id == person2.household.id if person1 and person2 else False,
-            'transmission_risk': self.calculate_transmission_risk(person1, person2, location)
         }
         
         self.contact_logs.append(contact_log)
@@ -579,7 +577,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                 }
             }
             print(f"Infected person {id} with variant {variant}")
-
+            # logging initial infections at the beginning of the simulation
             if simulator.enable_logging and simulator.logger:
                 simulator.logger.log_infection_event(person, None, person.household, variant, 0)
 
