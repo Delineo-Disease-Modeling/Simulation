@@ -35,7 +35,7 @@ class SimulationLogger:
         self.exposure_logs = []
 
         self.person_states = {}
-        self.location_occupancy = defaultdict(list)
+        self.location_population = defaultdict(list)
         self.infection_chains = {}
 
         self.setup_logging()
@@ -53,7 +53,7 @@ class SimulationLogger:
 
     def log_person_demographics(self, person, timestep):
         """Log person demographics and current state"""
-        vax_status = person.vaccination_status if person.vaccination_status else "Unvaccinated"
+        vax_status = person.vaccination_state if person.vaccination_state else "Unvaccinated"        
         vax_doses = 0
         if hasattr(person, 'vaccination_state') and person.vaccination_state: 
             vax_doses = person.vaccination_state.value if hasattr(person.vaccination_state, 'value') else 0
@@ -70,7 +70,7 @@ class SimulationLogger:
                 'infectious': bool(state & InfectionState.INFECTIOUS),
                 'symptomatic': bool(state & InfectionState.SYMPTOMATIC), 
                 'recovered': bool(state & InfectionState.RECOVERED), 
-                'deceased': bool(state & InfectionState.DECEASED)
+                'deceased': bool(state & InfectionState.REMOVED)
             }
 
             if state & InfectionState.INFECTIOUS:
@@ -81,7 +81,7 @@ class SimulationLogger:
             location_id = person.location.id if person.location else None 
             location_type = "household" if isinstance(person.location, Household) else "facility" if isinstance(person.location, Facility) else "unknown"
             location_capacity = getattr(person.location, 'capacity', -1) if person.location else -1
-            location_occupancy = len(person.location.population) if person.location else 0 
+            location_population = len(person.location.population) if person.location else 0 
 
             person_log = {
                 'timestep': timestep, 
@@ -92,8 +92,8 @@ class SimulationLogger:
                 'current_location_id': location_id,
                 'current_location_type': location_type,
                 'location_capacity': location_capacity,
-                'location_occupancy': location_occupancy,
-                'location_utilization': location_occupancy / location_capacity if location_capacity > 0 else 0,
+                'location_occupancy': location_population, 
+                'location_utilization': location_population / location_capacity if location_capacity > 0 else 0,
                 'is_masked': getattr(person, 'masked', False), 
                 'vaccination_status': vax_status,
                 'vaccination_doses': vax_doses,
@@ -201,7 +201,6 @@ class SimulationLogger:
             'masked_count': masked_count,
             'vaccinated_count': vaccinated_count,
             'avg_age': avg_age,
-            'infection_risk_score': self.calculate_infection_risk(location),
             'male_count': sum(1 for p in population if p.sex == 'M'),
             'female_count': sum(1 for p in population if p.sex == 'F')
         }
@@ -388,7 +387,8 @@ def move_people(simulator, items, is_household, current_timestep):
         for person_id in people:
             person = simulator.get_person(person_id)
             if person is None:
-                raise Exception(f"Person {person_id} was not found in the simulator data")
+                #raise Exception(f"Person {person_id} was not found in the simulator data")
+                continue
 
             original_location = person.location 
 
@@ -649,10 +649,10 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                 if isinstance(data, dict):
                     if 'homes' in data:
                         print(f"  Moving people to homes: {len(data['homes'])} locations")
-                        move_people(simulator, data['homes'].items(), True)
+                        move_people(simulator, data['homes'].items(), True, current_timestamp)
                     if 'places' in data:
                         print(f"  Moving people to places: {len(data['places'])} locations")
-                        move_people(simulator, data['places'].items(), False)
+                        move_people(simulator, data['places'].items(), False, current_timestamp)
                 else:
                     print(f"  ERROR: Pattern data is not a dict: {data}")
             else:
@@ -665,7 +665,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                     simulator.logger.log_person_demographics(person, last_timestep)
                 
                 for household in simulator.households.values(): 
-                    if len(household.participation) > 0: 
+                    if len(household.population) > 0: 
                         simulator.logger.log_location_state(household, last_timestep)
 
                 for facility in simulator.facilities.values(): 

@@ -1,0 +1,5 @@
+=== Simulation Summary Report ===
+
+Total people: 276
+Total infections: 2
+Total movements: 29568

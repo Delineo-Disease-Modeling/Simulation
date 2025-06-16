@@ -53,6 +53,7 @@ class Person:
             'mask': False,
             'vaccine': VaccinationState.NONE
         }
+        self.vaccination_state = 0
     
     def set_masked(self, masked):
         self.interventions['mask'] = masked
