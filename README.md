@@ -52,4 +52,4 @@ Main simulation logic and configuration files.
 To run a simulation:
 
 ```bash
-python simulate.py
+python app.py
