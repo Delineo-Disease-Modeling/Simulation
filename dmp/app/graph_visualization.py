@@ -16,6 +16,9 @@ except ImportError as e:
 # Set page to wide mode
 st.set_page_config(layout="wide")
 
+# Add a title at the top
+st.title("Disease Modeling Platform")
+
 def load_default_states():
     """Load default states from file or return default list if file doesn't exist."""
     default_states = [
@@ -58,7 +61,7 @@ def main():
     
     with create_tab:
         # Add state editing section at the top
-        st.subheader("Edit States")
+        # st.subheader("Edit States")
         edit_states()
         st.markdown("---")
         # Create state machine with updated states

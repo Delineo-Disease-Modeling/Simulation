@@ -6,6 +6,7 @@ import pandas as pd
 from .state_machine_db import StateMachineDB
 from core.simulation_functions import run_simulation
 from .state_editor import validate_matrices
+from streamlit_javascript import st_javascript
 
 def convert_graph_to_matrices(states, edges):
     """Convert graph representation to six matrices."""
@@ -83,6 +84,7 @@ def display_matrices(matrices, states):
             st.dataframe(df, use_container_width=True)
 
 def create_state_machine(states):
+    print("DEBUG: Current node_positions:", st.session_state.get('node_positions', {}))
     """Create a graph visualization of disease states using Cytoscape.js"""
     # Initialize database
     db = StateMachineDB()
@@ -94,7 +96,9 @@ def create_state_machine(states):
         st.session_state.node_positions = {}
     if 'clicked_element' not in st.session_state:
         st.session_state.clicked_element = None
-
+    if 'new_edge' not in st.session_state:
+        st.session_state.new_edge = None
+    
     st.header("Create A State Machine")
     st.write("""
     First, edit the states for your state machine above. Then, use the interface below to:
@@ -103,15 +107,16 @@ def create_state_machine(states):
     3. Visualize your state machine
     4. Save your state machine with a set of demographics and their values
     """)
-    
+
+    # Remove Streamlit draw mode toggle
+    # (No draw mode, no JS edge creation, no st_javascript message handling)
+
     # Add edge creation interface
     st.subheader("Add Edge")
     col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
-    
     with col1:
         source_state = st.selectbox("From State", states, key="source_state")
     with col2:
-        # Create a list of target states starting from the second element
         target_states = states[1:] if len(states) > 1 else states
         target_state = st.selectbox("To State", target_states, key="target_state")
     with col3:
@@ -127,10 +132,11 @@ def create_state_machine(states):
     with col4:
         mean_value = st.number_input(
             "Mean Time",
-            min_value=1,
-            max_value=20,
-            value=5,
-            step=1,
+            min_value=0.1,
+            max_value=50.0,
+            value=5.0,
+            step=0.1,
+            format="%.1f",
             key="mean_value"
         )
     with col5:
@@ -169,16 +175,14 @@ def create_state_machine(states):
             format="%.1f",
             key="max_cutoff"
         )
-    
+
     if st.button("Add Edge"):
         if source_state != target_state:  # Prevent self-loops
-            # Check if edge already exists
             edge_exists = any(
                 edge["data"]["source"] == source_state and 
                 edge["data"]["target"] == target_state 
                 for edge in st.session_state.graph_edges
             )
-            
             if not edge_exists:
                 new_edge = {
                     "data": {
@@ -200,7 +204,7 @@ def create_state_machine(states):
                 st.warning("This edge already exists!")
         else:
             st.warning("Cannot create self-loops!")
-    
+
     # Add edge removal interface
     if st.session_state.graph_edges:
         st.subheader("Remove Edge")
@@ -242,18 +246,34 @@ def create_state_machine(states):
     st.subheader("State Machine Visualization")
     
     # Build nodes list with persisted positions
+    print("DEBUG: node_positions used for graph:", st.session_state.node_positions)
     nodes = []
     for i, state in enumerate(states):
-        default_pos = {
-            "x": (i - (len(states)-1)/2)*200,
-            "y": 0
-        }
+        # Use a more spread out layout instead of straight line
+        n = len(states)
+        if n <= 3:
+            # For 3 or fewer nodes, use a triangle layout
+            angle = (i * 2 * np.pi / n) - np.pi/2  # Start from top
+            radius = 200
+            default_pos = {
+                "x": radius * np.cos(angle),
+                "y": radius * np.sin(angle)
+            }
+        else:
+            # For more nodes, use a grid layout
+            cols = int(np.ceil(np.sqrt(n)))
+            row = i // cols
+            col = i % cols
+            default_pos = {
+                "x": (col - (cols-1)/2) * 250,
+                "y": (row - (n//cols)/2) * 200
+            }
         pos = st.session_state.node_positions.get(state, default_pos)
         nodes.append({
             "data": {"id": state, "label": state},
             "position": pos
         })
-
+    
     elements = nodes + st.session_state.graph_edges
 
     # Convert graph to matrices and display them
@@ -299,13 +319,13 @@ def create_state_machine(states):
         }
     ]
 
-    # Create the HTML for the Cytoscape graph
+    # Clean Cytoscape HTML: remove draw button and related JS
     html = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <title>Cytoscape Graph</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+        <script src=\"https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js\"></script>
         <style>
             body {{
                 margin: 0;
@@ -341,8 +361,8 @@ def create_state_machine(states):
         </style>
     </head>
     <body>
-        <div id="cy"></div>
-        <button class="reset-button" onclick="resetView()">Reset View</button>
+        <div id=\"cy\"></div>
+        <button class=\"reset-button\" onclick=\"resetView()\">Reset View</button>
         <script>
             var cy = cytoscape({{
                 container: document.getElementById('cy'),
@@ -365,27 +385,30 @@ def create_state_machine(states):
                 }}, '*');
             }});
 
-            // Handle node/edge clicks
-            cy.on('tap', 'node, edge', function(evt) {{
-                var element = evt.target;
+            // Handle edge clicking
+            cy.on('tap', 'edge', function(evt) {{
+                var edge = evt.target;
                 window.parent.postMessage({{
-                    type: 'element_click',
-                    id: element.id(),
-                    isNode: element.isNode()
+                    type: 'edge_click',
+                    id: edge.id(),
+                    source: edge.data('source'),
+                    target: edge.data('target'),
+                    transition_prob: edge.data('transition_prob'),
+                    mean_time: edge.data('mean_time'),
+                    std_dev: edge.data('std_dev'),
+                    distribution_type: edge.data('distribution_type'),
+                    min_cutoff: edge.data('min_cutoff'),
+                    max_cutoff: edge.data('max_cutoff')
                 }}, '*');
             }});
 
-            // Listen for messages from Streamlit
-            window.addEventListener('message', function(event) {{
-                if (event.data.type === 'node_position') {{
-                    var node = cy.getElementById(event.data.id);
-                    if (node.length > 0) {{
-                        node.position({{
-                            x: event.data.x,
-                            y: event.data.y
-                        }});
-                    }}
-                }}
+            // Handle node clicking
+            cy.on('tap', 'node', function(evt) {{
+                var node = evt.target;
+                window.parent.postMessage({{
+                    type: 'node_click',
+                    id: node.id()
+                }}, '*');
             }});
 
             // Reset view function
@@ -397,30 +420,49 @@ def create_state_machine(states):
     </body>
     </html>
     """
-
+    
     # Display the graph using Streamlit's components
     components.html(html, height=600)
+
+    # Listen for node position updates from JS and persist them (single st_javascript call)
+    msg = st_javascript("""
+        new Promise((resolve) => {
+            window.addEventListener("message", (event) => {
+                if (event.data && event.data.type === "node_position") {
+                    resolve(event.data);
+                }
+            }, { once: true });
+        });
+    """)
+
+    if msg and msg.get("type") == "node_position":
+        node_id = msg["id"]
+        x = msg["x"]
+        y = msg["y"]
+        st.session_state.node_positions[node_id] = {"x": x, "y": y}
+        print("DEBUG: node_positions after update:", st.session_state.node_positions)
+        st.rerun()
 
     # Display clicked element info if available
     if st.session_state.clicked_element:
         st.write("Selected element:", st.session_state.clicked_element)
 
-    # Add save interface
+    # Add demographics interface
     st.markdown("---")
-    st.subheader("Save State Machine")
+    st.subheader("Demographics")
     
     # Dynamic demographic inputs
     st.write("Demographic Values")
-    
+
     # Initialize demographics in session state if not exists
     if 'demographics' not in st.session_state:
         st.session_state.demographics = []
-    
+
     # Add new demographic button
     if st.button("Add Demographic"):
         st.session_state.demographics.append({"key": "", "value": ""})
         st.rerun()
-    
+
     # Display existing demographics
     for i, demo in enumerate(st.session_state.demographics):
         col1, col2, col3 = st.columns([2, 2, 1])
@@ -440,6 +482,10 @@ def create_state_machine(states):
             if st.button("Remove", key=f"remove_demo_{i}"):
                 st.session_state.demographics.pop(i)
                 st.rerun()
+
+    # Add save interface
+    st.markdown("---")
+    st.subheader("Save State Machine")
     
     # Create name from demographic values
     demo_values = []
@@ -448,7 +494,7 @@ def create_state_machine(states):
             demo_values.append(f"{demo['key']}={demo['value']}")
     
     state_machine_name = " | ".join(demo_values) if demo_values else "Default"
-    
+
     if st.button("Save State Machine"):
         if state_machine_name:
             # Create demographics dictionary
@@ -474,4 +520,4 @@ def create_state_machine(states):
                 )
                 st.success(f"✅ Saved state machine: {state_machine_name}")
         else:
-            st.error("Please provide at least one demographic value") 
+            st.error("Please provide at least one demographic value")
