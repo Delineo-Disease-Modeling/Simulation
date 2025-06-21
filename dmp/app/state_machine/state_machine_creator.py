@@ -113,13 +113,18 @@ def create_state_machine(states):
 
     # Add edge creation interface
     st.subheader("Add Edge")
-    col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
+    
+    # State selection on first line
+    col1, col2 = st.columns(2)
     with col1:
         source_state = st.selectbox("From State", states, key="source_state")
     with col2:
         target_states = states[1:] if len(states) > 1 else states
         target_state = st.selectbox("To State", target_states, key="target_state")
-    with col3:
+    
+    # Other parameters on second line
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    with col1:
         transition_prob = st.number_input(
             "Transition Probability",
             min_value=0.0,
@@ -129,9 +134,9 @@ def create_state_machine(states):
             format="%.2f",
             key="transition_prob"
         )
-    with col4:
+    with col2:
         mean_value = st.number_input(
-            "Mean Time",
+            "Mean Time (days)",
             min_value=0.1,
             max_value=50.0,
             value=5.0,
@@ -139,9 +144,9 @@ def create_state_machine(states):
             format="%.1f",
             key="mean_value"
         )
-    with col5:
+    with col3:
         std_dev = st.number_input(
-            "Standard Deviation",
+            "Standard Deviation (days)",
             min_value=0.1,
             max_value=10.0,
             value=1.0,
@@ -149,13 +154,13 @@ def create_state_machine(states):
             format="%.1f",
             key="std_dev"
         )
-    with col6:
+    with col4:
         dist_type = st.selectbox(
             "Distribution Type",
             options=["normal", "uniform", "log-normal", "gamma"],
             key="dist_type"
         )
-    with col7:
+    with col5:
         min_cutoff = st.number_input(
             "Min Cutoff",
             min_value=0.0,
@@ -165,7 +170,7 @@ def create_state_machine(states):
             format="%.1f",
             key="min_cutoff"
         )
-    with col8:
+    with col6:
         max_cutoff = st.number_input(
             "Max Cutoff",
             min_value=float(st.session_state.mean_value),
