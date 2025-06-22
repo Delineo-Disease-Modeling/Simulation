@@ -31,7 +31,7 @@ def initialize_dmp_api():
 
 @app.route("/simulation/", methods=['POST', 'GET'])
 @cross_origin()
-def run_simulation_endpoint():
+def run_simulation_endpoint(interventions_user):
     try:
         request.get_json(force=True)
     except BadRequest:
@@ -47,10 +47,14 @@ def run_simulation_endpoint():
     length = request.json.get('length', SIMULATION["default_max_length"])
     location = request.json.get('location', SIMULATION["default_location"])
     
-    # Build interventions dict from request, using defaults for missing values
-    interventions = {}
-    for key in SIMULATION["default_interventions"]:
-        interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
+    if not interventions_user: 
+        # Build interventions dict from request, using defaults for missing values
+        interventions = {}
+        for key in SIMULATION["default_interventions"]:
+            interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
+    else: 
+        for key in interventions_user: 
+            interventions[key] = request.json.get(key, interventions_user[key])
 
     try:
         return simulate.run_simulator(location, length, interventions)
