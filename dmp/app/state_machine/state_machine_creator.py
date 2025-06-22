@@ -23,7 +23,7 @@ def convert_graph_to_matrices(states, edges):
     
     # Distribution type mapping
     dist_type_to_num = {
-        "normal": 1,
+        "triangular": 1,
         "uniform": 2,
         "log-normal": 3,
         "gamma": 4
@@ -40,7 +40,7 @@ def convert_graph_to_matrices(states, edges):
         transition_matrix[i, j] = edge['data'].get('transition_prob', 1.0)
         mean_matrix[i, j] = edge['data'].get('mean_time', 0)
         std_dev_matrix[i, j] = edge['data'].get('std_dev', 0.0)
-        dist_type = edge['data'].get('distribution_type', 'normal')
+        dist_type = edge['data'].get('distribution_type', 'triangular')
         distribution_matrix[i, j] = dist_type_to_num.get(dist_type, 0)
         min_cutoff_matrix[i, j] = edge['data'].get('min_cutoff', 0.0)
         max_cutoff_matrix[i, j] = edge['data'].get('max_cutoff', float('inf'))
@@ -152,14 +152,26 @@ def create_state_machine(states):
             value=1.0,
             step=0.1,
             format="%.1f",
-            key="std_dev"
+            key="std_dev",
+            disabled=(st.session_state.get("dist_type", "triangular") in ["triangular", "uniform"])
         )
+        if st.session_state.get("dist_type", "triangular") in ["triangular", "uniform"]:
+            st.caption("Not used for triangular/uniform distributions")
     with col4:
         dist_type = st.selectbox(
             "Distribution Type",
-            options=["normal", "uniform", "log-normal", "gamma"],
+            options=["triangular", "uniform", "log-normal", "gamma"],
             key="dist_type"
         )
+        # Add descriptions for each distribution type
+        if st.session_state.get("dist_type", "triangular") == "triangular":
+            st.caption("Most likely value with min/max bounds. Good for recovery times.")
+        elif st.session_state.get("dist_type", "triangular") == "uniform":
+            st.caption("Equal probability across min/max range. Good for uncertain periods.")
+        elif st.session_state.get("dist_type", "triangular") == "log-normal":
+            st.caption("Right-skewed (some take much longer). Good for disease progression.")
+        elif st.session_state.get("dist_type", "triangular") == "gamma":
+            st.caption("Flexible right-skewed. Good for waiting times and symptom onset.")
     with col5:
         min_cutoff = st.number_input(
             "Min Cutoff",
@@ -220,7 +232,7 @@ def create_state_machine(states):
                 f"(p={edge['data'].get('transition_prob', 1.0):.2f}, "
                 f"μ={edge['data'].get('mean_time', 0)}, "
                 f"σ={edge['data'].get('std_dev', 0.0):.1f}, "
-                f"{edge['data'].get('distribution_type', 'normal')}, "
+                f"{edge['data'].get('distribution_type', 'triangular')}, "
                 f"min={edge['data'].get('min_cutoff', 0.0):.1f}, "
                 f"max={edge['data'].get('max_cutoff', float('inf')):.1f})"
                 for edge in st.session_state.graph_edges
@@ -236,7 +248,7 @@ def create_state_machine(states):
                     f"(p={edge['data'].get('transition_prob', 1.0):.2f}, "
                     f"μ={edge['data'].get('mean_time', 0)}, "
                     f"σ={edge['data'].get('std_dev', 0.0):.1f}, "
-                    f"{edge['data'].get('distribution_type', 'normal')}, "
+                    f"{edge['data'].get('distribution_type', 'triangular')}, "
                     f"min={edge['data'].get('min_cutoff', 0.0):.1f}, "
                     f"max={edge['data'].get('max_cutoff', float('inf')):.1f})"
                 )

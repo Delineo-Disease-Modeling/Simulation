@@ -88,7 +88,7 @@ def generate_transition_time(mean: float, std_dev: float,
         max_cutoff: Maximum allowed time
         distribution_type: Type of distribution (0-4)
             0: Fixed (mean)
-            1: Normal
+            1: Triangular (Used to be normal)
             2: Uniform
             3: Log-normal
             4: Gamma
@@ -100,11 +100,13 @@ def generate_transition_time(mean: float, std_dev: float,
         if distribution_type == 0:  # Fixed time
             return mean
             
-        elif distribution_type == 1:  # Normal
-            time = np.random.normal(mean, std_dev)
+        # elif distribution_type == 1:  # Normal
+        #     time = np.random.normal(mean, std_dev)
+        elif distribution_type == 1:  # Triangular, mode is mean
+            time = np.random.triangular(min_cutoff, mean, max_cutoff)
             
         elif distribution_type == 2:  # Uniform
-            time = np.random.uniform(mean - std_dev, mean + std_dev)
+            time = np.random.uniform(min_cutoff, max_cutoff)
             
         elif distribution_type == 3:  # Log-normal
             # Convert mean and std_dev to log-normal parameters
