@@ -46,15 +46,12 @@ def run_simulation_endpoint(interventions_user):
     # Get simulation length from request or use default
     length = request.json.get('length', SIMULATION["default_max_length"])
     location = request.json.get('location', SIMULATION["default_location"])
+    interventions = {}
     
-    if not interventions_user: 
-        # Build interventions dict from request, using defaults for missing values
-        interventions = {}
-        for key in SIMULATION["default_interventions"]:
-            interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
-    else: 
-        for key in interventions_user: 
-            interventions[key] = request.json.get(key, interventions_user[key])
+    # Build interventions dict from request, using defaults for missing values
+    for key in SIMULATION["default_interventions"]:
+        interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
+    
 
     try:
         return simulate.run_simulator(location, length, interventions)
