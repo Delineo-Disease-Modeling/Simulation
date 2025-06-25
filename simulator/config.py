@@ -53,7 +53,7 @@ INFECTION_MODEL = {
 SIMULATION = {
     "default_timestep": 60,             # Default timestep in minutes
     "default_location": "barnsdall",    # Default location for simulation
-    "default_max_length": 10080,        # Default simulation length (7 days in minutes)
+    "default_max_length": 72000,        # Default simulation length (50 days in minutes)
     "log_interval": 6000,               # Interval for printing progress logs
     "vaccination_options": {
         "min_doses": 1,                 # Minimum number of vaccine doses
@@ -67,7 +67,7 @@ SIMULATION = {
         "selfiso": 0.0,                 # Probability of self-isolation when symptomatic
         "randseed": False               # Whether to use random seed
     },
-    "default_infected_ids": ['160', '43', '47', '4', '36', '9', '14', '19', '27', '22'],
+    "default_infected_ids": ['160', '43', '47', '4', '36', '9', '14', '19', '27', '22', '3', '5', '6', '7', '8', '10', '11', '12', '13', '15', '16', '17', '18', '20', '21', '23', '24', '25', '26'],
     "variants": ['Delta', 'Omicron']    # Available disease variants
 }
 
