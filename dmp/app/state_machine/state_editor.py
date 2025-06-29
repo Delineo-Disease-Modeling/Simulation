@@ -31,7 +31,7 @@ def validate_matrices(states, edges):
     
     # Distribution type mapping
     dist_type_to_num = {
-        "normal": 1,
+        "triangular": 1,
         "uniform": 2,
         "log-normal": 3,
         "gamma": 4
@@ -88,9 +88,7 @@ def validate_matrices(states, edges):
                 
                 # Distribution-specific validations
                 dist_type = next((k for k, v in dist_type_to_num.items() if v == distribution_matrix[i, j]), None)
-                if dist_type == "normal" and std_dev_matrix[i, j] == 0:
-                    issues.append(f"Normal distribution requires non-zero standard deviation for transition {states[i]} → {states[j]}")
-                elif dist_type == "gamma" and mean_matrix[i, j] <= 0:
+                if dist_type == "gamma" and mean_matrix[i, j] <= 0:
                     issues.append(f"Gamma distribution requires positive mean for transition {states[i]} → {states[j]}")
     
     return issues

@@ -84,7 +84,6 @@ def display_matrices(matrices, states):
             st.dataframe(df, use_container_width=True)
 
 def create_state_machine(states):
-    print("DEBUG: Current node_positions:", st.session_state.get('node_positions', {}))
     """Create a graph visualization of disease states using Cytoscape.js"""
     # Initialize database
     db = StateMachineDB()
@@ -98,8 +97,81 @@ def create_state_machine(states):
         st.session_state.clicked_element = None
     if 'new_edge' not in st.session_state:
         st.session_state.new_edge = None
+    if 'editing_mode' not in st.session_state:
+        st.session_state.editing_mode = "new"
     
     st.header("Create A State Machine")
+    
+    # Add mode selection
+    st.subheader("Mode Selection")
+    mode = st.radio(
+        "Choose your mode:",
+        options=["Create New State Machine", "Edit From Existing State Machine"],
+        key="mode_selection"
+    )
+    
+    if mode == "Edit From Existing State Machine":
+        # Load existing state machines
+        existing_machines = db.list_state_machines()
+        if existing_machines:
+            machine_names = [machine[1] for machine in existing_machines]  # machine[1] is the name
+            selected_machine = st.selectbox(
+                "Select State Machine to Edit From:",
+                options=machine_names,
+                key="selected_machine_name"
+            )
+            
+            if st.button("Load State Machine"):
+                # Find the selected machine
+                selected_machine_id = None
+                for machine in existing_machines:
+                    if machine[1] == selected_machine:  # machine[1] is the name
+                        selected_machine_id = machine[0]  # machine[0] is the id
+                        break
+                
+                if selected_machine_id:
+                    # Load full state machine data
+                    selected_machine_data = db.load_state_machine(selected_machine_id)
+                    
+                    if selected_machine_data:
+                        # Load the state machine data into session state
+                        st.session_state.graph_edges = selected_machine_data['edges']
+                        st.session_state.demographics = []
+                        for key, value in selected_machine_data['demographics'].items():
+                            # Check if this is a standard demographic (Sex, Age) or custom
+                            if key in ["Sex", "Age"]:
+                                st.session_state.demographics.append({"key": key, "value": value})
+                            else:
+                                # This is a custom demographic
+                                st.session_state.demographics.append({
+                                    "key": "Custom", 
+                                    "value": f"{key}={value}",
+                                    "custom_key": key,
+                                    "custom_value": value
+                                })
+                        st.session_state.editing_mode = "edit"
+                        st.session_state.editing_machine_id = selected_machine_data['id']
+                        st.success(f"Loaded state machine: {selected_machine}")
+                        st.rerun()
+                    else:
+                        st.error("Failed to load state machine data")
+        else:
+            st.warning("No existing state machines found. Please create a new one.")
+            st.session_state.editing_mode = "new"
+    
+    elif mode == "Create New State Machine":
+        if st.button("Start New State Machine"):
+            # Clear session state for new machine
+            st.session_state.graph_edges = []
+            st.session_state.node_positions = {}
+            st.session_state.demographics = []
+            st.session_state.editing_mode = "new"
+            if 'editing_machine_id' in st.session_state:
+                del st.session_state.editing_machine_id
+            st.success("Started new state machine")
+            st.rerun()
+  
+    
     st.write("""
     First, edit the states for your state machine above. Then, use the interface below to:
     1. Add edges between states
@@ -263,7 +335,6 @@ def create_state_machine(states):
     st.subheader("State Machine Visualization")
     
     # Build nodes list with persisted positions
-    print("DEBUG: node_positions used for graph:", st.session_state.node_positions)
     nodes = []
     for i, state in enumerate(states):
         # Use a more spread out layout instead of straight line
@@ -457,7 +528,6 @@ def create_state_machine(states):
         x = msg["x"]
         y = msg["y"]
         st.session_state.node_positions[node_id] = {"x": x, "y": y}
-        print("DEBUG: node_positions after update:", st.session_state.node_positions)
         st.rerun()
 
     # Display clicked element info if available
@@ -484,17 +554,52 @@ def create_state_machine(states):
     for i, demo in enumerate(st.session_state.demographics):
         col1, col2, col3 = st.columns([2, 2, 1])
         with col1:
-            st.session_state.demographics[i]["key"] = st.text_input(
-                "Demographic Name",
-                value=demo["key"],
-                key=f"demo_key_{i}"
+            demo_type = st.selectbox(
+                "Demographic Type",
+                options=["", "Sex", "Age", "Custom"],
+                index=0 if demo["key"] == "" else (1 if demo["key"] == "Sex" else 2 if demo["key"] == "Age" else 3),
+                key=f"demo_type_{i}"
             )
+            st.session_state.demographics[i]["key"] = demo_type
         with col2:
-            st.session_state.demographics[i]["value"] = st.text_input(
-                "Value",
-                value=demo["value"],
-                key=f"demo_value_{i}"
-            )
+            if demo_type == "Sex":
+                demo_value = st.selectbox(
+                    "Value",
+                    options=["", "Male", "Female"],
+                    index=0 if demo["value"] == "" else (1 if demo["value"] == "Male" else 2),
+                    key=f"demo_value_{i}"
+                )
+            elif demo_type == "Age":
+                demo_value = st.selectbox(
+                    "Value",
+                    options=["", "0-18", "19-64", "65+"],
+                    index=0 if demo["value"] == "" else (1 if demo["value"] == "0-18" else 2 if demo["value"] == "19-64" else 3),
+                    key=f"demo_value_{i}"
+                )
+            elif demo_type == "Custom":
+                col_custom1, col_custom2 = st.columns(2)
+                with col_custom1:
+                    custom_key = st.text_input(
+                        "Custom Name",
+                        value=demo.get("custom_key", ""),
+                        key=f"custom_key_{i}"
+                    )
+                    st.session_state.demographics[i]["custom_key"] = custom_key
+                with col_custom2:
+                    custom_value = st.text_input(
+                        "Custom Value",
+                        value=demo.get("custom_value", ""),
+                        key=f"custom_value_{i}"
+                    )
+                    st.session_state.demographics[i]["custom_value"] = custom_value
+                demo_value = f"{custom_key}={custom_value}" if custom_key and custom_value else ""
+            else:
+                demo_value = st.text_input(
+                    "Value",
+                    value=demo["value"],
+                    key=f"demo_value_{i}"
+                )
+            st.session_state.demographics[i]["value"] = demo_value
         with col3:
             if st.button("Remove", key=f"remove_demo_{i}"):
                 st.session_state.demographics.pop(i)
@@ -504,23 +609,22 @@ def create_state_machine(states):
     st.markdown("---")
     st.subheader("Save State Machine")
     
-    # Create name from demographic values
-    demo_values = []
+    # Create demographics dictionary
+    demographics = {}
     for demo in st.session_state.demographics:
-        if demo["key"] and demo["value"]:
-            demo_values.append(f"{demo['key']}={demo['value']}")
+        if demo["key"] == "Custom":
+            if demo.get("custom_key") and demo.get("custom_value"):
+                demographics[demo["custom_key"]] = demo["custom_value"]
+        elif demo["key"] and demo["value"]:
+            demographics[demo["key"]] = demo["value"]
     
-    state_machine_name = " | ".join(demo_values) if demo_values else "Default"
+    state_machine_name = " | ".join([f"{key}={value}" for key, value in demographics.items()]) if demographics else "Default"
 
-    if st.button("Save State Machine"):
+    # Show different button text based on mode
+    save_button_text = "Update State Machine" if st.session_state.editing_mode == "edit" else "Save State Machine"
+    
+    if st.button(save_button_text):
         if state_machine_name:
-            # Create demographics dictionary
-            demographics = {
-                demo["key"]: demo["value"]
-                for demo in st.session_state.demographics
-                if demo["key"] and demo["value"]
-            }
-
             # Run validation
             validation_issues = validate_matrices(states, st.session_state.graph_edges)
             if validation_issues:
@@ -528,13 +632,24 @@ def create_state_machine(states):
                 for issue in validation_issues:
                     st.error(f"- {issue}")
             else:
-                # If valid, save the state machine
-                state_machine_id = db.save_state_machine(
-                    state_machine_name,
-                    states,
-                    st.session_state.graph_edges,
-                    demographics
-                )
-                st.success(f"✅ Saved state machine: {state_machine_name}")
+                # If valid, save or update the state machine
+                try:
+                    state_machine_id = db.save_state_machine(
+                        state_machine_name,
+                        states,
+                        st.session_state.graph_edges,
+                        demographics,
+                        update_existing=True  # This will update existing or create new
+                    )
+                    
+                    if st.session_state.editing_mode == "edit":
+                        st.success(f"✅ Updated state machine: {state_machine_name}")
+                    else:
+                        st.success(f"✅ Saved new state machine: {state_machine_name}")
+                        
+                except ValueError as e:
+                    st.error(f"❌ Error: {str(e)}")
+                except Exception as e:
+                    st.error(f"❌ Failed to save state machine: {str(e)}")
         else:
             st.error("Please provide at least one demographic value")

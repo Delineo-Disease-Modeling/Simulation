@@ -1,5 +1,6 @@
 import numpy as np
 from typing import List, Tuple
+import streamlit as st
 
 def run_simulation(transition_matrix, mean_matrix, std_dev_matrix, 
                   min_cutoff_matrix, max_cutoff_matrix, distribution_matrix,
@@ -21,6 +22,9 @@ def run_simulation(transition_matrix, mean_matrix, std_dev_matrix,
     Returns:
         List of (state_name, time) tuples where time is in hours
     """
+    # Reset random seed for each simulation to ensure different results
+    np.random.seed()
+    
     HOURS_PER_DAY = 24  # Convert days to hours
     
     # Initialize current state with the provided index
