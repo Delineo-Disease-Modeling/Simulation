@@ -24,6 +24,7 @@ class StateMachineDB:
                 CREATE TABLE IF NOT EXISTS state_machines (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
+                    disease_name TEXT DEFAULT 'Unknown',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     demographics TEXT NOT NULL DEFAULT '{}'
@@ -57,7 +58,28 @@ class StateMachineDB:
                 )
             ''')
             
+            # Migrate existing databases to add disease_name column
+            self._migrate_database(cursor)
+            
             conn.commit()
+
+    def _migrate_database(self, cursor):
+        """Migrate existing database to add disease_name column if it doesn't exist."""
+        try:
+            # Check if disease_name column exists
+            cursor.execute("PRAGMA table_info(state_machines)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            if 'disease_name' not in columns:
+                # Add disease_name column to existing table
+                cursor.execute('''
+                    ALTER TABLE state_machines 
+                    ADD COLUMN disease_name TEXT DEFAULT 'Unknown'
+                ''')
+                print("Database migrated: Added disease_name column")
+        except Exception as e:
+            print(f"Migration error: {e}")
+            # If migration fails, the table might not exist yet, which is fine
 
     def get_state_machine_by_name(self, name):
         """Get a state machine by its name."""
@@ -70,7 +92,7 @@ class StateMachineDB:
             ''', (name,))
             return cursor.fetchone()
 
-    def save_state_machine(self, name, states, edges, demographics=None, update_existing=True):
+    def save_state_machine(self, name, states, edges, demographics=None, disease_name="Unknown", update_existing=True):
         """Save a state machine to the database.
         
         Args:
@@ -78,6 +100,7 @@ class StateMachineDB:
             states: List of states
             edges: List of edges
             demographics: Optional demographics data as a dictionary
+            disease_name: Name of the disease (default: "Unknown")
             update_existing: If True, will update an existing state machine with the same name
                            If False, will raise an error if a state machine with the same name exists
         
@@ -106,10 +129,10 @@ class StateMachineDB:
                 cursor.execute(
                     """
                     UPDATE state_machines 
-                    SET demographics = ?, updated_at = CURRENT_TIMESTAMP
+                    SET demographics = ?, disease_name = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                     """,
-                    (demographics_json, state_machine_id)
+                    (demographics_json, disease_name, state_machine_id)
                 )
                 
                 # Delete existing states and edges
@@ -119,10 +142,10 @@ class StateMachineDB:
                 # Insert new state machine
                 cursor.execute(
                     """
-                    INSERT INTO state_machines (name, demographics)
-                    VALUES (?, ?)
+                    INSERT INTO state_machines (name, disease_name, demographics)
+                    VALUES (?, ?, ?)
                     """,
-                    (name, demographics_json)
+                    (name, disease_name, demographics_json)
                 )
                 state_machine_id = cursor.lastrowid
             
@@ -185,7 +208,7 @@ class StateMachineDB:
                 # Get state machine details
                 cursor.execute(
                     """
-                    SELECT name, demographics
+                    SELECT name, disease_name, demographics
                     FROM state_machines
                     WHERE id = ?
                     """,
@@ -235,11 +258,12 @@ class StateMachineDB:
                 ]
                 
                 # Parse demographics JSON
-                demographics = json.loads(machine_data[1] or "{}")
+                demographics = json.loads(machine_data[2] or "{}")
                 
                 return {
                     "id": state_machine_id,
                     "name": machine_data[0],
+                    "disease_name": machine_data[1],
                     "demographics": demographics,
                     "states": states,
                     "edges": edges
@@ -252,7 +276,7 @@ class StateMachineDB:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, name, created_at, updated_at, demographics
+                SELECT id, name, disease_name, created_at, updated_at, demographics
                 FROM state_machines
                 ORDER BY updated_at DESC
             ''')
@@ -272,4 +296,16 @@ class StateMachineDB:
             # Delete state machine
             cursor.execute('DELETE FROM state_machines WHERE id = ?', (state_machine_id,))
             
-            conn.commit() 
+            conn.commit()
+
+    def get_unique_diseases(self):
+        """Get list of unique diseases in the database."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT DISTINCT disease_name
+                FROM state_machines
+                WHERE disease_name IS NOT NULL AND disease_name != 'Unknown'
+                ORDER BY disease_name
+            ''')
+            return [row[0] for row in cursor.fetchall()] 

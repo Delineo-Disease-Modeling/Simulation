@@ -7,6 +7,7 @@ from .state_machine_db import StateMachineDB
 from core.simulation_functions import run_simulation
 from .state_editor import validate_matrices
 from streamlit_javascript import st_javascript
+from .disease_configurations import get_disease_template, get_available_diseases
 
 def convert_graph_to_matrices(states, edges):
     """Convert graph representation to six matrices."""
@@ -102,8 +103,57 @@ def create_state_machine(states):
     
     st.header("Create A State Machine")
     
-    # Add mode selection
-    st.subheader("Mode Selection")
+    # Add disease selection and template application at the top
+    st.subheader("Disease Selection & Template")
+    
+    # Disease selection with templates
+    disease_options = get_available_diseases() + ["Custom Disease"]
+    
+    selected_disease = st.selectbox(
+        "Select Disease:",
+        options=disease_options,
+        key="disease_selection"
+    )
+    
+    # Custom disease name input
+    if selected_disease == "Custom Disease":
+        custom_disease_name = st.text_input(
+            "Enter Custom Disease Name:",
+            key="custom_disease_name"
+        )
+        disease_name = custom_disease_name if custom_disease_name else "Unknown"
+    else:
+        disease_name = selected_disease
+    
+    # Apply disease template if a predefined disease is selected
+    if selected_disease != "Custom Disease" and selected_disease in get_available_diseases():
+        template = get_disease_template(selected_disease)
+        if template and template['states']:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.info(f"📋 **{selected_disease} Template Available**: {template['description']}")
+            with col2:
+                if st.button(f"Apply {selected_disease} Template", key="apply_disease_template"):
+                    # Update states with template states
+                    st.session_state.states = template['states'].copy()
+                    st.success(f"✅ Applied {selected_disease} template with {len(template['states'])} states")
+                    st.rerun()
+            
+            # Show template info
+            with st.expander(f"View {selected_disease} Template Details", expanded=False):
+                st.write("**Predefined States:**")
+                for i, state in enumerate(template['states'], 1):
+                    st.write(f"{i}. {state}")
+                
+                st.write("**Typical Transitions:**")
+                for transition in template['typical_transitions']:
+                    st.write(f"• {transition}")
+        elif template:
+            st.warning(f"⚠️ {selected_disease} template is not yet defined. Please use the Disease Configurations tab to define it.")
+    
+    # Add mode selection for editing existing machines
+    st.markdown("---")
+    st.subheader("Start New or Load Existing")
     mode = st.radio(
         "Choose your mode:",
         options=["Create New State Machine", "Edit From Existing State Machine"],
@@ -173,147 +223,147 @@ def create_state_machine(states):
   
     
     st.write("""
-    First, edit the states for your state machine above. Then, use the interface below to:
+    First, select a disease and apply its template (or choose Custom Disease). Then, use the interface below to:
     1. Add edges between states
     2. Configure transition probabilities and timing
     3. Visualize your state machine
-    4. Save your state machine with a set of demographics and their values
+    4. Save your state machine with demographics and disease information
     """)
 
     # Remove Streamlit draw mode toggle
     # (No draw mode, no JS edge creation, no st_javascript message handling)
 
     # Add edge creation interface
-    st.subheader("Add Edge")
-    
-    # State selection on first line
-    col1, col2 = st.columns(2)
-    with col1:
-        source_state = st.selectbox("From State", states, key="source_state")
-    with col2:
-        target_states = states[1:] if len(states) > 1 else states
-        target_state = st.selectbox("To State", target_states, key="target_state")
-    
-    # Other parameters on second line
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
-    with col1:
-        transition_prob = st.number_input(
-            "Transition Probability",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.5,
-            step=0.05,
-            format="%.2f",
-            key="transition_prob"
-        )
-    with col2:
-        mean_value = st.number_input(
-            "Mean Time (days)",
-            min_value=0.1,
-            max_value=50.0,
-            value=5.0,
-            step=0.1,
-            format="%.1f",
-            key="mean_value"
-        )
-    with col3:
-        std_dev = st.number_input(
-            "Standard Deviation (days)",
-            min_value=0.1,
-            max_value=10.0,
-            value=1.0,
-            step=0.1,
-            format="%.1f",
-            key="std_dev",
-            disabled=(st.session_state.get("dist_type", "triangular") in ["triangular", "uniform"])
-        )
-        if st.session_state.get("dist_type", "triangular") in ["triangular", "uniform"]:
-            st.caption("Not used for triangular/uniform distributions")
-    with col4:
-        dist_type = st.selectbox(
-            "Distribution Type",
-            options=["triangular", "uniform", "log-normal", "gamma"],
-            key="dist_type"
-        )
-        # Add descriptions for each distribution type
-        if st.session_state.get("dist_type", "triangular") == "triangular":
-            st.caption("Most likely value with min/max bounds. Good for recovery times.")
-        elif st.session_state.get("dist_type", "triangular") == "uniform":
-            st.caption("Equal probability across min/max range. Good for uncertain periods.")
-        elif st.session_state.get("dist_type", "triangular") == "log-normal":
-            st.caption("Right-skewed (some take much longer). Good for disease progression.")
-        elif st.session_state.get("dist_type", "triangular") == "gamma":
-            st.caption("Flexible right-skewed. Good for waiting times and symptom onset.")
-    with col5:
-        min_cutoff = st.number_input(
-            "Min Cutoff",
-            min_value=0.0,
-            max_value=float(st.session_state.mean_value),
-            value=0.0,
-            step=0.1,
-            format="%.1f",
-            key="min_cutoff"
-        )
-    with col6:
-        max_cutoff = st.number_input(
-            "Max Cutoff",
-            min_value=float(st.session_state.mean_value),
-            max_value=30.0,
-            value=float(st.session_state.mean_value) + 1.0,
-            step=0.1,
-            format="%.1f",
-            key="max_cutoff"
-        )
-
-    if st.button("Add Edge"):
-        if source_state != target_state:  # Prevent self-loops
-            edge_exists = any(
-                edge["data"]["source"] == source_state and 
-                edge["data"]["target"] == target_state 
-                for edge in st.session_state.graph_edges
-            )
-            if not edge_exists:
-                new_edge = {
-                    "data": {
-                        "source": source_state,
-                        "target": target_state,
-                        "transition_prob": transition_prob,
-                        "mean_time": mean_value,
-                        "std_dev": std_dev,
-                        "distribution_type": dist_type,
-                        "min_cutoff": min_cutoff,
-                        "max_cutoff": max_cutoff,
-                        "label": f"p={transition_prob:.2f}\nμ={mean_value}\nσ={std_dev:.1f}\n{dist_type}\nmin={min_cutoff:.1f}\nmax={max_cutoff:.1f}"
-                    }
-                }
-                st.session_state.graph_edges.append(new_edge)
-                st.success(f"Added edge from {source_state} to {target_state}")
-                st.rerun()
-            else:
-                st.warning("This edge already exists!")
-        else:
-            st.warning("Cannot create self-loops!")
-
-    # Add edge removal interface
-    if st.session_state.graph_edges:
-        st.subheader("Remove Edge")
-        edge_to_remove = st.selectbox(
-            "Select Edge to Remove",
-            options=[
-                f"{edge['data']['source']} → {edge['data']['target']} "
-                f"(p={edge['data'].get('transition_prob', 1.0):.2f}, "
-                f"μ={edge['data'].get('mean_time', 0)}, "
-                f"σ={edge['data'].get('std_dev', 0.0):.1f}, "
-                f"{edge['data'].get('distribution_type', 'triangular')}, "
-                f"min={edge['data'].get('min_cutoff', 0.0):.1f}, "
-                f"max={edge['data'].get('max_cutoff', float('inf')):.1f})"
-                for edge in st.session_state.graph_edges
-            ],
-            key="edge_to_remove"
-        )
+    with st.expander("Add Edge", expanded=False):
+        # State selection on first line
+        col1, col2 = st.columns(2)
+        with col1:
+            source_state = st.selectbox("From State", states, key="source_state")
+        with col2:
+            target_states = states[1:] if len(states) > 1 else states
+            target_state = st.selectbox("To State", target_states, key="target_state")
         
-        if st.button("Remove Edge"):
-            # Find and remove the selected edge
+        # Other parameters on second line
+        col1, col2, col3, col4, col5, col6 = st.columns(6)
+        with col1:
+            transition_prob = st.number_input(
+                "Transition Probability",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.5,
+                step=0.05,
+                format="%.2f",
+                key="transition_prob"
+            )
+        with col2:
+            mean_value = st.number_input(
+                "Mean Time (days)",
+                min_value=0.1,
+                max_value=50.0,
+                value=5.0,
+                step=0.1,
+                format="%.1f",
+                key="mean_value"
+            )
+        with col3:
+            std_dev = st.number_input(
+                "Standard Deviation (days)",
+                min_value=0.1,
+                max_value=10.0,
+                value=1.0,
+                step=0.1,
+                format="%.1f",
+                key="std_dev",
+                disabled=(st.session_state.get("dist_type", "triangular") in ["triangular", "uniform"])
+            )
+            if st.session_state.get("dist_type", "triangular") in ["triangular", "uniform"]:
+                st.caption("Not used for triangular/uniform distributions")
+        with col4:
+            dist_type = st.selectbox(
+                "Distribution Type",
+                options=["triangular", "uniform", "log-normal", "gamma"],
+                key="dist_type"
+            )
+            # Add descriptions for each distribution type
+            if st.session_state.get("dist_type", "triangular") == "triangular":
+                st.caption("Most likely value with min/max bounds. Good for recovery times.")
+            elif st.session_state.get("dist_type", "triangular") == "uniform":
+                st.caption("Equal probability across min/max range. Good for uncertain periods.")
+            elif st.session_state.get("dist_type", "triangular") == "log-normal":
+                st.caption("Right-skewed (some take much longer). Good for disease progression.")
+            elif st.session_state.get("dist_type", "triangular") == "gamma":
+                st.caption("Flexible right-skewed. Good for waiting times and symptom onset.")
+        with col5:
+            min_cutoff = st.number_input(
+                "Min Cutoff",
+                min_value=0.0,
+                max_value=float(st.session_state.mean_value),
+                value=0.0,
+                step=0.1,
+                format="%.1f",
+                key="min_cutoff"
+            )
+        with col6:
+            max_cutoff = st.number_input(
+                "Max Cutoff",
+                min_value=float(st.session_state.mean_value),
+                max_value=30.0,
+                value=float(st.session_state.mean_value) + 1.0,
+                step=0.1,
+                format="%.1f",
+                key="max_cutoff"
+            )
+
+        if st.button("Add Edge"):
+            if source_state != target_state:  # Prevent self-loops
+                edge_exists = any(
+                    edge["data"]["source"] == source_state and 
+                    edge["data"]["target"] == target_state 
+                    for edge in st.session_state.graph_edges
+                )
+                if not edge_exists:
+                    new_edge = {
+                        "data": {
+                            "source": source_state,
+                            "target": target_state,
+                            "transition_prob": transition_prob,
+                            "mean_time": mean_value,
+                            "std_dev": std_dev,
+                            "distribution_type": dist_type,
+                            "min_cutoff": min_cutoff,
+                            "max_cutoff": max_cutoff,
+                            "label": f"p={transition_prob:.2f}\nμ={mean_value}\nσ={std_dev:.1f}\n{dist_type}\nmin={min_cutoff:.1f}\nmax={max_cutoff:.1f}"
+                        }
+                    }
+                    st.session_state.graph_edges.append(new_edge)
+                    st.success(f"Added edge from {source_state} to {target_state}")
+                    st.rerun()
+                else:
+                    st.warning("This edge already exists!")
+            else:
+                st.warning("Cannot create self-loops!")
+
+    # Add edge editing interface
+    if st.session_state.graph_edges:
+        with st.expander("Edit Existing Edge", expanded=False):
+            edge_to_edit = st.selectbox(
+                "Select Edge to Edit",
+                options=[
+                    f"{edge['data']['source']} → {edge['data']['target']} "
+                    f"(p={edge['data'].get('transition_prob', 1.0):.2f}, "
+                    f"μ={edge['data'].get('mean_time', 0)}, "
+                    f"σ={edge['data'].get('std_dev', 0.0):.1f}, "
+                    f"{edge['data'].get('distribution_type', 'triangular')}, "
+                    f"min={edge['data'].get('min_cutoff', 0.0):.1f}, "
+                    f"max={edge['data'].get('max_cutoff', float('inf')):.1f})"
+                    for edge in st.session_state.graph_edges
+                ],
+                key="creator_edge_to_edit"
+            )
+            
+            # Find the selected edge
+            selected_edge = None
+            selected_edge_index = None
             for i, edge in enumerate(st.session_state.graph_edges):
                 edge_str = (
                     f"{edge['data']['source']} → {edge['data']['target']} "
@@ -324,11 +374,123 @@ def create_state_machine(states):
                     f"min={edge['data'].get('min_cutoff', 0.0):.1f}, "
                     f"max={edge['data'].get('max_cutoff', float('inf')):.1f})"
                 )
-                if edge_str == edge_to_remove:
-                    st.session_state.graph_edges.pop(i)
-                    st.success(f"Removed edge {edge_to_remove}")
-                    st.rerun()
+                if edge_str == edge_to_edit:
+                    selected_edge = edge
+                    selected_edge_index = i
                     break
+            
+            if selected_edge:
+                st.write(f"**Editing: {selected_edge['data']['source']} → {selected_edge['data']['target']}**")
+                
+                # Edge parameters for editing
+                col1, col2, col3, col4, col5, col6 = st.columns(6)
+                with col1:
+                    edit_transition_prob = st.number_input(
+                        "Transition Probability",
+                        min_value=0.0,
+                        max_value=1.0,
+                        value=float(selected_edge['data'].get('transition_prob', 1.0)),
+                        step=0.05,
+                        format="%.2f",
+                        key="creator_edit_transition_prob"
+                    )
+                with col2:
+                    edit_mean_value = st.number_input(
+                        "Mean Time (days)",
+                        min_value=0.1,
+                        max_value=50.0,
+                        value=float(selected_edge['data'].get('mean_time', 5.0)),
+                        step=0.1,
+                        format="%.1f",
+                        key="creator_edit_mean_value"
+                    )
+                with col3:
+                    edit_std_dev = st.number_input(
+                        "Standard Deviation (days)",
+                        min_value=0.1,
+                        max_value=10.0,
+                        value=float(selected_edge['data'].get('std_dev', 1.0)),
+                        step=0.1,
+                        format="%.1f",
+                        key="creator_edit_std_dev"
+                    )
+                with col4:
+                    edit_dist_type = st.selectbox(
+                        "Distribution Type",
+                        options=["triangular", "uniform", "log-normal", "gamma"],
+                        index=["triangular", "uniform", "log-normal", "gamma"].index(selected_edge['data'].get('distribution_type', 'triangular')),
+                        key="creator_edit_dist_type"
+                    )
+                with col5:
+                    edit_min_cutoff = st.number_input(
+                        "Min Cutoff",
+                        min_value=0.0,
+                        max_value=float(edit_mean_value),
+                        value=float(selected_edge['data'].get('min_cutoff', 0.0)),
+                        step=0.1,
+                        format="%.1f",
+                        key="creator_edit_min_cutoff"
+                    )
+                with col6:
+                    edit_max_cutoff = st.number_input(
+                        "Max Cutoff",
+                        min_value=float(edit_mean_value),
+                        max_value=30.0,
+                        value=float(selected_edge['data'].get('max_cutoff', float(edit_mean_value) + 1.0)),
+                        step=0.1,
+                        format="%.1f",
+                        key="creator_edit_max_cutoff"
+                    )
+
+                if st.button("Update Edge", key="creator_update_edge"):
+                    # Update the edge with new values
+                    st.session_state.graph_edges[selected_edge_index]['data'].update({
+                        'transition_prob': edit_transition_prob,
+                        'mean_time': edit_mean_value,
+                        'std_dev': edit_std_dev,
+                        'distribution_type': edit_dist_type,
+                        'min_cutoff': edit_min_cutoff,
+                        'max_cutoff': edit_max_cutoff,
+                        'label': f"p={edit_transition_prob:.2f}\nμ={edit_mean_value}\nσ={edit_std_dev:.1f}\n{edit_dist_type}\nmin={edit_min_cutoff:.1f}\nmax={edit_max_cutoff:.1f}"
+                    })
+                    st.success(f"Updated edge from {selected_edge['data']['source']} to {selected_edge['data']['target']}")
+                    st.rerun()
+
+    # Add edge removal interface
+    if st.session_state.graph_edges:
+        with st.expander("Remove Edge", expanded=False):
+            edge_to_remove = st.selectbox(
+                "Select Edge to Remove",
+                options=[
+                    f"{edge['data']['source']} → {edge['data']['target']} "
+                    f"(p={edge['data'].get('transition_prob', 1.0):.2f}, "
+                    f"μ={edge['data'].get('mean_time', 0)}, "
+                    f"σ={edge['data'].get('std_dev', 0.0):.1f}, "
+                    f"{edge['data'].get('distribution_type', 'triangular')}, "
+                    f"min={edge['data'].get('min_cutoff', 0.0):.1f}, "
+                    f"max={edge['data'].get('max_cutoff', float('inf')):.1f})"
+                    for edge in st.session_state.graph_edges
+                ],
+                key="edge_to_remove"
+            )
+            
+            if st.button("Remove Edge"):
+                # Find and remove the selected edge
+                for i, edge in enumerate(st.session_state.graph_edges):
+                    edge_str = (
+                        f"{edge['data']['source']} → {edge['data']['target']} "
+                        f"(p={edge['data'].get('transition_prob', 1.0):.2f}, "
+                        f"μ={edge['data'].get('mean_time', 0)}, "
+                        f"σ={edge['data'].get('std_dev', 0.0):.1f}, "
+                        f"{edge['data'].get('distribution_type', 'triangular')}, "
+                        f"min={edge['data'].get('min_cutoff', 0.0):.1f}, "
+                        f"max={edge['data'].get('max_cutoff', float('inf')):.1f})"
+                    )
+                    if edge_str == edge_to_remove:
+                        st.session_state.graph_edges.pop(i)
+                        st.success(f"Removed edge {edge_to_remove}")
+                        st.rerun()
+                        break
 
     # Add graph visualization
     st.markdown("---")
@@ -618,7 +780,7 @@ def create_state_machine(states):
         elif demo["key"] and demo["value"]:
             demographics[demo["key"]] = demo["value"]
     
-    state_machine_name = " | ".join([f"{key}={value}" for key, value in demographics.items()]) if demographics else "Default"
+    state_machine_name = f"{disease_name} | " + " | ".join([f"{key}={value}" for key, value in demographics.items()]) if demographics else f"{disease_name} | Default"
 
     # Show different button text based on mode
     save_button_text = "Update State Machine" if st.session_state.editing_mode == "edit" else "Save State Machine"
@@ -639,6 +801,7 @@ def create_state_machine(states):
                         states,
                         st.session_state.graph_edges,
                         demographics,
+                        disease_name,
                         update_existing=True  # This will update existing or create new
                     )
                     

@@ -103,19 +103,34 @@ def manage_state_machines(states):
     st.header("Manage State Machines")
     st.write("View your saved state machines, load them, and run simulations.")
     
+    # Add disease filter dropdown
+    diseases = db.get_unique_diseases()
+    all_diseases = ["All Diseases"] + diseases
+    
+    selected_disease = st.selectbox(
+        "Filter by Disease:",
+        options=all_diseases,
+        key="disease_filter"
+    )
+    
     # List all saved state machines
     saved_machines = db.list_state_machines()
     if saved_machines:
+        # Filter machines by selected disease
+        if selected_disease != "All Diseases":
+            saved_machines = [machine for machine in saved_machines if machine[2] == selected_disease]
+        
         # Create a table of state machines
         st.subheader("Saved State Machines")
         
         # Display state machines in a table format
         for machine in saved_machines:
-            with st.expander(f"{machine[1]} (Created: {machine[2]}, Updated: {machine[3]})"):
+            disease_name = machine[2] if machine[2] and machine[2] != "Unknown" else "Unknown Disease"
+            with st.expander(f"{machine[1]} ({disease_name}) - Created: {machine[3]}, Updated: {machine[4]})"):
                 col1, col2 = st.columns(2)
                 
                 # Load demographics
-                demographics = json.loads(machine[4] or "{}")
+                demographics = json.loads(machine[5] or "{}")
                 
                 with col1:
                     st.write("Demographics:")
@@ -447,6 +462,7 @@ def manage_state_machines(states):
                         st.session_state.states,
                         st.session_state.graph_edges,
                         demographics,
+                        st.session_state.selected_machine['disease_name'],
                         update_existing=True
                     )
                     

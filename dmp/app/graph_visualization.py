@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from state_machine.state_machine_creator import create_state_machine
     from state_machine.state_machine_manager import manage_state_machines
-    from state_machine.state_editor import edit_states
+    from state_machine.disease_configurations import display_disease_configurations
 except ImportError as e:
     st.error(f"Error importing state machine modules: {str(e)}")
     st.stop()
@@ -56,19 +56,22 @@ def main():
     # Load states
     states = load_default_states()
     
+    # Initialize session state if not exists
+    if 'states' not in st.session_state:
+        st.session_state.states = states
+
     # Create tabs for different sections
-    create_tab, manage_tab = st.tabs(["Create State Machine", "Manage State Machines"])
+    create_tab, manage_tab, config_tab = st.tabs(["Create State Machine", "Manage State Machines", "Disease Configurations"])
     
     with create_tab:
-        # Add state editing section at the top
-        # st.subheader("Edit States")
-        edit_states()
-        st.markdown("---")
-        # Create state machine with updated states
+        # Create state machine with disease selection and templates
         create_state_machine(st.session_state.states)
     
     with manage_tab:
         manage_state_machines(st.session_state.states)
+    
+    with config_tab:
+        display_disease_configurations()
 
 if __name__ == "__main__":
     main() 
