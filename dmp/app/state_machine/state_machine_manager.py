@@ -259,8 +259,11 @@ def manage_state_machines(states):
                                 value=float(selected_edge['data'].get('std_dev', 1.0)),
                                 step=0.1,
                                 format="%.1f",
-                                key="manager_edit_std_dev"
+                                key="manager_edit_std_dev",
+                                disabled=(st.session_state.get("manager_edit_dist_type", "triangular") in ["triangular", "uniform"])
                             )
+                            if st.session_state.get("manager_edit_dist_type", "triangular") in ["triangular", "uniform"]:
+                                st.caption("Not used for triangular/uniform distributions")
                         with col4:
                             edit_dist_type = st.selectbox(
                                 "Distribution Type",
@@ -344,8 +347,11 @@ def manage_state_machines(states):
                         value=1.0,
                         step=0.1,
                         format="%.1f",
-                        key="manager_std_dev"
+                        key="manager_std_dev",
+                        disabled=(st.session_state.get("manager_dist_type", "triangular") in ["triangular", "uniform"])
                     )
+                    if st.session_state.get("manager_dist_type", "triangular") in ["triangular", "uniform"]:
+                        st.caption("Not used for triangular/uniform distributions")
                 with col4:
                     dist_type = st.selectbox(
                         "Distribution Type",

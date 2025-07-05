@@ -7,7 +7,7 @@ from .state_machine_db import StateMachineDB
 from core.simulation_functions import run_simulation
 from .state_editor import validate_matrices
 from streamlit_javascript import st_javascript
-from .disease_configurations import get_disease_template, get_available_diseases
+from .disease_configurations import get_disease_template, get_available_diseases, get_disease_parameters
 
 def convert_graph_to_matrices(states, edges):
     """Convert graph representation to six matrices."""
@@ -103,60 +103,11 @@ def create_state_machine(states):
     
     st.header("Create A State Machine")
     
-    # Add disease selection and template application at the top
-    st.subheader("Disease Selection & Template")
-    
-    # Disease selection with templates
-    disease_options = get_available_diseases() + ["Custom Disease"]
-    
-    selected_disease = st.selectbox(
-        "Select Disease:",
-        options=disease_options,
-        key="disease_selection"
-    )
-    
-    # Custom disease name input
-    if selected_disease == "Custom Disease":
-        custom_disease_name = st.text_input(
-            "Enter Custom Disease Name:",
-            key="custom_disease_name"
-        )
-        disease_name = custom_disease_name if custom_disease_name else "Unknown"
-    else:
-        disease_name = selected_disease
-    
-    # Apply disease template if a predefined disease is selected
-    if selected_disease != "Custom Disease" and selected_disease in get_available_diseases():
-        template = get_disease_template(selected_disease)
-        if template and template['states']:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.info(f"📋 **{selected_disease} Template Available**: {template['description']}")
-            with col2:
-                if st.button(f"Apply {selected_disease} Template", key="apply_disease_template"):
-                    # Update states with template states
-                    st.session_state.states = template['states'].copy()
-                    st.success(f"✅ Applied {selected_disease} template with {len(template['states'])} states")
-                    st.rerun()
-            
-            # Show template info
-            with st.expander(f"View {selected_disease} Template Details", expanded=False):
-                st.write("**Predefined States:**")
-                for i, state in enumerate(template['states'], 1):
-                    st.write(f"{i}. {state}")
-                
-                st.write("**Typical Transitions:**")
-                for transition in template['typical_transitions']:
-                    st.write(f"• {transition}")
-        elif template:
-            st.warning(f"⚠️ {selected_disease} template is not yet defined. Please use the Disease Configurations tab to define it.")
-    
-    # Add mode selection for editing existing machines
-    st.markdown("---")
+    # Add mode selection for editing existing machines at the top
     st.subheader("Start New or Load Existing")
     mode = st.radio(
         "Choose your mode:",
-        options=["Create New State Machine", "Edit From Existing State Machine"],
+        options=["Create From Scratch", "Edit From Existing State Machine"],
         key="mode_selection"
     )
     
@@ -188,9 +139,15 @@ def create_state_machine(states):
                         st.session_state.graph_edges = selected_machine_data['edges']
                         st.session_state.demographics = []
                         for key, value in selected_machine_data['demographics'].items():
-                            # Check if this is a standard demographic (Sex, Age) or custom
-                            if key in ["Sex", "Age"]:
+                            # Check if this is a standard demographic (Sex, Age, Vaccination) or custom
+                            if key in ["Sex", "Age", "Vaccination"]:
                                 st.session_state.demographics.append({"key": key, "value": value})
+                            elif key.startswith("Disease_"):
+                                # This is a disease parameter, handle separately
+                                param_name = key.replace("Disease_", "").lower()
+                                if 'disease_parameters' not in st.session_state:
+                                    st.session_state.disease_parameters = {}
+                                st.session_state.disease_parameters[param_name] = value
                             else:
                                 # This is a custom demographic
                                 st.session_state.demographics.append({
@@ -209,7 +166,7 @@ def create_state_machine(states):
             st.warning("No existing state machines found. Please create a new one.")
             st.session_state.editing_mode = "new"
     
-    elif mode == "Create New State Machine":
+    elif mode == "Create From Scratch":
         if st.button("Start New State Machine"):
             # Clear session state for new machine
             st.session_state.graph_edges = []
@@ -220,27 +177,116 @@ def create_state_machine(states):
                 del st.session_state.editing_machine_id
             st.success("Started new state machine")
             st.rerun()
-  
     
-    st.write("""
-    First, select a disease and apply its template (or choose Custom Disease). Then, use the interface below to:
-    1. Add edges between states
-    2. Configure transition probabilities and timing
-    3. Visualize your state machine
-    4. Save your state machine with demographics and disease information
-    """)
-
-    # Remove Streamlit draw mode toggle
-    # (No draw mode, no JS edge creation, no st_javascript message handling)
-
+    # Add disease selection and template application
+    st.markdown("---")
+    st.subheader("Disease Selection & Template")
+    
+    # Disease selection with templates
+    disease_options = get_available_diseases() + ["Custom Disease"]
+    
+    selected_disease = st.selectbox(
+        "Select Disease:",
+        options=disease_options,
+        key="disease_selection"
+    )
+    
+    # Custom disease name input
+    if selected_disease == "Custom Disease":
+        custom_disease_name = st.text_input(
+            "Enter Custom Disease Name:",
+            key="custom_disease_name"
+        )
+        disease_name = custom_disease_name if custom_disease_name else "Unknown"
+        
+        # Add state editor for custom diseases
+        st.markdown("---")
+        st.subheader("Define States for Custom Disease")
+        st.write("Enter the states for your custom disease (one per line):")
+        
+        # Initialize states in session state if not exists
+        if 'states' not in st.session_state:
+            st.session_state.states = ["State1", "State2"]
+        if 'previous_states' not in st.session_state:
+            st.session_state.previous_states = st.session_state.states.copy()
+        
+        # State editing interface
+        states_text = "\n".join(st.session_state.states)
+        new_states_text = st.text_area("States:", value=states_text, height=150, key="custom_states_text")
+        
+        # Convert textarea to list of states
+        new_states = [state.strip() for state in new_states_text.split("\n") if state.strip()]
+        
+        # Update states if changed
+        if new_states != st.session_state.previous_states:
+            if len(new_states) >= 2:
+                st.session_state.states = new_states
+                st.session_state.previous_states = new_states.copy()
+                st.success(f"✅ Updated states: {len(new_states)} states defined")
+            else:
+                st.error("You must have at least 2 states!")
+    else:
+        disease_name = selected_disease
+    
+    # Apply disease template if a predefined disease is selected
+    if selected_disease != "Custom Disease" and selected_disease in get_available_diseases():
+        template = get_disease_template(selected_disease)
+        if template and template['states']:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.info(f"📋 **{selected_disease} Template Available**: {template['description']}")
+            with col2:
+                if st.button(f"Apply {selected_disease} Template", key="apply_disease_template"):
+                    # Update states with template states
+                    st.session_state.states = template['states'].copy()
+                    st.success(f"✅ Applied {selected_disease} template with {len(template['states'])} states")
+                    st.rerun()
+            
+            # Show template info
+            with st.expander(f"View {selected_disease} Template Details", expanded=False):
+                st.write("**Predefined States:**")
+                for i, state in enumerate(template['states'], 1):
+                    st.write(f"{i}. {state}")
+                
+                st.write("**Typical Transitions:**")
+                for transition in template['typical_transitions']:
+                    st.write(f"• {transition}")
+        elif template:
+            st.warning(f"⚠️ {selected_disease} template is not yet defined. Please use the Disease Configurations tab to define it.")
+    
+    # Add disease-specific parameters section
+    if selected_disease != "Custom Disease" and selected_disease in get_available_diseases():
+        disease_parameters = get_disease_parameters(selected_disease)
+        if disease_parameters:
+            st.markdown("---")
+            st.subheader("Disease-Specific Parameters")
+            st.write("Configure disease-specific parameters for your model:")
+            
+            # Initialize disease parameters in session state if not exists
+            if 'disease_parameters' not in st.session_state:
+                st.session_state.disease_parameters = {}
+            
+            # Create parameter inputs
+            for param_name, param_options in disease_parameters.items():
+                selected_value = st.selectbox(
+                    f"{param_name.title()}:",
+                    options=param_options,
+                    key=f"disease_param_{param_name}",
+                    index=0
+                )
+                st.session_state.disease_parameters[param_name] = selected_value
+    
     # Add edge creation interface
+    st.markdown("---")
+    st.subheader("Edge Management")
+    
     with st.expander("Add Edge", expanded=False):
         # State selection on first line
         col1, col2 = st.columns(2)
         with col1:
-            source_state = st.selectbox("From State", states, key="source_state")
+            source_state = st.selectbox("From State", st.session_state.states, key="source_state")
         with col2:
-            target_states = states[1:] if len(states) > 1 else states
+            target_states = st.session_state.states[1:] if len(st.session_state.states) > 1 else st.session_state.states
             target_state = st.selectbox("To State", target_states, key="target_state")
         
         # Other parameters on second line
@@ -498,9 +544,9 @@ def create_state_machine(states):
     
     # Build nodes list with persisted positions
     nodes = []
-    for i, state in enumerate(states):
+    for i, state in enumerate(st.session_state.states):
         # Use a more spread out layout instead of straight line
-        n = len(states)
+        n = len(st.session_state.states)
         if n <= 3:
             # For 3 or fewer nodes, use a triangle layout
             angle = (i * 2 * np.pi / n) - np.pi/2  # Start from top
@@ -527,9 +573,9 @@ def create_state_machine(states):
     elements = nodes + st.session_state.graph_edges
 
     # Convert graph to matrices and display them
-    matrices = convert_graph_to_matrices(states, st.session_state.graph_edges)
+    matrices = convert_graph_to_matrices(st.session_state.states, st.session_state.graph_edges)
     with st.expander("Matrix Representation", expanded=False):
-        display_matrices(matrices, states)
+        display_matrices(matrices, st.session_state.states)
 
     # Define the stylesheet
     stylesheet = [
@@ -718,8 +764,8 @@ def create_state_machine(states):
         with col1:
             demo_type = st.selectbox(
                 "Demographic Type",
-                options=["", "Sex", "Age", "Custom"],
-                index=0 if demo["key"] == "" else (1 if demo["key"] == "Sex" else 2 if demo["key"] == "Age" else 3),
+                options=["", "Sex", "Age", "Vaccination", "Custom"],
+                index=0 if demo["key"] == "" else (1 if demo["key"] == "Sex" else 2 if demo["key"] == "Age" else 3 if demo["key"] == "Vaccination" else 4),
                 key=f"demo_type_{i}"
             )
             st.session_state.demographics[i]["key"] = demo_type
@@ -736,6 +782,13 @@ def create_state_machine(states):
                     "Value",
                     options=["", "0-18", "19-64", "65+"],
                     index=0 if demo["value"] == "" else (1 if demo["value"] == "0-18" else 2 if demo["value"] == "19-64" else 3),
+                    key=f"demo_value_{i}"
+                )
+            elif demo_type == "Vaccination":
+                demo_value = st.selectbox(
+                    "Value",
+                    options=["", "Unvaccinated", "Partially", "Fully"],
+                    index=0 if demo["value"] == "" else (1 if demo["value"] == "Unvaccinated" else 2 if demo["value"] == "Partially" else 3),
                     key=f"demo_value_{i}"
                 )
             elif demo_type == "Custom":
@@ -780,7 +833,20 @@ def create_state_machine(states):
         elif demo["key"] and demo["value"]:
             demographics[demo["key"]] = demo["value"]
     
-    state_machine_name = f"{disease_name} | " + " | ".join([f"{key}={value}" for key, value in demographics.items()]) if demographics else f"{disease_name} | Default"
+    # Create state machine name with disease parameters
+    name_parts = [disease_name]
+    
+    # Add disease parameters to name
+    if 'disease_parameters' in st.session_state and st.session_state.disease_parameters:
+        for param_name, param_value in st.session_state.disease_parameters.items():
+            name_parts.append(f"{param_name}={param_value}")
+    
+    # Add demographics to name
+    if demographics:
+        for key, value in demographics.items():
+            name_parts.append(f"{key}={value}")
+    
+    state_machine_name = " | ".join(name_parts) if len(name_parts) > 1 else f"{disease_name} | Default"
 
     # Show different button text based on mode
     save_button_text = "Update State Machine" if st.session_state.editing_mode == "edit" else "Save State Machine"
@@ -788,7 +854,7 @@ def create_state_machine(states):
     if st.button(save_button_text):
         if state_machine_name:
             # Run validation
-            validation_issues = validate_matrices(states, st.session_state.graph_edges)
+            validation_issues = validate_matrices(st.session_state.states, st.session_state.graph_edges)
             if validation_issues:
                 st.error("❌ Validation failed. Please fix the following issues before saving:")
                 for issue in validation_issues:
@@ -798,7 +864,7 @@ def create_state_machine(states):
                 try:
                     state_machine_id = db.save_state_machine(
                         state_machine_name,
-                        states,
+                        st.session_state.states,
                         st.session_state.graph_edges,
                         demographics,
                         disease_name,

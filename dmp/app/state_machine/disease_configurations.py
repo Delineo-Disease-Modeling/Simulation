@@ -25,32 +25,40 @@ DISEASE_TEMPLATES = {
             "Hospitalized → Recovered",
             "ICU → Recovered",
             "ICU → Deceased"
-        ]
+        ],
+        "parameters": {
+            "variant": ["Delta", "Omicron"]
+        }
     },
     "Influenza": {
         "states": [],
         "description": "Influenza template - to be defined",
-        "typical_transitions": []
+        "typical_transitions": [],
+        "parameters": {}
     },
     "Ebola": {
         "states": [],
         "description": "Ebola template - to be defined",
-        "typical_transitions": []
+        "typical_transitions": [],
+        "parameters": {}
     },
     "Zika": {
         "states": [],
         "description": "Zika template - to be defined",
-        "typical_transitions": []
+        "typical_transitions": [],
+        "parameters": {}
     },
     "Measles": {
         "states": [],
         "description": "Measles template - to be defined",
-        "typical_transitions": []
+        "typical_transitions": [],
+        "parameters": {}
     },
     "Tuberculosis": {
         "states": [],
         "description": "Tuberculosis template - to be defined",
-        "typical_transitions": []
+        "typical_transitions": [],
+        "parameters": {}
     }
 }
 
@@ -96,6 +104,12 @@ def display_disease_configurations():
                         st.write("**Typical Transitions:**")
                         for transition in template['typical_transitions']:
                             st.write(f"• {transition}")
+                    
+                    # Display disease parameters if they exist
+                    if template.get('parameters'):
+                        st.write("**Disease Parameters:**")
+                        for param_name, param_options in template['parameters'].items():
+                            st.write(f"• **{param_name.title()}**: {', '.join(param_options)}")
                 else:
                     st.warning("⚠️ No states defined for this template yet.")
             
@@ -125,4 +139,9 @@ def display_disease_configurations():
 def get_disease_states(disease_name):
     """Get the states for a specific disease."""
     template = get_disease_template(disease_name)
-    return template['states'] if template else [] 
+    return template['states'] if template else []
+
+def get_disease_parameters(disease_name):
+    """Get the parameters for a specific disease."""
+    template = get_disease_template(disease_name)
+    return template.get('parameters', {}) if template else {} 
