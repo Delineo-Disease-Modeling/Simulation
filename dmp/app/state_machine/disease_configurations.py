@@ -14,7 +14,7 @@ DISEASE_TEMPLATES = {
             "Deceased",
             "Recovered"
         ],
-        "description": "COVID-19 state machine with standard progression from infection to recovery or death",
+        "description": "COVID-19 state machine framework with standard progression states and transitions. Apply this template to get the recommended structure, then configure the transition parameters with your own values.",
         "typical_transitions": [
             "Infected → Infectious_Asymptomatic",
             "Infected → Infectious_Symptomatic",
@@ -28,37 +28,134 @@ DISEASE_TEMPLATES = {
         ],
         "parameters": {
             "variant": ["Delta", "Omicron"]
-        }
+        },
+        "edges": [
+            {
+                "source": "Infected",
+                "target": "Infectious_Asymptomatic",
+                "transition_prob": 0.5,
+                "mean_time": 5.0,
+                "std_dev": 1.0,
+                "distribution_type": "triangular",
+                "min_cutoff": 0.0,
+                "max_cutoff": 6.0
+            },
+            {
+                "source": "Infected",
+                "target": "Infectious_Symptomatic",
+                "transition_prob": 0.5,
+                "mean_time": 5.0,
+                "std_dev": 1.0,
+                "distribution_type": "triangular",
+                "min_cutoff": 0.0,
+                "max_cutoff": 6.0
+            },
+            {
+                "source": "Infectious_Asymptomatic",
+                "target": "Recovered",
+                "transition_prob": 1.0,
+                "mean_time": 5.0,
+                "std_dev": 1.0,
+                "distribution_type": "triangular",
+                "min_cutoff": 0.0,
+                "max_cutoff": 6.0
+            },
+            {
+                "source": "Infectious_Symptomatic",
+                "target": "Hospitalized",
+                "transition_prob": 0.5,
+                "mean_time": 5.0,
+                "std_dev": 1.0,
+                "distribution_type": "triangular",
+                "min_cutoff": 0.0,
+                "max_cutoff": 6.0
+            },
+            {
+                "source": "Infectious_Symptomatic",
+                "target": "Recovered",
+                "transition_prob": 0.5,
+                "mean_time": 5.0,
+                "std_dev": 1.0,
+                "distribution_type": "triangular",
+                "min_cutoff": 0.0,
+                "max_cutoff": 6.0
+            },
+            {
+                "source": "Hospitalized",
+                "target": "ICU",
+                "transition_prob": 0.5,
+                "mean_time": 5.0,
+                "std_dev": 1.0,
+                "distribution_type": "triangular",
+                "min_cutoff": 0.0,
+                "max_cutoff": 6.0
+            },
+            {
+                "source": "Hospitalized",
+                "target": "Recovered",
+                "transition_prob": 0.5,
+                "mean_time": 5.0,
+                "std_dev": 1.0,
+                "distribution_type": "triangular",
+                "min_cutoff": 0.0,
+                "max_cutoff": 6.0
+            },
+            {
+                "source": "ICU",
+                "target": "Recovered",
+                "transition_prob": 0.5,
+                "mean_time": 5.0,
+                "std_dev": 1.0,
+                "distribution_type": "triangular",
+                "min_cutoff": 0.0,
+                "max_cutoff": 6.0
+            },
+            {
+                "source": "ICU",
+                "target": "Deceased",
+                "transition_prob": 0.5,
+                "mean_time": 5.0,
+                "std_dev": 1.0,
+                "distribution_type": "triangular",
+                "min_cutoff": 0.0,
+                "max_cutoff": 6.0
+            }
+        ]
     },
     "Influenza": {
         "states": [],
         "description": "Influenza template - to be defined",
         "typical_transitions": [],
-        "parameters": {}
+        "parameters": {},
+        "edges": []
     },
     "Ebola": {
         "states": [],
         "description": "Ebola template - to be defined",
         "typical_transitions": [],
-        "parameters": {}
+        "parameters": {},
+        "edges": []
     },
     "Zika": {
         "states": [],
         "description": "Zika template - to be defined",
         "typical_transitions": [],
-        "parameters": {}
+        "parameters": {},
+        "edges": []
     },
     "Measles": {
         "states": [],
         "description": "Measles template - to be defined",
         "typical_transitions": [],
-        "parameters": {}
+        "parameters": {},
+        "edges": []
     },
     "Tuberculosis": {
         "states": [],
         "description": "Tuberculosis template - to be defined",
         "typical_transitions": [],
-        "parameters": {}
+        "parameters": {},
+        "edges": []
     }
 }
 
@@ -144,4 +241,27 @@ def get_disease_states(disease_name):
 def get_disease_parameters(disease_name):
     """Get the parameters for a specific disease."""
     template = get_disease_template(disease_name)
-    return template.get('parameters', {}) if template else {} 
+    return template.get('parameters', {}) if template else {}
+
+def get_disease_edges(disease_name):
+    """Get the predefined edges for a specific disease."""
+    template = get_disease_template(disease_name)
+    if template and template.get('edges'):
+        # Convert to the format expected by the graph system
+        edges = []
+        for edge in template['edges']:
+            edges.append({
+                "data": {
+                    "source": edge["source"],
+                    "target": edge["target"],
+                    "transition_prob": edge["transition_prob"],
+                    "mean_time": edge["mean_time"],
+                    "std_dev": edge["std_dev"],
+                    "distribution_type": edge["distribution_type"],
+                    "min_cutoff": edge["min_cutoff"],
+                    "max_cutoff": edge["max_cutoff"],
+                    "label": f"p={edge['transition_prob']:.2f}\nμ={edge['mean_time']}\nσ={edge['std_dev']:.1f}\n{edge['distribution_type']}\nmin={edge['min_cutoff']:.1f}\nmax={edge['max_cutoff']:.1f}"
+                }
+            })
+        return edges
+    return [] 

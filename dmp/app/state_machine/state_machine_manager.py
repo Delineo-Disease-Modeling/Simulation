@@ -95,12 +95,13 @@ def manage_state_machines(states):
                 for state in st.session_state.states:
                     st.write(f"- {state}")
             
-            # Add visual state machine representation
-            st.markdown("---")
             
             # Use utility function for matrix representation
             matrices = render_matrix_representation(st.session_state.states, st.session_state.graph_edges)
             
+            # Add visual state machine representation
+            st.markdown("---")
+
             # Use utility function for graph visualization
             render_graph_visualization(st.session_state.states, st.session_state.graph_edges, st.session_state.node_positions)
             
