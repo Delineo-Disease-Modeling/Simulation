@@ -16,6 +16,30 @@ import csv
 
 curdir = os.path.dirname(os.path.abspath(__file__))
 
+class Maskingeffects: 
+    
+    MASK_EFFECTIVENESS = {
+        'source_control' : 0.7, # what should these values be?
+        'wearer_protection': 0.5, 
+        'both_masked' : 0.85, 
+    }
+
+    @staticmethod
+    def calculate_mask_transmission_modifier(infector, susceptible): 
+        base_modifier = 1.0 
+        infector_masked = getattr(infector, 'masked', False)
+        susceptible_masked = getattr(susceptible, 'masked', False)
+
+        if infector_masked and susceptible_masked: 
+            base_modifier *= (1 - Maskingeffects.MASK_EFFECTIVENESS['both_masked'])
+        elif infector_masked: 
+            base_modifier *= (1 - Maskingeffects.MASK_EFFECTIVENESS['source_control'])
+        elif susceptible_masked: 
+            base_modifier *= (1 - Maskingeffects.MASK_EFFECTIVENESS['wearer_protection'])
+        return base_modifier
+        
+
+
 class SimulationLogger: 
     """Logging system for simulation"""
 
@@ -591,6 +615,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         if random.random() < simulator.iv_weights['vaccine']:
             min_doses = SIMULATION["vaccination_options"]["min_doses"]
             max_doses = SIMULATION["vaccination_options"]["max_doses"]
+            doses = random.randint(min_doses, max_doses)
             person.set_vaccinated(VaccinationState(random.randint(min_doses, max_doses)))
             if simulator.enable_logging and simulator.logger: 
                 simulator.logger.log_intervention_effect(person, 'vaccine', f'received_{doses}_doses', 0)

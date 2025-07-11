@@ -93,7 +93,7 @@ class Person:
                 elif timeline.start <= curtime:
                     self.states[disease] = self.states[disease] | state
                     if state == InfectionState.REMOVED or state == InfectionState.RECOVERED or state == InfectionState.HOSPITALIZED:
-                        self.invisible = True
+                        self.invisible = True # means agent cannot get reinfected 
 
             
 

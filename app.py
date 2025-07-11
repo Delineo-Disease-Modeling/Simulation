@@ -31,7 +31,7 @@ def initialize_dmp_api():
 
 @app.route("/simulation/", methods=['POST', 'GET'])
 @cross_origin()
-def run_simulation_endpoint(interventions_user):
+def run_simulation_endpoint():
     try:
         request.get_json(force=True)
     except BadRequest:
@@ -56,6 +56,7 @@ def run_simulation_endpoint(interventions_user):
     try:
         return simulate.run_simulator(location, length, interventions)
     except Exception as e:
+        print("Simulation error:", repr(e))
         return jsonify({"error": str(e)}), 400
 
 

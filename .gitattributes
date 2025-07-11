@@ -1,0 +1,2 @@
+simulation_logs/location_logs.csv filter=lfs diff=lfs merge=lfs -text
+simulation_logs/person_logs.csv filter=lfs diff=lfs merge=lfs -text

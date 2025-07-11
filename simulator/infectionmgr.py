@@ -116,6 +116,8 @@ class InfectionManager:
                         continue
                     if p.states.get(disease) is not None and InfectionState.INFECTED in p.states[disease]:
                         continue
+
+                    mask_modifier = self.calculate_mask_transmission_modifier(i, p)
                     
                     # Assuming CAT function can h andle the matrix without needing to specify a disease
                     if CAT(p, True, num_timesteps, 7e3):
@@ -134,6 +136,11 @@ class InfectionManager:
                         
                         if file is not None:
                             file.write(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}\n')
+
+    def calculate_mask_transmission_modifier(self, infector, susceptible):
+        from .simulate import Maskingeffects 
+        return Maskingeffects.calculate_mask_transmission_modifier(infector, susceptible)
+    
 
     def create_timeline(self, person, disease, curtime):
         """Create a disease timeline for a newly infected person using the DMP API"""
