@@ -61,6 +61,15 @@ class Person:
     def get_masked(self):
         return self.interventions['mask']
     
+    def is_masked(self):
+        """Check if this person is wearing a mask"""
+        return getattr(self, 'masked', False)
+    
+    def toggle_mask(self):
+        """Toggle the masking status"""
+        self.masked = not getattr(self, 'masked', False)
+        return self.masked
+    
     def set_vaccinated(self, state):
         self.interventions['vaccine'] = state
         
@@ -74,6 +83,23 @@ class Person:
                 return True
         
         return False
+    
+    def update_mask_compliance(self, location_mask_policy=False, compliance_rate=1.0):
+        """
+        Update mask wearing based on location policy and personal compliance
+        
+        Args:
+            location_mask_policy: Whether the current location requires masks
+            compliance_rate: Probability of complying with mask policies (0.0-1.0)
+        """
+        if location_mask_policy:
+            # If location requires masks, comply based on compliance rate
+            import random
+            self.masked = random.random() < compliance_rate
+        else:
+            # If no policy, maintain current status or use personal preference
+            # Could extend this to include personal mask preference
+            pass
     
     def update_state(self, curtime, variants):
         '''
