@@ -14,7 +14,7 @@ DISEASE_TEMPLATES = {
             "Deceased",
             "Recovered"
         ],
-        "description": "COVID-19 state machine framework with standard progression states and transitions. Apply this template to get the recommended structure, then configure the transition parameters with your own values.",
+        "description": "COVID-19 state machine with realistic default parameters based on epidemiological research. This template provides a general COVID-19 progression model that can be customized for specific variants or scenarios.",
         "typical_transitions": [
             "Infected → Infectious_Asymptomatic",
             "Infected → Infectious_Symptomatic",
@@ -33,92 +33,92 @@ DISEASE_TEMPLATES = {
             {
                 "source": "Infected",
                 "target": "Infectious_Asymptomatic",
-                "transition_prob": 0.5,
+                "transition_prob": 0.4,
                 "mean_time": 5.0,
-                "std_dev": 1.0,
+                "std_dev": 1.5,
                 "distribution_type": "triangular",
-                "min_cutoff": 0.0,
-                "max_cutoff": 6.0
+                "min_cutoff": 3.0,
+                "max_cutoff": 8.0
             },
             {
                 "source": "Infected",
                 "target": "Infectious_Symptomatic",
-                "transition_prob": 0.5,
+                "transition_prob": 0.6,
                 "mean_time": 5.0,
-                "std_dev": 1.0,
+                "std_dev": 1.5,
                 "distribution_type": "triangular",
-                "min_cutoff": 0.0,
-                "max_cutoff": 6.0
+                "min_cutoff": 3.0,
+                "max_cutoff": 8.0
             },
             {
                 "source": "Infectious_Asymptomatic",
                 "target": "Recovered",
-                "transition_prob": 1.0,
-                "mean_time": 5.0,
-                "std_dev": 1.0,
+                "transition_prob": 0.95,
+                "mean_time": 10.0,
+                "std_dev": 2.0,
                 "distribution_type": "triangular",
-                "min_cutoff": 0.0,
-                "max_cutoff": 6.0
+                "min_cutoff": 7.0,
+                "max_cutoff": 14.0
             },
             {
                 "source": "Infectious_Symptomatic",
                 "target": "Hospitalized",
-                "transition_prob": 0.5,
-                "mean_time": 5.0,
-                "std_dev": 1.0,
+                "transition_prob": 0.15,
+                "mean_time": 10.0,
+                "std_dev": 2.0,
                 "distribution_type": "triangular",
-                "min_cutoff": 0.0,
-                "max_cutoff": 6.0
+                "min_cutoff": 7.0,
+                "max_cutoff": 14.0
             },
             {
                 "source": "Infectious_Symptomatic",
                 "target": "Recovered",
-                "transition_prob": 0.5,
-                "mean_time": 5.0,
-                "std_dev": 1.0,
+                "transition_prob": 0.85,
+                "mean_time": 10.0,
+                "std_dev": 2.0,
                 "distribution_type": "triangular",
-                "min_cutoff": 0.0,
-                "max_cutoff": 6.0
+                "min_cutoff": 7.0,
+                "max_cutoff": 14.0
             },
             {
                 "source": "Hospitalized",
                 "target": "ICU",
-                "transition_prob": 0.5,
-                "mean_time": 5.0,
-                "std_dev": 1.0,
+                "transition_prob": 0.25,
+                "mean_time": 7.0,
+                "std_dev": 2.0,
                 "distribution_type": "triangular",
-                "min_cutoff": 0.0,
-                "max_cutoff": 6.0
+                "min_cutoff": 4.0,
+                "max_cutoff": 10.0
             },
             {
                 "source": "Hospitalized",
                 "target": "Recovered",
-                "transition_prob": 0.5,
-                "mean_time": 5.0,
-                "std_dev": 1.0,
+                "transition_prob": 0.75,
+                "mean_time": 7.0,
+                "std_dev": 2.0,
                 "distribution_type": "triangular",
-                "min_cutoff": 0.0,
-                "max_cutoff": 6.0
+                "min_cutoff": 4.0,
+                "max_cutoff": 10.0
             },
             {
                 "source": "ICU",
                 "target": "Recovered",
-                "transition_prob": 0.5,
-                "mean_time": 5.0,
-                "std_dev": 1.0,
+                "transition_prob": 0.7,
+                "mean_time": 14.0,
+                "std_dev": 4.0,
                 "distribution_type": "triangular",
-                "min_cutoff": 0.0,
-                "max_cutoff": 6.0
+                "min_cutoff": 10.0,
+                "max_cutoff": 21.0
             },
             {
                 "source": "ICU",
                 "target": "Deceased",
-                "transition_prob": 0.5,
-                "mean_time": 5.0,
-                "std_dev": 1.0,
+                "transition_prob": 0.3,
+                "mean_time": 14.0,
+                "std_dev": 4.0,
                 "distribution_type": "triangular",
-                "min_cutoff": 0.0,
-                "max_cutoff": 6.0
+                "min_cutoff": 10.0,
+                "max_cutoff": 21.0
             }
         ]
     },

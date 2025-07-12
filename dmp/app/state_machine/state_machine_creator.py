@@ -32,6 +32,10 @@ def create_state_machine(states):
         st.session_state.current_step = 1
     if 'disease_name' not in st.session_state:
         st.session_state.disease_name = "COVID-19"
+    if 'template_applied' not in st.session_state:
+        st.session_state.template_applied = False
+    if 'applied_template_name' not in st.session_state:
+        st.session_state.applied_template_name = None
     
     st.header("Create A State Machine")
     
@@ -39,8 +43,8 @@ def create_state_machine(states):
     workflow_steps = {
         1: "Choose Mode",
         2: "Disease & Parameters", 
-        3: "Edge Management",
-        4: "Demographics & Save"
+        3: "Demographics",
+        4: "Edge Management & Save"
     }
     
     # Progress indicator
@@ -135,6 +139,8 @@ def create_state_machine(states):
                 st.session_state.demographics = []
                 st.session_state.editing_mode = "new"
                 st.session_state.disease_name = "COVID-19"
+                st.session_state.template_applied = False
+                st.session_state.applied_template_name = None
                 if 'editing_machine_id' in st.session_state:
                     del st.session_state.editing_machine_id
                 st.session_state.current_step = 2
@@ -201,8 +207,22 @@ def create_state_machine(states):
         else:
             st.session_state.disease_name = selected_disease
         
-        # Apply disease template if a predefined disease is selected
-        if selected_disease != "Custom Disease" and selected_disease in get_available_diseases():
+        # Show template applied indicator
+        if st.session_state.template_applied and st.session_state.applied_template_name:
+            st.success(f"✅ **{st.session_state.applied_template_name} Template Applied**")
+            st.info(f"📋 **Template Status**: Using predefined states and edges from {st.session_state.applied_template_name} template. You can modify the parameters but the structure is based on the template.")
+            
+            # Add option to clear template
+            if st.button("Clear Template (Start Fresh)", key="clear_template"):
+                st.session_state.template_applied = False
+                st.session_state.applied_template_name = None
+                st.session_state.states = ["State1", "State2"]
+                st.session_state.graph_edges = []
+                st.success("Template cleared. You can now create a custom state machine.")
+                st.rerun()
+        
+        # Apply disease template if a predefined disease is selected (only for new machines)
+        if selected_disease != "Custom Disease" and selected_disease in get_available_diseases() and st.session_state.editing_mode != "edit":
             template = get_disease_template(selected_disease)
             if template and template['states']:
                 col1, col2 = st.columns([3, 1])
@@ -219,6 +239,8 @@ def create_state_machine(states):
                             st.success(f"✅ Applied {selected_disease} template with {len(template['states'])} states and {len(predefined_edges)} predefined edges")
                         else:
                             st.success(f"✅ Applied {selected_disease} template with {len(template['states'])} states")
+                        st.session_state.template_applied = True
+                        st.session_state.applied_template_name = selected_disease
                         st.rerun()
                 
                 # Show template info
@@ -276,79 +298,19 @@ def create_state_machine(states):
                 st.session_state.current_step = 1
                 st.rerun()
         with col3:
-            if st.button("Next: Edge Management →"):
+            if st.button("Next: Demographics →"):
                 st.session_state.current_step = 3
                 st.rerun()
     
-    # Step 3: Edge Management with Visualization
+    # Step 3: Demographics
     elif st.session_state.current_step == 3:
-        st.subheader("Step 3: Edge Management")
-        st.write("Define the transitions between states and visualize your state machine.")
+        st.subheader("Step 3: Demographics")
+        st.write("Configure demographic parameters for your state machine.")
         
-        # Show current states for reference
-        if 'states' in st.session_state and st.session_state.states:
-            with st.expander("Current States", expanded=False):
-                for i, state in enumerate(st.session_state.states, 1):
-                    st.write(f"{i}. {state}")
-        
-        # Use utility functions for edge management
-        render_add_edge_section(st.session_state.states, st.session_state.graph_edges, "creator_add")
-        render_edit_edge_section(st.session_state.graph_edges, "creator_edit")
-        render_remove_edge_section(st.session_state.graph_edges, "creator_remove")
-        
-        # Show current edges
-        if st.session_state.graph_edges:
-            st.write("**Current Edges:**")
-            for edge in st.session_state.graph_edges:
-                st.write(f"• {edge['data']['source']} → {edge['data']['target']} (Rate: {edge['data'].get('transition_prob', 1.0)})")
-        
-        # Graph visualization
-        st.markdown("---")
-        st.write("**Visual Representation:**")
-        
-        # Use utility function for matrix representation
-        matrices = render_matrix_representation(st.session_state.states, st.session_state.graph_edges)
-
-        # Use utility function for graph visualization
-        render_graph_visualization(st.session_state.states, st.session_state.graph_edges, st.session_state.node_positions)
-
-        # Listen for node position updates from JS and persist them (single st_javascript call)
-        msg = st_javascript("""
-            new Promise((resolve) => {
-                window.addEventListener("message", (event) => {
-                    if (event.data && event.data.type === "node_position") {
-                        resolve(event.data);
-                    }
-                }, { once: true });
-            });
-        """)
-
-        if msg and msg.get("type") == "node_position":
-            node_id = msg["id"]
-            x = msg["x"]
-            y = msg["y"]
-            st.session_state.node_positions[node_id] = {"x": x, "y": y}
-            st.rerun()
-
-        # Display clicked element info if available
-        if st.session_state.clicked_element:
-            st.write("Selected element:", st.session_state.clicked_element)
-        
-        # Navigation buttons
-        col1, col2, col3 = st.columns([1, 1, 1])
-        with col1:
-            if st.button("← Back to Disease Config"):
-                st.session_state.current_step = 2
-                st.rerun()
-        with col3:
-            if st.button("Next: Demographics & Save →"):
-                st.session_state.current_step = 4
-                st.rerun()
-    
-    # Step 4: Demographics and Save
-    elif st.session_state.current_step == 4:
-        st.subheader("Step 4: Demographics & Save")
-        st.write("Configure demographic parameters and save your state machine.")
+        # Show template status if template is applied
+        if st.session_state.template_applied and st.session_state.applied_template_name:
+            st.success(f"✅ **{st.session_state.applied_template_name} Template Active**")
+            st.info(f"📋 **Template Structure**: You're working with the {st.session_state.applied_template_name} template. The disease name and structure will reflect the template.")
         
         # Dynamic demographic inputs
         st.write("**Demographic Values:**")
@@ -424,6 +386,76 @@ def create_state_machine(states):
                     st.session_state.demographics.pop(i)
                     st.rerun()
         
+        # Navigation buttons
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col1:
+            if st.button("← Back to Disease Config"):
+                st.session_state.current_step = 2
+                st.rerun()
+        with col3:
+            if st.button("Next: Edge Management →"):
+                st.session_state.current_step = 4
+                st.rerun()
+    
+    # Step 4: Edge Management and Save
+    elif st.session_state.current_step == 4:
+        st.subheader("Step 4: Edge Management & Save")
+        st.write("Define the transitions between states, visualize your state machine, and save it.")
+        
+        # Show template status if template is applied
+        if st.session_state.template_applied and st.session_state.applied_template_name:
+            st.success(f"✅ **{st.session_state.applied_template_name} Template Active**")
+            st.info(f"📋 **Template Structure**: You're working with the {st.session_state.applied_template_name} template. The states and edge structure are predefined, but you can modify transition probabilities and timing parameters.")
+        
+        # Show current states for reference
+        if 'states' in st.session_state and st.session_state.states:
+            with st.expander("Current States", expanded=False):
+                for i, state in enumerate(st.session_state.states, 1):
+                    st.write(f"{i}. {state}")
+        
+        # Use utility functions for edge management
+        render_add_edge_section(st.session_state.states, st.session_state.graph_edges, "creator_add")
+        render_edit_edge_section(st.session_state.graph_edges, "creator_edit")
+        render_remove_edge_section(st.session_state.graph_edges, "creator_remove")
+        
+        # Show current edges
+        if st.session_state.graph_edges:
+            st.write("**Current Edges:**")
+            for edge in st.session_state.graph_edges:
+                st.write(f"• {edge['data']['source']} → {edge['data']['target']} (Rate: {edge['data'].get('transition_prob', 1.0)})")
+        
+        # Graph visualization
+        st.markdown("---")
+        st.write("**Visual Representation:**")
+        
+        # Use utility function for matrix representation
+        matrices = render_matrix_representation(st.session_state.states, st.session_state.graph_edges)
+
+        # Use utility function for graph visualization
+        render_graph_visualization(st.session_state.states, st.session_state.graph_edges, st.session_state.node_positions)
+
+        # Listen for node position updates from JS and persist them (single st_javascript call)
+        msg = st_javascript("""
+            new Promise((resolve) => {
+                window.addEventListener("message", (event) => {
+                    if (event.data && event.data.type === "node_position") {
+                        resolve(event.data);
+                    }
+                }, { once: true });
+            });
+        """)
+
+        if msg and msg.get("type") == "node_position":
+            node_id = msg["id"]
+            x = msg["x"]
+            y = msg["y"]
+            st.session_state.node_positions[node_id] = {"x": x, "y": y}
+            st.rerun()
+
+        # Display clicked element info if available
+        if st.session_state.clicked_element:
+            st.write("Selected element:", st.session_state.clicked_element)
+        
         # Save interface
         st.markdown("---")
         st.write("**Save State Machine:**")
@@ -458,7 +490,7 @@ def create_state_machine(states):
         # Navigation and save buttons
         col1, col2, col3 = st.columns([1, 1, 1])
         with col1:
-            if st.button("← Back to Edge Management"):
+            if st.button("← Back to Demographics"):
                 st.session_state.current_step = 3
                 st.rerun()
         with col2:
@@ -468,6 +500,8 @@ def create_state_machine(states):
                 st.session_state.demographics = []
                 st.session_state.editing_mode = "new"
                 st.session_state.disease_name = "COVID-19"
+                st.session_state.template_applied = False
+                st.session_state.applied_template_name = None
                 if 'editing_machine_id' in st.session_state:
                     del st.session_state.editing_machine_id
                 st.rerun()
