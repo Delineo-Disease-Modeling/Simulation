@@ -116,15 +116,18 @@ def calculate_susceptible_variables(p, indoor, time):
     return calculate_inhalation_rate(p, indoor) * calculate_frac_filtered(p) * time
 
 # times all the left side of the equation
-def CAT (p, indoor, num_time_steps, Nid):
+def CAT (p, indoor, num_time_steps, transmission_prob):
     left = calculate_host_variables(p) * calculate_environment_variables(p, num_time_steps) * calculate_susceptible_variables(p, indoor, num_time_steps)
     # print(f"host {calculate_host_variables(p)}")
     # print(f"env {calculate_environment_variables(p, num_time_steps)}")
     # print(f"sus {calculate_susceptible_variables(p, indoor, num_time_steps)}")
     # print(f"left {left}")
     # print(f"right {Nid}")
-    if left <= Nid: # threhold for infection
+    '''if left <= Nid: # threhold for infection
         return False
     else:
-        return True
+        return True'''
+    chance = min(left / transmission_prob, 1.0)
+    return random.random() < chance
+
 
