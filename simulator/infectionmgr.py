@@ -118,9 +118,11 @@ class InfectionManager:
                         continue
 
                     mask_modifier = self.calculate_mask_transmission_modifier(i, p)
+                    base_transmission_prob = 7e3 * mask_modifier
+
                     
                     # Assuming CAT function can h andle the matrix without needing to specify a disease
-                    if CAT(p, True, num_timesteps, 7e3):
+                    if CAT(p, True, num_timesteps, base_transmission_prob):
                         new_infections.append(disease)
                         
                         if newlyInfected.get(disease) == None:
