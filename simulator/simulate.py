@@ -617,8 +617,10 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         # Assign masked and vaccination states
         if random.random() < simulator.iv_weights['mask']:
             person.set_masked(True)
+            print(f"Person {person.id} assigned mask")
             if simulator.enable_logging and simulator.logger: 
                 simulator.logger.log_intervention_effect(person, 'mask', 'complied', 0)
+
 
         
         if random.random() < simulator.iv_weights['vaccine']:
@@ -729,8 +731,11 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
             pre_infection_states = {}
             if simulator.enable_logging and simulator.logger: 
                 for person in simulator.people.values(): 
-                    pre_infection_states[person.id] = {variant: person.states.get(variant, 0) for variant in variants}
-
+                    # pre_infection_states[person.id] = {variant: person.states.get(variant, 0) for variant in variants}
+                    pre_infection_states[person.id] = {
+                        variant: person.states.get(variant, InfectionState.SUSCEPTIBLE) 
+                        for variant in variants
+                    }
                 
             infectionmgr.run_model(1, None, last_timestep, variantInfected, newlyInfected)
 
@@ -738,7 +743,14 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                 for person in simulator.people.values(): 
                     for variant in variants: 
                         old_state = pre_infection_states[person.id][variant]
-                        new_state = person.states.get(variant, 0)
+                        new_state = person.states.get(variant, InfectionState.SUSCEPTIBLE)  # Use enum default
+                        
+                        # Ensure both states are InfectionState enums
+                        if not isinstance(old_state, InfectionState):
+                            old_state = InfectionState.SUSCEPTIBLE
+                        if not isinstance(new_state, InfectionState):
+                            new_state = InfectionState.SUSCEPTIBLE
+                            
                         if not (old_state & InfectionState.INFECTED) and (new_state & InfectionState.INFECTED):
                             # Try to identify the infector (simplified - could be enhanced)
                             infector = None
@@ -747,8 +759,12 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                             # Look for infectious people in the same location
                             if location and hasattr(location, 'population'):
                                 for potential_infector in location.population:
+                                    infector_state = potential_infector.states.get(variant, InfectionState.SUSCEPTIBLE)
+                                    if not isinstance(infector_state, InfectionState):
+                                        infector_state = InfectionState.SUSCEPTIBLE
+                                        
                                     if (potential_infector != person and 
-                                        potential_infector.states.get(variant, 0) & InfectionState.INFECTIOUS):
+                                        infector_state & InfectionState.INFECTIOUS):
                                         infector = potential_infector
                                         break
                             simulator.logger.log_infection_event(person, infector, location, variant, last_timestep)

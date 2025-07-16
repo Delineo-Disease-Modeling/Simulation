@@ -118,7 +118,7 @@ class InfectionManager:
                         continue
 
                     mask_modifier = self.calculate_mask_transmission_modifier(i, p)
-                    base_transmission_prob = 7e3 * mask_modifier
+                    base_transmission_prob = 7e3 * (1 - mask_modifier)
 
                     
                     # Assuming CAT function can h andle the matrix without needing to specify a disease

@@ -1,10 +1,10 @@
 === Simulation Summary Report ===
 
-Total people: 6
+Total people: 2
 Total infections: 2
 Total movements: 2112
 
 Intervention Events:
-  lockdown: 667 events
-  mask: 4108 events
-  vaccine: 5062 events
+  lockdown: 5 events
+  mask: 1075 events
+  vaccine: 4342 events
