@@ -49,17 +49,17 @@ class Person:
         self.invisible = False
         self.states = {}
         self.timeline = {}
+        self.masked = False
         self.interventions = {
-            'mask': False,
             'vaccine': VaccinationState.NONE
         }
         self.vaccination_state = 0
     
     def set_masked(self, masked):
-        self.interventions['mask'] = masked
+        self.masked = True
     
     def get_masked(self):
-        return self.interventions['mask']
+        return getattr(self, 'masked', False)
     
     def is_masked(self):
         """Check if this person is wearing a mask"""
