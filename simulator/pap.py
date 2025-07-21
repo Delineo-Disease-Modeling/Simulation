@@ -4,7 +4,7 @@ import yaml
 import json
 
 import random
-random.seed(2)
+# random.seed(2)
 
 from enum import Flag, Enum
 

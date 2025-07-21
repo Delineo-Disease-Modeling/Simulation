@@ -2,9 +2,4 @@
 
 Total people: 2
 Total infections: 2
-Total movements: 4224
-
-Intervention Events:
-  lockdown: 9 events
-  mask: 56 events
-  vaccine: 55 events
+Total movements: 211200
