@@ -169,10 +169,9 @@ def CAT (p, indoor, num_time_steps, transmission_prob):
         return True'''
     chance = min(left / transmission_prob, 1.0)
     return random.random() < chance """
-
-""" def CAT(p, indoor, num_time_steps, transmission_prob, infector_masked=False, susceptible_masked=False):
+def CAT(p, indoor, num_time_steps, transmission_prob, infector_masked=False, susceptible_masked=False):
     
-    Calculate transmission probability
+    """Calculate transmission probability
     
     Args:
         p: susceptible person
@@ -180,7 +179,7 @@ def CAT (p, indoor, num_time_steps, transmission_prob):
         num_time_steps: number of time steps
         transmission_prob: base transmission probability (should already include mask effects)
         infector_masked: whether infector is masked (for logging/debugging)
-        susceptible_masked: whether susceptible is masked (for logging/debugging)
+        susceptible_masked: whether susceptible is masked (for logging/debugging)"""
     
     # Since mask effects are already applied in transmission_prob, 
     # we bypass mask calculations here to avoid double application
@@ -201,14 +200,14 @@ def CAT (p, indoor, num_time_steps, transmission_prob):
         print(f"  Susceptible masked: {susceptible_masked}")
     
     chance = min(left / transmission_prob, 1.0)
-    return random.random() < chance """
+    return random.random() < chance 
 
-def CAT(p, indoor, num_time_steps, transmission_prob, infector_masked=False, susceptible_masked=False):
-    if transmission_prob <= 0:
-        return False
+# def CAT(p, indoor, num_time_steps, transmission_prob, infector_masked=False, susceptible_masked=False):
+#     if transmission_prob <= 0:
+#         return False
     
-    # Use a simple calculation without mask effects since they're already in transmission_prob
-    left = 1.0  # Simplified for testing
+#     # Use a simple calculation without mask effects since they're already in transmission_prob
+#     left = 1.0  # Simplified for testing
     
-    chance = min(left / transmission_prob, 1.0)
-    return random.random() < chance
+#     chance = min(left / transmission_prob, 1.0)
+#     return random.random() < chance
