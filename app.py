@@ -49,8 +49,15 @@ def run_simulation_endpoint():
     interventions = {}
     
     # Build interventions dict from request, using defaults for missing values
-    for key in SIMULATION["default_interventions"]:
-        interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
+    if not request.json or not any(key in request.json for key in SIMULATION["default_interventions"]):
+        for key in SIMULATION["default_interventions"]:
+            interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
+        print("Using default interventions:", interventions)
+    # if the interventions are provided from rerunner.py (AI-counterfactual-analysis repo/src/sparser/rerunner.py), use those 
+    elif isinstance(request.json, dict):
+        interventions = request.json
+        print("Using provided interventions:", interventions)
+        
     
 
     try:

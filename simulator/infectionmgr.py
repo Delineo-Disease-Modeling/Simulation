@@ -82,6 +82,63 @@ class InfectionManager:
             
     #         # print(len(all_p))
 
+    # def run_model(self, num_timesteps=4, file=None, curtime=0, variantInfected={}, newlyInfected={}):
+    #     if file is not None:
+    #         file.write(f'====== TIMESTEP {curtime} ======\n')
+    #         for variant in variantInfected.keys():
+    #             infected_ids = [i.id for i in self.infected if variant in i.states and i.states[variant] != InfectionState.SUSCEPTIBLE]
+    #             file.write(f'{variant}: {infected_ids}\n')
+    #             file.write(f"{variant} count: {len(infected_ids)}\n")
+
+    #     # Update the infection counts for each variant
+    #     for i in self.infected:
+    #         for disease in variantInfected.keys():
+    #             if disease in i.states and i.states[disease] != InfectionState.SUSCEPTIBLE:
+    #                 variantInfected[disease][i.id] = int(i.states[disease].value)
+
+    #     # Update the state of each person based on the current time
+    #     for i in self.infected:
+    #         i.update_state(curtime, self.matrices_dict.keys())
+
+    #     # Evaluate the possibility of new infections
+    #     for i in self.infected:
+    #         if i.invisible:
+    #             continue
+
+    #         for p in i.location.population:
+    #             if i == p or p.invisible:
+    #                 continue
+
+    #             new_infections = []
+
+    #             for disease, state in i.states.items():
+    #                 if InfectionState.INFECTIOUS not in state:
+    #                     continue
+    #                 if p.states.get(disease) is not None and InfectionState.INFECTED in p.states[disease]:
+    #                     continue
+
+    #                 mask_modifier = self.calculate_mask_transmission_modifier(i, p)
+    #                 base_transmission_prob = 7e3 * (1 - mask_modifier)
+
+                    
+    #                 # Assuming CAT function can h andle the matrix without needing to specify a disease
+    #                 if CAT(p, True, num_timesteps, base_transmission_prob):
+    #                     new_infections.append(disease)
+                        
+    #                     if newlyInfected.get(disease) == None:
+    #                         newlyInfected[disease] = {}
+    #                     newlyInfected[disease][str(i.id)] = [ *newlyInfected.get(str(i.id), []), str(p.id) ]
+                        
+    #                     break
+
+    #             for disease in new_infections:
+    #                 self.infected.append(p)  # Add to list of infected regardless
+    #                 if len(new_infections) == 1 or self.multidisease:
+    #                     self.create_timeline(p, disease, curtime)
+                        
+    #                     if file is not None:
+    #                         file.write(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}\n')
+    
     def run_model(self, num_timesteps=4, file=None, curtime=0, variantInfected={}, newlyInfected={}):
         if file is not None:
             file.write(f'====== TIMESTEP {curtime} ======\n')
@@ -112,27 +169,45 @@ class InfectionManager:
                 new_infections = []
 
                 for disease, state in i.states.items():
+                    # Check if the infector is infectious with this disease
                     if InfectionState.INFECTIOUS not in state:
                         continue
-                    if p.states.get(disease) is not None and InfectionState.INFECTED in p.states[disease]:
+                    
+                    # Check if the susceptible person is already infected with this disease
+                    if p.states.get(disease) is not None and InfectionState.SUSCEPTIBLE not in p.states[disease]:
                         continue
 
-                    mask_modifier = self.calculate_mask_transmission_modifier(i, p)
-                    base_transmission_prob = 7e3 * (1 - mask_modifier)
-
+                    # Get mask status for both people
+                    # infector_masked = getattr(i, 'masked', False)
+                    infector_masked = i.is_masked()
+                    susceptible_masked = p.is_masked()
                     
-                    # Assuming CAT function can h andle the matrix without needing to specify a disease
-                    if CAT(p, True, num_timesteps, base_transmission_prob):
+                    # Use base transmission probability without pre-applying mask effects
+                    # Let CAT handle mask effects internally
+                    base_transmission_prob = 7e3
+                    
+                    # Call CAT with all required parameters
+                    if CAT(p, True, num_timesteps, base_transmission_prob, infector_masked, susceptible_masked):
+                        print("New infection detected, infector_masked: {infector_masked}, susceptible_masked: {susceptible_masked}")
                         new_infections.append(disease)
                         
-                        if newlyInfected.get(disease) == None:
+                        # Track newly infected individuals
+                        if disease not in newlyInfected:
                             newlyInfected[disease] = {}
-                        newlyInfected[disease][str(i.id)] = [ *newlyInfected.get(str(i.id), []), str(p.id) ]
+                        if str(i.id) not in newlyInfected[disease]:
+                            newlyInfected[disease][str(i.id)] = []
+                        newlyInfected[disease][str(i.id)].append(str(p.id))
                         
+                        # Break to prevent multiple infections from the same infector in this timestep
                         break
 
+                # Process new infections
                 for disease in new_infections:
-                    self.infected.append(p)  # Add to list of infected regardless
+                    # Only add person to infected list if they're not already in it
+                    if p not in self.infected:
+                        self.infected.append(p)
+                    
+                    # Create timeline for single disease or if multidisease is enabled
                     if len(new_infections) == 1 or self.multidisease:
                         self.create_timeline(p, disease, curtime)
                         
