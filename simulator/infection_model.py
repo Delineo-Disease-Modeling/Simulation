@@ -354,6 +354,8 @@ def CAT(p, indoor, num_time_steps, transmission_prob, infector_masked=False, sus
     if transmission_prob <= 0:
         return False
     
+    return random.random() < 0.8
+    
     # Apply masking effects if they haven't been applied yet
     if transmission_prob >= 0.001:  # Assuming masks haven't been applied to high base rates
         mask_modifier = 1.0

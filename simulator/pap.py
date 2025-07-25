@@ -56,7 +56,7 @@ class Person:
         self.vaccination_state = 0
     
     def set_masked(self, masked):
-        self.masked = True
+        self.masked = masked
     
     def get_masked(self):
         return getattr(self, 'masked', False)
