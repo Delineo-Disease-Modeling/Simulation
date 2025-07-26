@@ -215,7 +215,7 @@
 # ANALYSIS OF INFECTION MODEL CODE AND INTEGRATION ISSUES
 
 # CORRECTED INFECTION MODEL CODE
-from .pap import InfectionState
+from ..pap import InfectionState
 import math
 
 import random
