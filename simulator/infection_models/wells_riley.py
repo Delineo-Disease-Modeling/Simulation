@@ -2,6 +2,7 @@ from ..pap import InfectionState
 import math
 import random
 
+
 def set_droplets_num(p, Rh):
     if p.age < 3:
         return 30
@@ -85,10 +86,11 @@ def calculate_susceptible_variables(p, indoor, time, mask_already_applied=False)
 
 def CAT(p, indoor, num_time_steps, transmission_prob, infector_masked=False, susceptible_masked=False):
     """
-    Calculate transmission according to Wells–Riley:
+    Calculate transmission according to Wells-Riley:
     P = 1 - exp(- q·B·t / Q_effective )
     Here transmission_prob passed in is treated as (q·B / Q_eff) unit rate per time-step.
     """
+    random.seed(0)
     if transmission_prob <= 0:
         return False
 
