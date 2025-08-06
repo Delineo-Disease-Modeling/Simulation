@@ -146,14 +146,14 @@ def test_measles_default_model():
             "Age": "5",
             "Sex": "M"
         },
-        "model_category": "default",
+        "model_path": "default.general",
         "initial_state": "Exposed"
     }
     
     print(f"📋 Request:")
     print(f"   Disease: {simulation_request['disease_name']}")
     print(f"   Demographics: {simulation_request['demographics']}")
-    print(f"   Model Category: {simulation_request['model_category']}")
+    print(f"   Model Path: {simulation_request['model_path']}")
     print(f"   Initial State: {simulation_request['initial_state']}")
     print()
     
@@ -216,7 +216,7 @@ def test_covid_delta_variant():
             for machine in machines:
                 print(f"   - {machine['name']}")
                 print(f"     Demographics: {machine['demographics']}")
-                print(f"     Model Category: {machine['model_category']}")
+                print(f"     Model Path: {machine.get('model_path', 'N/A')}")
                 print()
     except Exception as e:
         print(f"   Error getting machines: {e}")
@@ -228,17 +228,14 @@ def test_covid_delta_variant():
             "Sex": "Male",
             "Vaccination Status": "Unvaccinated"
         },
-        "model_category": "variant",
-        "variant_name": "Delta",
+        "model_path": "variant.Delta.general",
         "initial_state": "Infected"
     }
     
     print(f"📋 Request:")
     print(f"   Disease: {simulation_request['disease_name']}")
     print(f"   Demographics: {simulation_request['demographics']}")
-    print(f"   Model Category: {simulation_request['model_category']}")
-    if 'variant_name' in simulation_request:
-        print(f"   Variant: {simulation_request['variant_name']}")
+    print(f"   Model Path: {simulation_request['model_path']}")
     print(f"   Initial State: {simulation_request['initial_state']}")
     print()
     
@@ -294,14 +291,14 @@ def test_measles_vaccination_model():
     # First, let's see what machines are available
     print("🔍 Available State Machines:")
     try:
-        response = requests.get(f"{BASE_URL}/state-machines?disease_name=Measles&model_category=vaccination")
+        response = requests.get(f"{BASE_URL}/state-machines?disease_name=Measles")
         if response.status_code == 200:
             data = response.json()
             machines = data.get('state_machines', [])
             for machine in machines:
                 print(f"   - {machine['name']}")
                 print(f"     Demographics: {machine['demographics']}")
-                print(f"     Model Category: {machine['model_category']}")
+                print(f"     Model Path: {machine.get('model_path', 'N/A')}")
                 print()
     except Exception as e:
         print(f"   Error getting machines: {e}")
@@ -310,17 +307,17 @@ def test_measles_vaccination_model():
         "disease_name": "Measles",
         "demographics": {
             "Age": "3",
-            # "Sex": "M",
+            "Sex": "M",
             "Vaccination Status": "Unvaccinated"
         },
-        "model_category": "vaccination",
+        "model_path": "vaccination.Unvaccinated.general",
         "initial_state": "Exposed"
     }
     
     print(f"📋 Request:")
     print(f"   Disease: {simulation_request['disease_name']}")
     print(f"   Demographics: {simulation_request['demographics']}")
-    print(f"   Model Category: {simulation_request['model_category']}")
+    print(f"   Model Path: {simulation_request['model_path']}")
     print(f"   Initial State: {simulation_request['initial_state']}")
     print()
     

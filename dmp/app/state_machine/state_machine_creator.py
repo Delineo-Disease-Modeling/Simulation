@@ -201,66 +201,74 @@ def create_state_machine(states):
             if 'vaccination_status' not in st.session_state:
                 st.session_state.vaccination_status = None
             
-            # Create model category options from configuration
-            model_category_options = [category["name"] for category in model_categories]
-            model_category_ids = [category["id"] for category in model_categories]
-            
-            # Find current model category index
-            current_category_index = 0
-            if st.session_state.model_category in model_category_ids:
-                current_category_index = model_category_ids.index(st.session_state.model_category)
-            
-            model_category = st.radio(
-                "Model Category:",
-                options=model_category_options,
-                index=current_category_index,
-                key="model_category_selection"
-            )
-            
-            # Update session state with selected category ID
-            selected_category_id = model_category_ids[model_category_options.index(model_category)]
-            st.session_state.model_category = selected_category_id
-            
-            # Handle specific model category types
-            if selected_category_id == "vaccination":
-                # Get vaccination options from disease configuration
-                demographic_options = get_disease_demographic_options(selected_disease)
-                vaccination_options = demographic_options.get("Vaccination Status", ["Unvaccinated", "Partially Vaccinated", "Fully Vaccinated"])
+            # Check if there are any model categories available
+            if model_categories:
+                # Create model category options from configuration
+                model_category_options = [category["name"] for category in model_categories]
+                model_category_ids = [category["id"] for category in model_categories]
                 
-                selected_vaccination_index = 0
-                if st.session_state.vaccination_status in vaccination_options:
-                    selected_vaccination_index = vaccination_options.index(st.session_state.vaccination_status)
+                # Find current model category index
+                current_category_index = 0
+                if st.session_state.model_category in model_category_ids:
+                    current_category_index = model_category_ids.index(st.session_state.model_category)
                 
-                vaccination_status = st.selectbox(
-                    "Select Vaccination Status:",
-                    options=vaccination_options,
-                    index=selected_vaccination_index,
-                    key="vaccination_selection"
+                model_category = st.radio(
+                    "Model Category:",
+                    options=model_category_options,
+                    index=current_category_index,
+                    key="model_category_selection"
                 )
-                st.session_state.vaccination_status = vaccination_status
-                st.session_state.variant_name = None
                 
-            elif selected_category_id == "variant":
-                # Variant selection for variant-specific models
-                available_variants = get_available_variants(selected_disease)
-                if available_variants:
-                    selected_variant_index = 0
-                    if st.session_state.variant_name in available_variants:
-                        selected_variant_index = available_variants.index(st.session_state.variant_name)
-                    selected_variant = st.selectbox(
-                        "Select Variant:",
-                        options=available_variants,
-                        index=selected_variant_index,
-                        key="variant_selection"
+                # Update session state with selected category ID
+                selected_category_id = model_category_ids[model_category_options.index(model_category)]
+                st.session_state.model_category = selected_category_id
+                
+                # Handle specific model category types
+                if selected_category_id == "vaccination":
+                    # Get vaccination options from disease configuration
+                    demographic_options = get_disease_demographic_options(selected_disease)
+                    vaccination_options = demographic_options.get("Vaccination Status", ["Unvaccinated", "Partially Vaccinated", "Fully Vaccinated"])
+                    
+                    selected_vaccination_index = 0
+                    if st.session_state.vaccination_status in vaccination_options:
+                        selected_vaccination_index = vaccination_options.index(st.session_state.vaccination_status)
+                    
+                    vaccination_status = st.selectbox(
+                        "Select Vaccination Status:",
+                        options=vaccination_options,
+                        index=selected_vaccination_index,
+                        key="vaccination_selection"
                     )
-                    st.session_state.variant_name = selected_variant
-                else:
-                    st.warning("⚠️ No variants defined for this disease. Please use the Disease Configurations tab to add variants.")
+                    st.session_state.vaccination_status = vaccination_status
                     st.session_state.variant_name = None
-                st.session_state.vaccination_status = None
-                
+                    
+                elif selected_category_id == "variant":
+                    # Variant selection for variant-specific models
+                    available_variants = get_available_variants(selected_disease)
+                    if available_variants:
+                        selected_variant_index = 0
+                        if st.session_state.variant_name in available_variants:
+                            selected_variant_index = available_variants.index(st.session_state.variant_name)
+                        selected_variant = st.selectbox(
+                            "Select Variant:",
+                            options=available_variants,
+                            index=selected_variant_index,
+                            key="variant_selection"
+                        )
+                        st.session_state.variant_name = selected_variant
+                    else:
+                        st.warning("⚠️ No variants defined for this disease. Please use the Disease Configurations tab to add variants.")
+                        st.session_state.variant_name = None
+                    st.session_state.vaccination_status = None
+                    
+                else:
+                    # Default model - clear variant and vaccination
+                    st.session_state.variant_name = None
+                    st.session_state.vaccination_status = None
             else:
-                # Default model - clear variant and vaccination
+                # No model categories available (placeholder diseases)
+                st.info(f"ℹ️ {selected_disease} is a placeholder disease with no model categories defined yet.")
+                st.session_state.model_category = "default"
                 st.session_state.variant_name = None
                 st.session_state.vaccination_status = None
         else:
@@ -767,13 +775,24 @@ def create_state_machine(states):
         # Create state machine name with disease parameters
         name_parts = [st.session_state.disease_name]
         
-        # Add variant to name if it's a variant-specific model
-        if st.session_state.model_category == "variant" and st.session_state.variant_name:
-            name_parts.append(f"variant={st.session_state.variant_name}")
+        # Determine the model path based on disease, model category, and variant/vaccination
+        model_path = "default.general"  # Default
         
-        # Add vaccination status to name if measles
-        if st.session_state.disease_name == "Measles" and st.session_state.model_category == "vaccination" and st.session_state.vaccination_status:
-            name_parts.append(f"vaccination={st.session_state.vaccination_status}")
+        if st.session_state.disease_name == "COVID-19":
+            if st.session_state.model_category == "variant" and st.session_state.variant_name:
+                model_path = f"variant.{st.session_state.variant_name}.general"
+                name_parts.append(f"variant={st.session_state.variant_name}")
+            else:
+                model_path = "default.general"
+        elif st.session_state.disease_name == "Measles":
+            if st.session_state.model_category == "vaccination" and st.session_state.vaccination_status:
+                model_path = f"vaccination.{st.session_state.vaccination_status}.general"
+                name_parts.append(f"vaccination={st.session_state.vaccination_status}")
+            else:
+                model_path = "default.general"
+        else:
+            # For other diseases, use default
+            model_path = "default.general"
         
         # Add demographics to name
         if demographics:
@@ -822,7 +841,8 @@ def create_state_machine(states):
                                 demographics,
                                 st.session_state.disease_name,
                                 st.session_state.variant_name,
-                                st.session_state.model_category,
+                                st.session_state.model_category,  # Pass model_category first
+                                model_path,  # Then model_path
                                 update_existing=True  # This will update existing or create new
                             )
                             

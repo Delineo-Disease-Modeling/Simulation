@@ -61,13 +61,9 @@ class SimulationRequest(BaseModel):
         ...,
         description="Disease name (required)"
     )
-    variant_name: Optional[str] = Field(
+    model_path: Optional[str] = Field(
         None,
-        description="Variant name (optional)"
-    )
-    model_category: Optional[str] = Field(
-        "default",
-        description="Model category: 'default', 'variant', or 'vaccination'"
+        description="Model path in dot notation (e.g., 'variant.Delta.general', 'vaccination.Unvaccinated.general'). The .general suffix is a placeholder for any future subcategory expansion."
     )
     initial_state: Optional[str] = Field(
         None,
@@ -203,14 +199,44 @@ async def run_dmp_simulation(request: SimulationRequest):
     try:
         print(f"Running simulation for disease: {request.disease_name}")
         print(f"Demographics: {request.demographics}")
-        print(f"Variant: {request.variant_name}")
-        print(f"Model category: {request.model_category}")
+        print(f"Model path: {request.model_path}")
         
-        # Find matching state machine with model category-based hierarchical fallback
+        # Import the disease configuration functions
+        from app.state_machine.disease_configurations import (
+            validate_model_path, get_parent_model_path, get_default_model_path,
+            get_model_info
+        )
+        
+        # Find matching state machine with model path-based hierarchical fallback
         saved_machines = db.list_state_machines()
         matching_machine = None
         best_match_score = -1
         
+        # Determine the model path to search for
+        search_paths = []
+        
+        if request.model_path:
+            # Start with the exact model path
+            search_paths.append(request.model_path)
+            
+            # Add parent paths for fallback
+            current_path = request.model_path
+            while True:
+                parent_path = get_parent_model_path(request.disease_name, current_path)
+                if parent_path:
+                    search_paths.append(parent_path)
+                    current_path = parent_path
+                else:
+                    break
+        
+        # Add default model path as final fallback
+        default_path = get_default_model_path(request.disease_name)
+        if default_path and default_path not in search_paths:
+            search_paths.append(default_path)
+        
+        print(f"Search paths (in order): {search_paths}")
+        
+        # Search for matching state machines
         for machine in saved_machines:
             machine_data = db.load_state_machine(machine[0])
             if not machine_data:
@@ -220,145 +246,110 @@ async def run_dmp_simulation(request: SimulationRequest):
             if machine_data["disease_name"] != request.disease_name:
                 continue
             
-            # Check variant if specified
-            if request.variant_name and machine_data.get("variant_name") != request.variant_name:
+            # Check if this machine matches any of our search paths
+            machine_model_path = machine_data.get("model_path", "default")
+            path_match = False
+            
+            for search_path in search_paths:
+                if machine_model_path == search_path:
+                    path_match = True
+                    break
+            
+            if not path_match:
                 continue
             
-            # Check model category
-            if request.model_category and machine_data.get("model_category") != request.model_category:
-                continue
-            
-            # Model category-based hierarchical matching
+            # Demographic matching
             machine_demographics = machine_data["demographics"]
             match_score = 0
             demographics_match = True
             
-            if machine_data.get("model_category") == "vaccination":
-                # Vaccination models require vaccination status matching
-                machine_name = machine_data.get("name", "")
-                if "vaccination=" in machine_name:
-                    vaccination_part = machine_name.split("vaccination=")[-1].split(" |")[0]
-                    request_vaccination = request.demographics.get("Vaccination Status")
-                    
-                    if request_vaccination:
-                        if vaccination_part == request_vaccination:
-                            # Vaccination status matches - now check other demographics
-                            match_score = 100  # Start with full score for vaccination match
-                            
-                            # Check other demographics (Age, Sex, etc.)
-                            for key, value in request.demographics.items():
-                                if key != "Vaccination Status" and key in machine_demographics:
-                                    if key == "Age":
-                                        # Special handling for age range matching
-                                        if machine_demographics[key] == "*":
-                                            pass  # Wildcard accepts any age
-                                        elif not _age_in_range(str(value), machine_demographics[key]):
-                                            # Age doesn't match range
-                                            demographics_match = False
-                                            break
-                                    else:
-                                        # Normal demographic matching for non-age fields
-                                        if machine_demographics[key] != "*" and machine_demographics[key] != str(value):
-                                            # Specific demographic doesn't match
-                                            demographics_match = False
-                                            break
-                                elif key != "Vaccination Status":
-                                    # Demographics not specified in machine - neutral
-                                    pass
-                            
-                            # Score based on how many demographics are specified in the machine
-                            specified_demographics = len([k for k in machine_demographics.keys() if k != "Vaccination Status"])
-                            request_demographics = len([k for k in request.demographics.keys() if k != "Vaccination Status"])
-                            
-                            if request_demographics == 0:
-                                # No demographics in request - prefer general models
-                                if specified_demographics == 0:
-                                    match_score = 100  # Perfect match: general request, general model
-                                else:
-                                    match_score = 50   # General request, specific model
-                            else:
-                                # Demographics in request - prefer specific models
-                                if specified_demographics > 0:
-                                    match_score = 100  # Specific request, specific model
-                                else:
-                                    match_score = 50   # Specific request, general model (fallback)
-                        else:
-                            # Vaccination status doesn't match - skip this machine
-                            continue
+            # Check demographics
+            for key, value in request.demographics.items():
+                if key in machine_demographics:
+                    if key == "Age":
+                        # Special handling for age range matching
+                        if machine_demographics[key] == "*":
+                            pass  # Wildcard accepts any age
+                        elif not _age_in_range(str(value), machine_demographics[key]):
+                            # Age doesn't match range
+                            demographics_match = False
+                            break
                     else:
-                        # No vaccination status in request - skip vaccination models
-                        continue
+                        # Normal demographic matching
+                        if machine_demographics[key] != "*" and machine_demographics[key] != str(value):
+                            # Specific demographic doesn't match
+                            demographics_match = False
+                            break
                 else:
-                    # No vaccination status in machine name - skip
-                    continue
-            else:
-                # Default models - vaccination status doesn't matter
-                # Check demographics normally
-                total_demographics = len([k for k in request.demographics.keys() if k != "Vaccination Status"])
-                if total_demographics == 0:
-                    match_score = 100  # No demographics to match
-                else:
-                    matched_demographics = 0
-                    for key, value in request.demographics.items():
-                        if key != "Vaccination Status":  # Ignore vaccination status for default models
-                            if key in machine_demographics:
-                                if key == "Age":
-                                    # Special handling for age range matching
-                                    if machine_demographics[key] == "*":
-                                        matched_demographics += 0.5
-                                    elif _age_in_range(str(value), machine_demographics[key]):
-                                        matched_demographics += 1.0
-                                    else:
-                                        demographics_match = False
-                                        break
-                                else:
-                                    # Normal demographic matching for non-age fields
-                                    if machine_demographics[key] == "*":
-                                        matched_demographics += 0.5
-                                    elif machine_demographics[key] == str(value):
-                                        matched_demographics += 1.0
-                                    else:
-                                        demographics_match = False
-                                        break
-                            else:
-                                matched_demographics += 0.5
-                    
-                    if demographics_match:
-                        match_score = (matched_demographics / total_demographics) * 100
+                    # Demographics not specified in machine - neutral
+                    pass
             
-            # Update best match if this machine has a higher score
-            if demographics_match and match_score > best_match_score:
-                matching_machine = machine_data
+            if not demographics_match:
+                continue
+            
+            # Calculate match score based on how many demographics match
+            total_request_demographics = len(request.demographics)
+            matched_demographics = 0
+            
+            for key, value in request.demographics.items():
+                if key in machine_demographics:
+                    if key == "Age":
+                        if machine_demographics[key] == "*" or _age_in_range(str(value), machine_demographics[key]):
+                            matched_demographics += 1
+                    else:
+                        if machine_demographics[key] == "*" or machine_demographics[key] == str(value):
+                            matched_demographics += 1
+            
+            if total_request_demographics > 0:
+                match_score = (matched_demographics / total_request_demographics) * 100
+            else:
+                match_score = 100  # No demographics to match
+            
+            # Prefer exact model path matches
+            if machine_model_path == request.model_path:
+                match_score += 1000  # Bonus for exact path match
+            
+            # Prefer machines with more specific demographics
+            specified_demographics = len([k for k in machine_demographics.keys() if machine_demographics[k] != "*"])
+            match_score += specified_demographics * 10
+            
+            if match_score > best_match_score:
                 best_match_score = match_score
-                print(f"DEBUG: Selected machine '{machine_data.get('name')}' with score {match_score}")
-            elif demographics_match:
-                print(f"DEBUG: Skipped machine '{machine_data.get('name')}' with score {match_score} (best: {best_match_score})")
+                matching_machine = machine_data
         
         if not matching_machine:
+            # No matching state machine found
+            error_msg = f"No matching state machine found for disease '{request.disease_name}'"
+            if request.model_path:
+                error_msg += f" with model path '{request.model_path}'"
+            if request.demographics:
+                error_msg += f" and demographics {request.demographics}"
+            
             raise HTTPException(
                 status_code=404,
-                detail=f"No matching state machine found for disease '{request.disease_name}' with the provided demographics"
+                detail=error_msg
             )
         
+        # Run simulation with the matching state machine
+        states = matching_machine["states"]
+        edges = matching_machine["edges"]
+        
         # Convert graph to matrices
-        matrices = convert_graph_to_matrices(
-            matching_machine["states"], 
-            matching_machine["edges"]
-        )
+        matrices = convert_graph_to_matrices(states, edges)
         
         # Determine initial state
         initial_state_idx = 0
         if request.initial_state:
-            if request.initial_state in matching_machine["states"]:
-                initial_state_idx = matching_machine["states"].index(request.initial_state)
+            if request.initial_state in states:
+                initial_state_idx = states.index(request.initial_state)
             else:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Initial state '{request.initial_state}' not found in state machine"
+                    detail=f"Initial state '{request.initial_state}' not found in state machine states: {states}"
                 )
         
         # Run simulation
-        simulation_data = run_simulation(
+        timeline = run_simulation(
             transition_matrix=matrices["Transition Matrix"],
             mean_matrix=matrices["Mean Matrix"],
             std_dev_matrix=matrices["Standard Deviation Matrix"],
@@ -366,21 +357,18 @@ async def run_dmp_simulation(request: SimulationRequest):
             max_cutoff_matrix=matrices["Max Cutoff Matrix"],
             distribution_matrix=matrices["Distribution Type Matrix"],
             initial_state_idx=initial_state_idx,
-            states=matching_machine["states"]
+            states=states
         )
-        
-        # Format timeline for response
-        timeline = [(state, time) for state, time in simulation_data]
         
         return {
             "status": "success",
+            "mode": "state_machines",
             "timeline": timeline,
             "state_machine": {
                 "id": matching_machine["id"],
                 "name": matching_machine["name"],
                 "disease_name": matching_machine["disease_name"],
-                "variant_name": matching_machine.get("variant_name"),
-                "model_category": matching_machine.get("model_category"),
+                "model_path": matching_machine.get("model_path", "default"),
                 "demographics": matching_machine["demographics"]
             }
         }
@@ -388,9 +376,8 @@ async def run_dmp_simulation(request: SimulationRequest):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error during simulation: {str(e)}")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"Error during simulation: {str(e)}"
         )
 

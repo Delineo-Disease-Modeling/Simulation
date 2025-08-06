@@ -1,402 +1,305 @@
-# Disease Modeling Platform API v2.0
+# Disease Modeling Platform API Documentation
 
-## Overview
+Complete API reference for the Disease Modeling Platform (DMP) v2.0.
 
-The Disease Modeling Platform (DMP) API is a web service that allows external applications to run disease simulations. Think of it as a "simulation engine" that other programs can use to model how diseases spread and progress through different populations.
+## Base URL
 
-The API provides a unified interface for disease progression simulation using a hierarchical state machine database system.
-
-## What is this API?
-
-The Disease Modeling Platform (DMP) API is a web service that allows external applications to run disease simulations. Think of it as a "simulation engine" that other programs can use to model how diseases spread and progress through different populations.
-
-## How it Works
-
-### 1. **Database Storage**
-- The API connects to a SQLite database that stores "state machines"
-- Each state machine represents a disease model (like COVID-19, Measles, etc.)
-- State machines contain:
-  - **States**: Different stages of the disease (Infected → Hospitalized → Recovered)
-  - **Edges**: Transitions between states with probabilities and timing
-  - **Demographics**: Population characteristics (Age, Sex, etc.)
-
-### 2. **Simulation Process**
-
-When you request a simulation:
-
-1. **Input**: You provide demographics (Age: "19-64", Sex: "M") and disease info
-2. **Matching**: API finds the best matching state machine in the database
-3. **Conversion**: Converts the state machine to mathematical matrices
-4. **Simulation**: Runs the simulation using probability and timing data
-5. **Output**: Returns a timeline showing disease progression
-
-## Features
-
-### 🏥 **Disease-Specific Models**
-- Support for multiple diseases (COVID-19, Measles, etc.)
-- Variant-specific models (Delta, Omicron, etc.)
-- Model categories (Default, Variant-Specific, Vaccination)
-- Demographic-specific configurations
-
-### 🔍 **Advanced Discovery**
-- List available diseases and variants
-- Browse state machines with filtering
-- Get detailed state machine information
-- Automatic matching based on demographics
-
-## API Endpoints
-
-### Root Information
-```http
-GET /
 ```
-Returns API information and current mode.
-
-### Initialization
-```http
-POST /initialize
+http://localhost:8000
 ```
+
+## Endpoints
+
+### 1. Run Simulation
+
+**POST** `/simulate`
+
+Run a disease simulation using the specified parameters.
+
+**Request Body:**
 ```json
 {
-  "use_state_machines": true
-}
-```
-
-### Disease Discovery
-
-#### Get All Diseases
-```http
-GET /diseases
-```
-
-Response:
-```json
-{
-    "status": "success",
-    "diseases": ["COVID-19", "Measles"]
-}
-```
-
-#### Get Variants for Disease
-```http
-GET /diseases/{disease_name}/variants
-```
-
-Response:
-```json
-{
-    "status": "success",
-    "variants": ["Measles"]
-}
-```
-
-### State Machine Management
-
-#### List State Machines
-```http
-GET /state-machines?disease_name=COVID-19&model_category=default
-```
-
-#### Get Specific State Machine
-```http
-GET /state-machines/{machine_id}
-```
-
-### Simulation
-```http
-POST /simulate
-```
-```json
-{
+  "disease_name": "Measles",
   "demographics": {
     "Age": "3",
     "Sex": "M",
     "Vaccination Status": "Unvaccinated"
   },
-  "disease_name": "Measles",
-  "model_category": "vaccination",
-  "initial_state": "Exposed"
+  "model_path": "vaccination.Unvaccinated.general",
+  "initial_state": "Susceptible"
 }
 ```
 
-**Note**: `variant_name` is only used for COVID-19 (e.g., "Delta", "Omicron"). For other diseases like Measles, omit this field.
+**Parameters:**
+- `disease_name` (required): Name of the disease (e.g., "COVID-19", "Measles")
+- `demographics` (required): Dictionary of demographic values
+- `model_path` (optional): Model path in dot notation (e.g., "variant.Delta.general", "vaccination.Unvaccinated.general")
+- `initial_state` (optional): Initial state for simulation (defaults to first state)
 
-## Usage Examples
-
-### 1. Basic Setup and Discovery
-
-```bash
-# Initialize with state machine database
-curl -X POST http://localhost:8000/initialize \
-  -H "Content-Type: application/json" \
-  -d '{
-    "use_state_machines": true
-  }'
-
-# Discover available diseases
-curl http://localhost:8000/diseases
-
-# Get variants for Measles
-curl http://localhost:8000/diseases/Measles/variants
-
-# List Measles state machines
-curl "http://localhost:8000/state-machines?disease_name=Measles"
+**Response:**
+```json
+{
+  "success": true,
+  "simulation_id": "sim_12345",
+  "model_path": "vaccination.Unvaccinated.general",
+  "timeline": [
+    ["Susceptible", 0.0],
+    ["Exposed", 2.5],
+    ["Infectious", 12.3],
+    ["Recovered", 168.7]
+  ],
+  "total_duration": 168.7,
+  "final_state": "Recovered",
+  "states_visited": ["Susceptible", "Exposed", "Infectious", "Recovered"]
+}
 ```
 
-### 2. Running Simulations
+## Model Path Structure
 
+The `model_path` parameter uses a hierarchical structure: `category.subcategory.type`
+
+### Examples:
+- `variant.Delta.general` - Delta variant, general type
+- `variant.Omicron.general` - Omicron variant, general type  
+- `vaccination.Unvaccinated.general` - Unvaccinated, general type
+- `vaccination.Fully Vaccinated.general` - Fully vaccinated, general type
+- `default.general` - Default model, general type
+
+**Note:** The `.general` suffix is a placeholder for any future subcategory expansion.
+
+## Disease-Specific API Usage
+
+### COVID-19
+
+**Available Model Paths:**
+- `variant.Delta.general` - Delta variant
+- `variant.Omicron.general` - Omicron variant
+- `default.general` - Default COVID-19 model
+
+**Demographics:**
+- Age: 0-4, 5-18, 19-64, 65+
+- Sex: M, F
+- Vaccination Status: Unvaccinated, Vaccinated
+
+**Example Request:**
 ```bash
-# Run simulation with specific disease and demographics
 curl -X POST http://localhost:8000/simulate \
   -H "Content-Type: application/json" \
   -d '{
+    "disease_name": "COVID-19",
     "demographics": {
-      "Age": "3",
+      "Age": "65+",
       "Sex": "M",
       "Vaccination Status": "Unvaccinated"
     },
-    "disease_name": "Measles",
-    "model_category": "vaccination",
-    "initial_state": "Exposed"
+    "model_path": "variant.Delta.general"
   }'
 ```
 
-### 3. Python Integration
+### Measles
 
-```python
-import requests
+**Available Model Paths:**
+- `vaccination.Unvaccinated.general` - Unvaccinated
+- `vaccination.Partially Vaccinated.general` - Partially vaccinated
+- `vaccination.Fully Vaccinated.general` - Fully vaccinated
+- `default.general` - Default measles model
 
-# Initialize API
-response = requests.post("http://localhost:8000/initialize", 
-                        json={"use_state_machines": True})
+**Demographics:**
+- Age: 0-4, 5-18, 19-64, 65+
+- Sex: M, F
 
-# Get available diseases
-diseases = requests.get("http://localhost:8000/diseases").json()
-
-# Run simulation for individual
-simulation = requests.post("http://localhost:8000/simulate", json={
-    "demographics": {
-        "Age": "3",
-        "Sex": "M",
-        "Vaccination Status": "Unvaccinated"
-    },
-    "disease_name": "Measles"
-})
-
-timeline = simulation.json()["timeline"]
-```
-
-## Response Formats
-
-### Simulation Response
-```json
-{
-  "status": "success",
-  "mode": "state_machines",
-  "timeline": [
-    ["Exposed", 0.0],
-    ["Infectious_Presymptomatic", 187.0],
-    ["Infectious_Symptomatic", 294.5],
-    ["Hospitalized", 354.4],
-    ["Recovered", 453.8]
-  ],
-  "state_machine": {
-    "id": 45,
-    "name": "Measles | vaccination=Unvaccinated | Age=0-4",
+**Example Request:**
+```bash
+curl -X POST http://localhost:8000/simulate \
+  -H "Content-Type: application/json" \
+  -d '{
     "disease_name": "Measles",
-    "model_category": "vaccination",
     "demographics": {
       "Age": "3",
       "Sex": "M",
       "Vaccination Status": "Unvaccinated"
-    }
-  }
-}
+    },
+    "model_path": "vaccination.Unvaccinated.general"
+  }'
 ```
 
-### State Machine List Response
-```json
-{
-  "status": "success",
-  "state_machines": [
-    {
-      "id": 45,
-      "name": "Measles | vaccination=Unvaccinated | Age=0-4",
-      "disease_name": "Measles",
-      "model_category": "vaccination",
-      "demographics": {
-        "Age": "0-4",
-        "Sex": "*",
-        "Vaccination Status": "Unvaccinated"
-      },
-      "states": ["Exposed", "Infectious_Presymptomatic", "Infectious_Symptomatic", "Hospitalized", "Recovered"],
-      "created_at": "2024-01-15 10:30:00",
-      "updated_at": "2024-01-15 10:30:00"
-    }
-  ]
-}
-```
+### Placeholder Diseases
 
-## Key Concepts
+Influenza, Ebola, and Zika are placeholder only with no models implemented. Requests for these diseases will return errors.
 
-### **State Machine**
-- A mathematical model representing disease progression
-- Like a flowchart showing how people move through different disease stages
+## Fallback Strategy
 
-### **Demographics**
-- Population characteristics that affect disease progression
-- Examples: Age, Sex, Vaccination Status
+The API implements a hierarchical fallback strategy for model matching:
 
-### **Model Categories**
-- Different types of models for the same disease
-- Examples: "default", "variant-specific", "vaccination"
+1. **Exact match**: Try the exact `model_path` provided
+2. **Parent match**: Try the parent path (e.g., `variant.Delta` if `variant.Delta.general` not found)
+3. **Default match**: Try `default.general`
+4. **Error**: Return error if no matching state machine found
 
-### **Variants**
-- **COVID-19 only**: Use `variant_name` for different virus strains (Delta, Omicron)
-- **Other diseases**: Do not use `variant_name` (e.g., Measles has no variants)
+### Example Fallback Scenarios
 
-### **Timeline**
-- The simulation result showing disease progression over time
-- Each entry: [State Name, Time in Hours]
+**Scenario 1: Exact Match Found**
+- Request: `model_path: "variant.Delta.general"`
+- Result: Uses exact match
 
-## State Machine Matching Logic
+**Scenario 2: Parent Match**
+- Request: `model_path: "variant.Delta.severe"` (doesn't exist)
+- Fallback: Tries `variant.Delta.general`
 
-### Hierarchical Matching
-1. **Disease Name**: Must match exactly
-2. **Variant Name**: Optional, must match if specified
-3. **Model Category**: Optional, must match if specified
-4. **Demographics**: Supports wildcard matching (`*` matches any value)
-
-### Example Matching Scenarios
-
-#### Scenario 1: Specific Measles Vaccination Model
-```json
-{
-  "disease_name": "Measles",
-  "demographics": {
-    "Age": "3",
-    "Sex": "M"
-  }
-}
-```
-Matches: Measles state machine with vaccination model and demographics containing Age=3, Sex=M (or wildcards)
-
-#### Scenario 2: COVID-19 with Variant (for comparison)
-```json
-{
-  "disease_name": "COVID-19",
-  "variant_name": "Omicron",
-  "demographics": {
-    "Age": "25",
-    "Sex": "F"
-  }
-}
-```
-Matches: COVID-19 state machine with Omicron variant and demographics containing Age=25, Sex=F (or wildcards)
+**Scenario 3: Default Match**
+- Request: `model_path: "variant.Unknown.general"` (doesn't exist)
+- Fallback: Tries `default.general`
 
 ## Error Handling
 
-### Common Error Responses
-
-#### 404 - No Matching State Machine
+### Invalid Request
 ```json
 {
-  "detail": "No matching state machine found for disease 'Measles' with the provided demographics"
+  "success": false,
+  "error": "Invalid request format",
+  "details": "Missing required field: disease_name"
 }
 ```
 
-#### 400 - Missing Required Fields
+### No Matching State Machine
 ```json
 {
-  "detail": "disease_name is required when using state machines"
+  "success": false,
+  "error": "No matching state machine found",
+  "details": "No state machine found for disease: Measles, demographics: {'Age': '3', 'Sex': 'M'}, model_path: vaccination.Unvaccinated.general"
 }
 ```
 
-#### 500 - Internal Server Error
+### Simulation Error
 ```json
 {
-  "detail": "Error during simulation: [specific error message]"
+  "success": false,
+  "error": "Simulation failed",
+  "details": "Invalid transition probabilities in state machine"
 }
 ```
 
-## Benefits
+## Common Error Scenarios
 
-1. **Separation of Concerns**: Web interface for creation, API for external access
-2. **Scalability**: Multiple applications can use the same simulation engine
-3. **Flexibility**: Easy to add new diseases and models
-4. **Integration**: Can be integrated into other systems (mobile apps, web apps, etc.)
-
-## Architecture
-
-```
-External Application → API → Database → Simulation Engine → Results
+### 1. Using `variant_name` for Non-COVID-19 Diseases
+```json
+{
+  "disease_name": "Measles",
+  "variant_name": "Delta",  // ❌ Wrong - Measles has no variants
+  "demographics": {...}
+}
 ```
 
-The API acts as a bridge between external applications and the disease modeling system, providing a clean, standardized way to access simulation capabilities.
-
-## Performance Considerations
-
-- **State Machine Mode**: Fast matching due to database indexing
-- **Caching**: Consider caching frequently used state machines
-- **Batch Operations**: API supports individual simulations (batch processing can be added)
-
-## Security Notes
-
-- API is designed for internal use within disease modeling systems
-- No authentication currently implemented
-- Consider adding rate limiting for production use
-- Validate all input demographics before processing
-
-## Running the API
-
-```bash
-# Start the v2.0 API server
-uvicorn api.dmp_api_v2:app --reload --port 8000
+### 2. Using Non-Existent Model Paths
+```json
+{
+  "disease_name": "COVID-19",
+  "model_path": "severity.Delta.critical",  // ❌ Wrong - severity not defined
+  "demographics": {...}
+}
 ```
 
-## API Documentation
-
-Once the server is running, visit:
-- **Interactive API docs**: http://localhost:8000/docs
-- **Alternative docs**: http://localhost:8000/redoc
-
-## Testing
-
-```bash
-# Test the API
-python test_api_v2.py
+### 3. Requesting Placeholder Diseases
+```json
+{
+  "disease_name": "Influenza",  // ❌ Wrong - placeholder only
+  "demographics": {...}
+}
 ```
 
-## For External Disease Modeling Simulators
+## Integration Examples
 
-The API is designed to work seamlessly with external simulators:
-
-1. **Initialize once** at startup
-2. **Discover available models** using `/diseases` and `/state-machines`
-3. **Run simulations** with individual demographics
-4. **Handle responses** consistently
-
-### Example External Simulator Usage
-
+### Python Integration
 ```python
 import requests
 
-# Initialize API
-response = requests.post("http://localhost:8000/initialize", 
-                        json={"use_state_machines": True})
-
-# Get available diseases
-diseases = requests.get("http://localhost:8000/diseases").json()
-
-# Run simulation for individual
-simulation = requests.post("http://localhost:8000/simulate", json={
+# Run simulation
+response = requests.post("http://localhost:8000/simulate", json={
+    "disease_name": "Measles",
     "demographics": {
         "Age": "3",
         "Sex": "M",
         "Vaccination Status": "Unvaccinated"
     },
-    "disease_name": "Measles"
+    "model_path": "vaccination.Unvaccinated.general"
 })
 
-timeline = simulation.json()["timeline"]
-``` 
+if response.status_code == 200:
+    result = response.json()
+    timeline = result["timeline"]
+    print(f"Simulation completed in {result['total_duration']} hours")
+else:
+    print(f"Error: {response.json()}")
+```
+
+### JavaScript Integration
+```javascript
+const response = await fetch('http://localhost:8000/simulate', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        disease_name: "COVID-19",
+        demographics: {
+            Age: "25",
+            Sex: "F",
+            "Vaccination Status": "Vaccinated"
+        },
+        model_path: "variant.Omicron.general"
+    })
+});
+
+const result = await response.json();
+console.log(`Final state: ${result.final_state}`);
+```
+
+### R Integration
+```r
+library(httr)
+library(jsonlite)
+
+response <- POST("http://localhost:8000/simulate",
+    add_headers("Content-Type" = "application/json"),
+    body = toJSON(list(
+        disease_name = "Measles",
+        demographics = list(
+            Age = "3",
+            Sex = "M",
+            "Vaccination Status" = "Unvaccinated"
+        ),
+        model_path = "vaccination.Unvaccinated.general"
+    ))
+)
+
+result <- fromJSON(rawToChar(response$content))
+cat("Duration:", result$total_duration, "hours\n")
+```
+
+## Performance Considerations
+
+- **Response Time**: Typically 100-500ms per simulation
+- **Concurrent Requests**: No built-in rate limiting, but consider server resources
+- **Database Size**: SQLite database grows with number of state machines
+- **Memory Usage**: Minimal for individual simulations
+
+## Best Practices
+
+1. **Always check response status** before processing results
+2. **Handle errors gracefully** with appropriate fallback logic
+3. **Use appropriate model paths** for each disease
+4. **Include relevant demographics** for better matching
+5. **Cache frequently used state machines** if making many requests
+6. **Test with known working examples** before implementing custom solutions
+
+## Versioning
+
+This documentation covers API v2.0. The API version is included in the response headers.
+
+## Support
+
+For issues or questions:
+1. Check the error messages for specific details
+2. Verify the model_path exists for your disease
+3. Ensure demographics match available options
+4. Test with the provided examples first 

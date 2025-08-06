@@ -1,373 +1,267 @@
 # Disease Modeling Platform (DMP)
 
+A comprehensive platform for creating, managing, and simulating disease progression models using state machines.
+
 ## Overview
-This project simulates the progression of individuals through various stages of a disease, based on transition probabilities, time intervals, and demographic information. The system models how people move through health states such as being infected, hospitalized, and recovered, accommodating a wide range of disease progression scenarios using customizable state machines.
 
-The simulation helps answer questions like:
-- How long does it take for a vaccinated person to recover compared to an unvaccinated person?
-- What is the probability that an elderly individual moves from infection to hospitalization versus recovery?
-- How does the average time spent in the ICU differ across demographic groups?
+The Disease Modeling Platform (DMP) provides a web interface and API for modeling disease progression through state machines. It supports multiple diseases, variants, and demographic-specific models with a hierarchical model structure.
 
-## Installation
+## Features
+
+- **Web Interface**: Interactive state machine creation and management
+- **API Access**: RESTful API for external applications
+- **Multi-Disease Support**: COVID-19, Measles, and placeholder diseases
+- **Hierarchical Models**: Organized model structure with fallback strategies
+- **Demographic Matching**: Population-specific disease models
+- **Simulation Engine**: Monte Carlo simulation with configurable parameters
+
+## Quick Start
+
+### 1. Installation
 
 ```bash
 # Clone the repository
-git clone [repository-url]
-cd Simulation/dmp
+git clone <repository-url>
+cd dmp
 
 # Install dependencies
 pip install -r requirements.txt
-```
 
-## Interfaces
-
-The platform offers three distinct interfaces:
-
-### 1. Command Line Interface
-Run simulations directly from the command line:
-
-### Basic Usage
-From the `Simulation/dmp` directory:
-
-```bash
-python3 -m cli.user_input \
-    --age 25 \
-    --vaccination_status Vaccinated \
-    --sex F \
-    --variant Omicron
-```
-
-### Arguments
-
-Required:
-- `--age`: Age of the individual
-- `--vaccination_status`: Vaccination status (e.g., "Vaccinated", "Unvaccinated")
-- `--sex`: Sex of the individual ("M" or "F")
-- `--variant`: Virus variant (e.g., "Delta", "Omicron")
-
-### Example Output
-```
-Demographics:
-- Age: 70
-- Sex: M
-- Vaccination Status: Vaccinated
-- Variant: Omicron
-
-Disease Progression Timeline:
-   0.0 hours: Infected
-  40.3 hours: Infectious_Symptomatic
-  92.9 hours: Hospitalized
-  212.9 hours: Recovered
-```
-
-### 2. REST API v2.0
-Start the API server:
-```bash
-uvicorn api.dmp_api_v2:app --reload
-```
-
-Initialize the DMP:
-```bash
-curl -X POST http://localhost:8000/initialize \
-     -H "Content-Type: application/json" \
-     -d '{"use_state_machines": true}'
-```
-
-Run a simulation:
-```bash
-curl -X POST http://localhost:8000/simulate \
-     -H "Content-Type: application/json" \
-     -d '{
-           "disease_name": "Measles",
-           "demographics": {
-             "Age": "3",
-             "Vaccination Status": "Unvaccinated",
-             "Sex": "M"
-           },
-           "model_category": "vaccination"
-         }'
-```
-
-### 3. Web Interface (Streamlit)
-```bash
+# Start the web interface
 streamlit run app/graph_visualization.py
 ```
 
-Features:
-- **State Machine Creator**: Interactive visual graph editor for creating disease progression models
-  * Visual node-based interface using Cytoscape.js
-  * Drag-and-drop state positioning
-  * Interactive edge creation with parameter editing
-  * JSON editor for bulk edge modifications
-  * Disease templates (COVID-19, Measles) with predefined states and transitions
-  * Demographics integration (Age, Sex, Vaccination Status, Custom)
-  * Real-time validation of transition probabilities
-  * Support for 3 decimal precision in probability inputs
+### 2. Web Interface
 
-- **State Machine Manager**: Comprehensive management of saved state machines
-  * Load, edit, and delete saved state machines
-  * Disease and category filtering (Default Models, Variant-Specific Models, Vaccination Models)
-  * Demographic filtering and organization
-  * Interactive graph visualization of loaded machines
-  * Edge editing with individual parameter controls
-  * JSON editor for bulk edge modifications
-  * Matrix representation with validation
-  * Single simulation with timeline visualization
-  * Multi-run analysis with statistical analysis:
-    - Final state distribution analysis
-    - Duration statistics (mean, median, std dev, percentiles)
-    - State visit rates (% of simulations visiting each state)
-    - Time statistics for each state
-    - Visualizations (pie charts, histograms, bar charts)
-    - Sample timeline display
+The web interface provides four main tabs:
 
-- **Disease Configurations**: Template-based disease model creation
-  * Predefined disease templates (COVID-19, Measles)
-  * Disease-specific age ranges and demographics
-  * Variant-specific model configurations
-  * Vaccination status models for Measles
-  * Template application with automatic state and edge generation
+1. **State Machine Manager** - View, load, and manage saved state machines
+2. **State Machine Creator** - Create new state machines with visual editor
+3. **Disease Configurations** - View available disease models
+4. **State Machine Comparison** - Compare multiple simulations
 
-- **State Machine Comparison**: Side-by-side analysis of different models
-  * Load two different state machines for comparison
-  * Run simulations on both machines with same parameters
-  * Compare final state distributions
-  * Compare duration statistics
-  * Compare state visit rates
-  * Visual comparison with side-by-side charts
-  * Statistical analysis of differences
+### 3. API Usage
 
-- **Database Integration**: SQLite database for persistent storage
-  * Automatic saving of state machines with metadata
-  * Demographics stored as JSON for flexible categorization
-  * Disease, variant, and model category organization
-  * Version tracking with creation and update timestamps
+```bash
+# Start the API server
+uvicorn api.dmp_api_v2:app --reload --port 8000
+```
 
-- **Advanced Features**:
-  * Real-time validation with detailed error messages
-  * Support for multiple distribution types (triangular, uniform, log-normal, gamma)
-  * Configurable time parameters (mean, std dev, min/max cutoffs)
-  * Export/import functionality for state machines
-  * Responsive design with collapsible sections
-  * Progress tracking for multi-run simulations
+**Example API Request:**
+```bash
+curl -X POST http://localhost:8000/simulate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "disease_name": "Measles",
+    "demographics": {
+      "Age": "3",
+      "Sex": "M",
+      "Vaccination Status": "Unvaccinated"
+    },
+    "model_path": "vaccination.Unvaccinated.general"
+  }'
+```
+
+## Model Structure
+
+The DMP uses a hierarchical model structure: `category.subcategory.type`
+
+### Available Models
+
+| Disease | Model Path Example | Demographics | Status |
+|---------|-------------------|--------------|--------|
+| **COVID-19** | `variant.Delta.general` | Age, Sex, Vaccination Status | ✅ Full |
+| **Measles** | `vaccination.Unvaccinated.general` | Age, Sex | ✅ Full |
+| **Influenza** | None | None | ⚠️ Placeholder |
+| **Ebola** | None | None | ⚠️ Placeholder |
+| **Zika** | None | None | ⚠️ Placeholder |
+
+### Model Path Examples
+
+- `variant.Delta.general` - COVID-19 Delta variant
+- `variant.Omicron.general` - COVID-19 Omicron variant
+- `vaccination.Unvaccinated.general` - Measles unvaccinated
+- `vaccination.Fully Vaccinated.general` - Measles fully vaccinated
+- `default.general` - Default model for any disease
+
+**Note:** The `.general` suffix is a placeholder for any future subcategory expansion.
+
+## API Documentation
+
+### Endpoints
+
+#### Run Simulation
+**POST** `/simulate`
+
+**Request:**
+```json
+{
+  "disease_name": "Measles",
+  "demographics": {
+    "Age": "3",
+    "Sex": "M",
+    "Vaccination Status": "Unvaccinated"
+  },
+  "model_path": "vaccination.Unvaccinated.general",
+  "initial_state": "Susceptible"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "simulation_id": "sim_12345",
+  "model_path": "vaccination.Unvaccinated.general",
+  "timeline": [
+    ["Susceptible", 0.0],
+    ["Exposed", 2.5],
+    ["Infectious", 12.3],
+    ["Recovered", 168.7]
+  ],
+  "total_duration": 168.7,
+  "final_state": "Recovered",
+  "states_visited": ["Susceptible", "Exposed", "Infectious", "Recovered"]
+}
+```
+
+### Fallback Strategy
+
+The API implements hierarchical fallback for model matching:
+1. **Exact match**: Try the exact `model_path` provided
+2. **Parent match**: Try the parent path (e.g., `variant.Delta` if `variant.Delta.general` not found)
+3. **Default match**: Try `default.general`
+4. **Error**: Return error if no matching state machine found
+
+### Error Handling
+
+```json
+{
+  "success": false,
+  "error": "No matching state machine found",
+  "details": "No state machine found for disease: Measles, demographics: {'Age': '3', 'Sex': 'M'}, model_path: vaccination.Unvaccinated.general"
+}
+```
+
+## Disease-Specific Information
+
+### COVID-19
+- **Variants**: Delta, Omicron
+- **Demographics**: Age, Sex, Vaccination Status, Comorbidity
+- **Model Paths**: `variant.Delta.general`, `variant.Omicron.general`, `default.general`
+
+### Measles
+- **Vaccination Models**: Unvaccinated, Partially Vaccinated, Fully Vaccinated
+- **Demographics**: Age, Sex
+- **Model Paths**: `vaccination.Unvaccinated.general`, `vaccination.Fully Vaccinated.general`, `default.general`
+
+### Placeholder Diseases
+Influenza, Ebola, and Zika are placeholder only with no models implemented.
+
+## Command Line Interface
+
+For direct database access and local integration:
+
+```bash
+# List available diseases
+python3 -m cli.user_input --action list-diseases
+
+# List variants for a disease
+python3 -m cli.user_input --action list-variants --disease COVID-19
+
+# List state machines
+python3 -m cli.user_input --action list-machines --disease Measles
+
+# Run simulation
+python3 -m cli.user_input --action simulate \
+    --disease Measles \
+    --demographics '{"Age": "3", "Sex": "M", "Vaccination Status": "Unvaccinated"}'
+```
+
+**Benefits of CLI:**
+- **Faster performance** - Direct database access, no API overhead
+- **Local integration** - Easy to use in Python scripts and batch processing
+- **Same functionality** - Uses the same state machine database as the web interface
 
 ## Project Structure
+
 ```
-api/
-- dmp_api_v2.py: FastAPI v2.0 endpoints
-- test_api_v2.py: API testing suite
-
-app/
-- graph_visualization.py: Main Streamlit application entry point
-- state_machine/
-  - state_machine_creator.py: Interactive state machine creation
-  - state_machine_manager.py: State machine management and analysis
-  - state_machine_comparison.py: Side-by-side comparison functionality
-  - disease_configurations.py: Disease templates and configurations
-  - state_machine_db.py: Database operations
-  - utils/
-    - edge_editor.py: Edge parameter editing components
-    - graph_utils.py: Graph utility functions
-    - graph_visualizer.py: Cytoscape.js visualization components
-
-cli/
-- user_input.py: Command line interface
-
-core/
-- simulation_functions.py: Core simulation logic
-
-data/
-- custom_states.txt: Default state definitions
-- default_states.txt: Alternative state definitions
-- legacy/: Legacy CSV files (no longer used)
-
-docs/
-- API_DOCUMENTATION.md: Complete API documentation
-
-examples/
-- (Placeholder for example scripts and use cases)
-
-results/
-- (Simulation output files - auto-generated)
-
-tests/
-- (Placeholder for test files)
-```
-
-## State Machine System
-
-### State Machine Structure
-Each state machine contains:
-- **States**: Different stages of the disease (Infected → Hospitalized → Recovered)
-- **Edges**: Transitions between states with probabilities and timing
-- **Demographics**: Population characteristics (Age, Sex, Vaccination Status, etc.)
-
-### Model Categories
-- **Default Models**: Basic disease progression models
-- **Variant-Specific Models**: Models tailored to specific virus variants
-- **Vaccination Models**: Models accounting for vaccination status
-
-### Disease Templates
-Pre-built templates for common diseases:
-- **COVID-19**: Multiple variants (Delta, Omicron) with vaccination models
-- **Measles**: Vaccination status models
-- **Custom Diseases**: User-defined disease models
-
-## Time Calculations
-
-1. Input Times:
-   - All times in state machines are specified in HOURS
-   - Example: mean time of 48.0 represents 48 hours
-
-2. Output Times:
-   - All output times are in HOURS
-   - Example: 48 hours = 2 days
-
-3. Time Generation:
-   - Times generated based on specified distribution
-   - Bounded by min/max cutoffs
-   - Out-of-bounds times are regenerated
-   - Available distributions handle different scenarios:
-     * Triangular: Most likely value with min/max bounds
-     * Uniform: Equal probability across min/max range
-     * Log-normal: Right-skewed distribution
-     * Gamma: Flexible right-skewed distribution
-
-Example Output:
-```
-Disease Progression Timeline:
-   0.0 hours: Infected
-  12.0 hours: Infectious_Symptomatic  # 0.5 days after infection
-  96.0 hours: Recovered              # 4 days after symptoms
+dmp/
+├── app/                    # Web interface
+│   ├── graph_visualization.py
+│   └── state_machine/     # State machine components
+├── api/                   # API server
+│   └── dmp_api_v2.py
+├── cli/                   # Command line interface
+│   └── user_input.py
+├── core/                  # Core simulation functions
+├── docs/                  # Documentation
+└── requirements.txt       # Dependencies
 ```
 
 ## Development
 
-Run tests:
-```bash
-python3 -m api.test_api_v2
-```
+### Adding New Diseases
 
-## Documentation
+1. **Update `disease_configurations.py`**:
+   ```python
+   DISEASE_MODELS = {
+       "New Disease": {
+           "default": {
+               "general": {
+                   "description": "General model",
+                   "demographics": ["Age", "Sex"]
+               }
+           }
+       }
+   }
+   ```
 
-For detailed API documentation and advanced usage examples, see:
-- **API Documentation**: `docs/API_DOCUMENTATION.md` - Complete API reference with examples
-- **Quick Start Guide**: `docs/QUICK_START.md` - Getting started guide for new users
+2. **Add disease templates** with states, transitions, and parameters
 
-## License
-[Your license information here]
+3. **Test with web interface** and API
 
-## API Reference
+### Database Schema
 
-### POST /initialize
-Initialize the DMP with state machine database.
+The system uses SQLite with the following main tables:
+- `state_machines`: Core state machine metadata
+- `states`: Individual states for each machine
+- `edges`: Transitions between states with timing parameters
 
-Request:
-```json
-{
-    "use_state_machines": true
-}
-```
+## Troubleshooting
 
-Response:
-```json
-{
-    "status": "success",
-    "message": "DMP initialized with state machine database",
-    "mode": "state_machines"
-}
-```
+### Common Issues
 
-### GET /diseases
-Get all available diseases.
+1. **"No matching state machine found"**
+   - Check that the disease name is correct
+   - Verify demographics match available options
+   - Ensure model_path exists for the disease
 
-Response:
-```json
-{
-    "status": "success",
-    "diseases": ["COVID-19", "Measles"]
-}
-```
+2. **"Invalid transition probabilities"**
+   - Ensure outgoing probabilities sum to 1.0 for each state
+   - Check for negative or invalid probability values
 
-### GET /diseases/{disease_name}/variants
-Get variants for a specific disease.
+3. **API connection errors**
+   - Verify the API server is running on port 8000
+   - Check firewall settings
 
-Response:
-```json
-{
-    "status": "success",
-    "variants": ["Delta", "Omicron"]
-}
-```
+### Validation
 
-### GET /state-machines
-List state machines with optional filtering.
+The system validates:
+- Transition probabilities sum to 1.0 for each state
+- All states have valid transitions
+- Demographic values match available options
+- Model paths follow the hierarchical structure
 
-Response:
-```json
-{
-    "status": "success",
-    "state_machines": [
-        {
-            "id": 1,
-            "name": "COVID-19 Default Model",
-            "disease_name": "COVID-19",
-            "variant_name": null,
-            "model_category": "default",
-            "demographics": {
-                "Age": "*",
-                "Sex": "*",
-                "Vaccination Status": "*"
-            },
-            "states": ["Infected", "Infectious_Symptomatic", "Recovered"],
-            "created_at": "2024-01-15 10:30:00",
-            "updated_at": "2024-01-15 10:30:00"
-        }
-    ]
-}
-```
+## Contributing
 
-### POST /simulate
-Run a simulation with provided demographics.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-Request:
-```json
-{
-    "disease_name": "COVID-19",
-    "demographics": {
-        "Age": "25",
-        "Vaccination Status": "Vaccinated",
-        "Sex": "F"
-    },
-    "variant_name": "Omicron",
-    "model_category": "variant",
-    "initial_state": "Infected"
-}
-```
 
-Response:
-```json
-{
-    "status": "success",
-    "mode": "state_machines",
-    "timeline": [
-        ["Infected", 0.0],
-        ["Infectious_Symptomatic", 21.8],
-        ["Recovered", 69.8]
-    ],
-    "state_machine": {
-        "id": 1,
-        "name": "COVID-19 | variant=Omicron | Age=25 | Sex=F | Vaccination Status=Vaccinated",
-        "disease_name": "COVID-19",
-        "variant_name": "Omicron",
-        "model_category": "variant",
-        "demographics": {
-            "Age": "25",
-            "Sex": "F",
-            "Vaccination Status": "Vaccinated"
-        }
-    }
-}
-```
+---
 
-Note: Times in the timeline are in hours. 
+**For complete API documentation, see [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md).** 

@@ -142,57 +142,29 @@ DISEASE_TEMPLATES = {
     },
     "Influenza": {
         "states": [],
-        "description": "Influenza template - to be defined",
+        "description": "Influenza - placeholder for future implementation",
         "typical_transitions": [],
         "parameters": {},
-        "model_categories": [
-            {
-                "id": "default",
-                "name": "Default Model",
-                "description": "General influenza progression model"
-            }
-        ],
-        "demographic_options": {
-            "Age": ["0-18", "19-64", "65+"],
-            "Sex": ["M", "F"],
-            "Vaccination Status": ["Vaccinated", "Unvaccinated"]
-        },
+        "model_categories": [],
+        "demographic_options": {},
         "edges": []
     },
     "Ebola": {
         "states": [],
-        "description": "Ebola template - to be defined",
+        "description": "Ebola - placeholder for future implementation",
         "typical_transitions": [],
         "parameters": {},
-        "model_categories": [
-            {
-                "id": "default",
-                "name": "Default Model",
-                "description": "General Ebola progression model"
-            }
-        ],
-        "demographic_options": {
-            "Age": ["0-18", "19-64", "65+"],
-            "Sex": ["M", "F"]
-        },
+        "model_categories": [],
+        "demographic_options": {},
         "edges": []
     },
     "Zika": {
         "states": [],
-        "description": "Zika template - to be defined",
+        "description": "Zika - placeholder for future implementation",
         "typical_transitions": [],
         "parameters": {},
-        "model_categories": [
-            {
-                "id": "default",
-                "name": "Default Model",
-                "description": "General Zika progression model"
-            }
-        ],
-        "demographic_options": {
-            "Age": ["0-18", "19-64", "65+"],
-            "Sex": ["M", "F"]
-        },
+        "model_categories": [],
+        "demographic_options": {},
         "edges": []
     },
     "Measles": {
@@ -381,6 +353,86 @@ DISEASE_TEMPLATES = {
     }
 }
 
+# Nested model structure for organizing state machines
+# Model paths are separate from demographics - they're purely organizational
+# The .general suffix is a placeholder for any future subcategory expansion
+DISEASE_MODELS = {
+    "COVID-19": {
+        "default": {
+            "general": {
+                "description": "General COVID-19 model",
+                "demographics": ["Age", "Sex"]
+            }
+        },
+        "variant": {
+            "Delta": {
+                "general": {
+                    "description": "Delta variant model",
+                    "demographics": ["Age", "Sex", "Vaccination Status"]
+                }
+            },
+            "Omicron": {
+                "general": {
+                    "description": "Omicron variant model",
+                    "demographics": ["Age", "Sex", "Vaccination Status"]
+                }
+            }
+        }
+    },
+    "Measles": {
+        "default": {
+            "general": {
+                "description": "General measles model",
+                "demographics": ["Age", "Sex"]
+            }
+        },
+        "vaccination": {
+            "Unvaccinated": {
+                "general": {
+                    "description": "Unvaccinated measles model",
+                    "demographics": ["Age", "Sex"]
+                }
+            },
+            "Partially Vaccinated": {
+                "general": {
+                    "description": "Partially vaccinated measles model",
+                    "demographics": ["Age", "Sex"]
+                }
+            },
+            "Fully Vaccinated": {
+                "general": {
+                    "description": "Fully vaccinated measles model",
+                    "demographics": ["Age", "Sex"]
+                }
+            }
+        }
+    },
+    "Influenza": {
+        "default": {
+            "general": {
+                "description": "General influenza model",
+                "demographics": ["Age", "Sex"]
+            }
+        }
+    },
+    "Ebola": {
+        "default": {
+            "general": {
+                "description": "General Ebola model",
+                "demographics": ["Age", "Sex"]
+            }
+        }
+    },
+    "Zika": {
+        "default": {
+            "general": {
+                "description": "General Zika model",
+                "demographics": ["Age", "Sex"]
+            }
+        }
+    }
+}
+
 def get_disease_template(disease_name):
     """Get the template for a specific disease"""
     return DISEASE_TEMPLATES.get(disease_name, None)
@@ -392,7 +444,8 @@ def get_available_diseases():
 def display_disease_configurations():
     """Display disease configurations interface"""
     st.header("Disease Configurations")
-    st.write("Configure disease-specific parameters, states, and transitions.")
+    st.write("View disease-specific parameters, states, and model structure.")
+    st.info("Note: Model structure can be configured in the disease_configurations.py file.")
     
     # Disease selection
     selected_disease = st.selectbox(
@@ -403,10 +456,11 @@ def display_disease_configurations():
     
     if selected_disease:
         disease_template = get_disease_template(selected_disease)
+        disease_models = get_disease_models(selected_disease)
         
         if disease_template:
             # Display disease information
-            st.subheader(f"📋 {selected_disease} Configuration")
+            st.subheader(f"{selected_disease} Configuration")
             
             # Description
             st.write("**Description:**")
@@ -428,17 +482,9 @@ def display_disease_configurations():
             else:
                 st.write("No typical transitions defined")
             
-            # Model categories
-            st.write("**Model Categories:**")
-            if "model_categories" in disease_template:
-                for category in disease_template["model_categories"]:
-                    st.write(f"- **{category['name']}** ({category['id']}): {category['description']}")
-            else:
-                st.write("No model categories defined")
-            
             # Demographic options
             st.write("**Demographic Options:**")
-            if "demographic_options" in disease_template:
+            if "demographic_options" in disease_template and disease_template["demographic_options"]:
                 for demo_type, options in disease_template["demographic_options"].items():
                     st.write(f"- **{demo_type}**: {', '.join(options)}")
             else:
@@ -458,49 +504,39 @@ def display_disease_configurations():
             else:
                 st.write("No default edges defined")
             
-            # Edit interface
+            # Nested Model Structure
             st.markdown("---")
-            st.subheader("🔧 Edit Configuration")
+            st.subheader("Model Structure")
             
-            # Add new model category
-            with st.expander("Add Model Category"):
-                new_category_id = st.text_input("Category ID (e.g., 'custom')")
-                new_category_name = st.text_input("Category Name (e.g., 'Custom Model')")
-                new_category_desc = st.text_area("Category Description")
+            if disease_models:
+                st.write("**Available Model Paths:**")
+                available_paths = get_available_model_paths(selected_disease)
                 
-                if st.button("Add Model Category") and new_category_id and new_category_name:
-                    if "model_categories" not in disease_template:
-                        disease_template["model_categories"] = []
-                    
-                    disease_template["model_categories"].append({
-                        "id": new_category_id,
-                        "name": new_category_name,
-                        "description": new_category_desc
-                    })
-                    st.success(f"Added model category: {new_category_name}")
-            
-            # Add new demographic option
-            with st.expander("Add Demographic Option"):
-                new_demo_type = st.text_input("Demographic Type (e.g., 'Age')")
-                new_demo_options = st.text_area("Options (one per line)")
+                # Display as hierarchical text with proper indentation
+                def _display_hierarchy(node, level=0, path=""):
+                    for key, value in node.items():
+                        indent = "&nbsp;&nbsp;&nbsp;&nbsp;" * level
+                        current_path = f"{path}.{key}" if path else key
+                        
+                        if isinstance(value, dict) and "description" in value:
+                            # Leaf node (actual model)
+                            st.markdown(f"{indent}**{key}** ({current_path})")
+                            st.markdown(f"{indent}&nbsp;&nbsp;&nbsp;&nbsp;Description: {value['description']}")
+                            st.markdown(f"{indent}&nbsp;&nbsp;&nbsp;&nbsp;Demographics: {', '.join(value['demographics'])}")
+                        else:
+                            # Branch node (category)
+                            st.markdown(f"{indent}**{key}**")
+                            _display_hierarchy(value, level + 1, current_path)
                 
-                if st.button("Add Demographic Option") and new_demo_type and new_demo_options:
-                    if "demographic_options" not in disease_template:
-                        disease_template["demographic_options"] = {}
-                    
-                    options_list = [opt.strip() for opt in new_demo_options.split('\n') if opt.strip()]
-                    disease_template["demographic_options"][new_demo_type] = options_list
-                    st.success(f"Added demographic option: {new_demo_type}")
-            
-            # Add new parameter
-            with st.expander("Add Parameter"):
-                new_param_type = st.text_input("Parameter Type (e.g., 'variant')")
-                new_param_options = st.text_area("Parameter Options (one per line)")
+                _display_hierarchy(disease_models)
                 
-                if st.button("Add Parameter") and new_param_type and new_param_options:
-                    options_list = [opt.strip() for opt in new_param_options.split('\n') if opt.strip()]
-                    disease_template["parameters"][new_param_type] = options_list
-                    st.success(f"Added parameter: {new_param_type}")
+                st.write("**API Usage Examples:**")
+                for path in available_paths:
+                    model_info = get_model_info(selected_disease, path)
+                    if model_info:
+                        st.code(f'POST /simulate\n{{\n  "disease_name": "{selected_disease}",\n  "model_path": "{path}",\n  "demographics": {{...}}\n}}')
+            else:
+                st.write("No model structure defined")
         else:
             st.error(f"No template found for {selected_disease}")
 
@@ -527,22 +563,99 @@ def get_available_variants(disease_name):
 def get_disease_model_categories(disease_name):
     """Get model categories for a specific disease"""
     template = get_disease_template(disease_name)
-    if template and "model_categories" in template:
+    if template and "model_categories" in template and template["model_categories"]:
         return template["model_categories"]
-    return [
-        {
-            "id": "default",
-            "name": "Default Model",
-            "description": "General disease progression model"
-        }
-    ]
+    # Return empty array for placeholder diseases
+    return []
 
 def get_disease_demographic_options(disease_name):
     """Get demographic options for a specific disease"""
     template = get_disease_template(disease_name)
-    if template and "demographic_options" in template:
+    if template and "demographic_options" in template and template["demographic_options"]:
         return template["demographic_options"]
-    return {
-        "Age": ["0-18", "19-64", "65+"],
-        "Sex": ["M", "F"]
-    }
+    # Return empty dict for placeholder diseases
+    return {}
+
+def get_disease_models(disease_name):
+    """Get the nested model structure for a specific disease"""
+    return DISEASE_MODELS.get(disease_name, {})
+
+def get_available_model_paths(disease_name):
+    """Get all available model paths for a disease as dot-notation strings"""
+    models = get_disease_models(disease_name)
+    paths = []
+    
+    def _collect_paths(node, current_path=""):
+        for key, value in node.items():
+            if isinstance(value, dict) and "description" in value:
+                # This is a leaf node (actual model)
+                full_path = f"{current_path}.{key}" if current_path else key
+                paths.append(full_path)
+            elif isinstance(value, dict):
+                # This is a branch node (category)
+                new_path = f"{current_path}.{key}" if current_path else key
+                _collect_paths(value, new_path)
+    
+    _collect_paths(models)
+    return paths
+
+def validate_model_path(disease_name, model_path):
+    """Validate if a model path exists for a disease"""
+    if not model_path:
+        return False
+    
+    models = get_disease_models(disease_name)
+    if not models:
+        return False
+    
+    # Split the path by dots
+    path_parts = model_path.split('.')
+    
+    # Navigate through the nested structure
+    current = models
+    for part in path_parts:
+        if part not in current:
+            return False
+        current = current[part]
+    
+    # Check if we reached a leaf node (has description)
+    return isinstance(current, dict) and "description" in current
+
+def get_model_info(disease_name, model_path):
+    """Get information about a specific model path"""
+    if not validate_model_path(disease_name, model_path):
+        return None
+    
+    models = get_disease_models(disease_name)
+    path_parts = model_path.split('.')
+    
+    # Navigate to the model
+    current = models
+    for part in path_parts:
+        current = current[part]
+    
+    return current
+
+def get_parent_model_path(disease_name, model_path):
+    """Get the parent model path (one level up)"""
+    if not model_path or '.' not in model_path:
+        return None
+    
+    parent_path = '.'.join(model_path.split('.')[:-1])
+    if validate_model_path(disease_name, parent_path):
+        return parent_path
+    return None
+
+def get_default_model_path(disease_name):
+    """Get the default model path for a disease"""
+    models = get_disease_models(disease_name)
+    if not models or "default" not in models:
+        return None
+    
+    # Find the first available default model
+    default_models = models["default"]
+    for key, value in default_models.items():
+        if isinstance(value, dict) and "description" in value:
+            return f"default.{key}"
+    
+    return None

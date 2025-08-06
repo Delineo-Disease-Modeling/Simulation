@@ -340,19 +340,21 @@ def manage_state_machines(states):
                     break
             
             if selected_category_id:
-                saved_machines = [machine for machine in saved_machines if machine[4] == selected_category_id]
+                # Filter by model_path that starts with the category
+                saved_machines = [machine for machine in saved_machines if machine[5].startswith(selected_category_id)]
         
         # Filter by variant
         if selected_variant and selected_variant != "All Variants":
-            saved_machines = [machine for machine in saved_machines if machine[3] == selected_variant]
+            # Filter by model_path that contains the variant
+            saved_machines = [machine for machine in saved_machines if selected_variant in machine[5]]
         
         # Filter by vaccination status for measles
         if selected_disease == "Measles" and selected_vaccination and selected_vaccination != "All Vaccination Statuses":
-            # Filter by vaccination status in the model name
-            saved_machines = [machine for machine in saved_machines if f"vaccination={selected_vaccination}" in machine[1]]
+            # Filter by vaccination status in the model_path
+            saved_machines = [machine for machine in saved_machines if selected_vaccination in machine[5]]
         
         # Sort machines by update time (most recent first) and limit to last 10 by default
-        saved_machines.sort(key=lambda x: x[6], reverse=True)  # Sort by update time descending
+        saved_machines.sort(key=lambda x: x[7], reverse=True)  # Sort by update time descending
         
         # Add option to show all machines or just recent ones
         show_all = st.checkbox("Show all state machines", value=False, 
@@ -370,30 +372,19 @@ def manage_state_machines(states):
         # Display state machines in a table format
         for machine in recent_machines:
             disease_name = machine[2] if machine[2] and machine[2] != "Unknown" else "Unknown Disease"
-            variant_name = machine[3] if machine[3] else None
-            model_category = machine[4]
+            model_path = machine[5] if machine[5] else "default"
             
-            # Create display name with category and variant info
-            if model_category == "variant" and variant_name:
-                display_name = f"{machine[1]} ({disease_name} - {variant_name} Variant)"
-            elif model_category == "vaccination" and disease_name == "Measles":
-                # Extract vaccination status from model name
-                vaccination_status = "Unknown"
-                if "vaccination=Unvaccinated" in machine[1]:
-                    vaccination_status = "Unvaccinated"
-                elif "vaccination=Partially Vaccinated" in machine[1]:
-                    vaccination_status = "Partially Vaccinated"
-                elif "vaccination=Fully Vaccinated" in machine[1]:
-                    vaccination_status = "Fully Vaccinated"
-                display_name = f"{machine[1]} ({disease_name} - {vaccination_status} Model)"
+            # Create display name with model path info
+            if model_path != "default":
+                display_name = f"{machine[1]} ({disease_name} - {model_path})"
             else:
                 display_name = f"{machine[1]} ({disease_name} - Default Model)"
             
-            with st.expander(f"{display_name} - Created: {machine[5]}, Updated: {machine[6]})"):
+            with st.expander(f"{display_name} - Created: {machine[6]}, Updated: {machine[7]})"):
                 col1, col2 = st.columns(2)
                 
                 # Load demographics
-                demographics = json.loads(machine[7] or "{}")
+                demographics = json.loads(machine[8] or "{}")
                 
                 with col1:
                     st.write("Demographics:")
@@ -427,12 +418,12 @@ def manage_state_machines(states):
                                     "name": machine_data["name"],
                                     "disease_name": machine_data.get("disease_name", "Unknown"),
                                     "variant_name": machine_data.get("variant_name"),
-                                    "model_category": machine_data.get("model_category", "default"),
+                                    "model_path": machine_data.get("model_path", "default"),
                                     "states": machine_data["states"],
                                     "edges": machine_data["edges"],
                                     "demographics": machine_data["demographics"],
-                                    "created_at": machine[5],
-                                    "updated_at": machine[6]
+                                    "created_at": machine[6],
+                                    "updated_at": machine[7]
                                 }
                                 
                                 # Create downloadable JSON
@@ -467,7 +458,7 @@ def manage_state_machines(states):
                         "name": st.session_state.selected_machine["name"],
                         "disease_name": st.session_state.selected_machine.get("disease_name", "Unknown"),
                         "variant_name": st.session_state.selected_machine.get("variant_name"),
-                        "model_category": st.session_state.selected_machine.get("model_category", "default"),
+                        "model_path": st.session_state.selected_machine.get("model_path", "default"),
                         "states": st.session_state.states,
                         "edges": st.session_state.graph_edges,
                         "demographics": st.session_state.selected_machine["demographics"],

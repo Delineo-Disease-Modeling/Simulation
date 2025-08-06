@@ -27,6 +27,7 @@ class StateMachineDB:
                     disease_name TEXT DEFAULT 'Unknown',
                     variant_name TEXT DEFAULT NULL,
                     model_category TEXT DEFAULT 'default',
+                    model_path TEXT DEFAULT 'default',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     demographics TEXT NOT NULL DEFAULT '{}'
@@ -95,6 +96,14 @@ class StateMachineDB:
                     ADD COLUMN model_category TEXT DEFAULT 'default'
                 ''')
                 print("Database migrated: Added model_category column")
+            
+            # Add model_path column if it doesn't exist
+            if 'model_path' not in columns:
+                cursor.execute('''
+                    ALTER TABLE state_machines 
+                    ADD COLUMN model_path TEXT DEFAULT 'default'
+                ''')
+                print("Database migrated: Added model_path column")
                 
         except Exception as e:
             print(f"Migration error: {e}")
@@ -111,7 +120,7 @@ class StateMachineDB:
             ''', (name,))
             return cursor.fetchone()
 
-    def save_state_machine(self, name, states, edges, demographics=None, disease_name="Unknown", variant_name=None, model_category="default", update_existing=True):
+    def save_state_machine(self, name, states, edges, demographics=None, disease_name="Unknown", variant_name=None, model_category="default", model_path="default", update_existing=True):
         """Save a state machine to the database.
         
         Args:
@@ -122,6 +131,7 @@ class StateMachineDB:
             disease_name: Name of the disease (default: "Unknown")
             variant_name: Name of the variant (default: None for default models)
             model_category: Category of the model ("default" or "variant")
+            model_path: Model path in dot notation (e.g., "variant.Delta.general")
             update_existing: If True, will update an existing state machine with the same name
                            If False, will raise an error if a state machine with the same name exists
         
@@ -150,10 +160,10 @@ class StateMachineDB:
                 cursor.execute(
                     """
                     UPDATE state_machines 
-                    SET demographics = ?, disease_name = ?, variant_name = ?, model_category = ?, updated_at = CURRENT_TIMESTAMP
+                    SET demographics = ?, disease_name = ?, variant_name = ?, model_category = ?, model_path = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                     """,
-                    (demographics_json, disease_name, variant_name, model_category, state_machine_id)
+                    (demographics_json, disease_name, variant_name, model_category, model_path, state_machine_id)
                 )
                 
                 # Delete existing states and edges
@@ -163,10 +173,10 @@ class StateMachineDB:
                 # Insert new state machine
                 cursor.execute(
                     """
-                    INSERT INTO state_machines (name, disease_name, variant_name, model_category, demographics)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO state_machines (name, disease_name, variant_name, model_category, model_path, demographics)
+                    VALUES (?, ?, ?, ?, ?, ?)
                     """,
-                    (name, disease_name, variant_name, model_category, demographics_json)
+                    (name, disease_name, variant_name, model_category, model_path, demographics_json)
                 )
                 state_machine_id = cursor.lastrowid
             
@@ -229,7 +239,7 @@ class StateMachineDB:
                 # Get state machine details
                 cursor.execute(
                     """
-                    SELECT name, disease_name, variant_name, model_category, demographics
+                    SELECT name, disease_name, variant_name, model_category, model_path, demographics
                     FROM state_machines
                     WHERE id = ?
                     """,
@@ -279,7 +289,7 @@ class StateMachineDB:
                 ]
                 
                 # Parse demographics JSON
-                demographics = json.loads(machine_data[4] or "{}")
+                demographics = json.loads(machine_data[5] or "{}")
                 
                 return {
                     "id": state_machine_id,
@@ -287,6 +297,7 @@ class StateMachineDB:
                     "disease_name": machine_data[1],
                     "variant_name": machine_data[2],
                     "model_category": machine_data[3],
+                    "model_path": machine_data[4],
                     "demographics": demographics,
                     "states": states,
                     "edges": edges
@@ -299,7 +310,7 @@ class StateMachineDB:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, name, disease_name, variant_name, model_category, created_at, updated_at, demographics
+                SELECT id, name, disease_name, variant_name, model_category, model_path, created_at, updated_at, demographics
                 FROM state_machines
                 ORDER BY updated_at DESC
             ''')
