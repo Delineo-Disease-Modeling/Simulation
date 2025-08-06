@@ -1,5 +1,0 @@
-State,Time,Age,Sex,Vaccination Status,Variant
-Infected,0.0,25,F,Vaccinated,Omicron
-Infectious_Symptomatic,5015.6263800538,25,F,Vaccinated,Omicron
-Hospitalized,8781.917867559414,25,F,Vaccinated,Omicron
-Recovered,20606.039693544422,25,F,Vaccinated,Omicron

@@ -1,7 +1,7 @@
 # Disease Modeling Platform (DMP)
 
 ## Overview
-This project simulates the progression of individuals through various stages of a disease, based on transition probabilities, time intervals, and demographic information. The system models how people move through health states such as being infected, hospitalized, and recovered, accommodating a wide range of disease progression scenarios using customizable transition matrices and time intervals.
+This project simulates the progression of individuals through various stages of a disease, based on transition probabilities, time intervals, and demographic information. The system models how people move through health states such as being infected, hospitalized, and recovered, accommodating a wide range of disease progression scenarios using customizable state machines.
 
 The simulation helps answer questions like:
 - How long does it take for a vaccinated person to recover compared to an unvaccinated person?
@@ -31,20 +31,6 @@ From the `Simulation/dmp` directory:
 
 ```bash
 python3 -m cli.user_input \
-    --matrices data/combined_matrices.csv \
-    --mapping data/demographic_mapping.csv \
-    --age 25 \
-    --vaccination_status Vaccinated \
-    --sex F \
-    --variant Omicron
-```
-
-### Optional States File
-```bash
-python3 -m cli.user_input \
-    --matrices data/combined_matrices.csv \
-    --mapping data/demographic_mapping.csv \
-    --states data/custom_states.txt \
     --age 25 \
     --vaccination_status Vaccinated \
     --sex F \
@@ -54,51 +40,37 @@ python3 -m cli.user_input \
 ### Arguments
 
 Required:
-- `--matrices`: Path to CSV file containing transition matrices
-- `--mapping`: Path to CSV file containing demographic mappings
 - `--age`: Age of the individual
 - `--vaccination_status`: Vaccination status (e.g., "Vaccinated", "Unvaccinated")
 - `--sex`: Sex of the individual ("M" or "F")
 - `--variant`: Virus variant (e.g., "Delta", "Omicron")
 
-Optional:
-- `--states`: Path to custom states file (if not provided, uses default_states.txt)
-
 ### Example Output
 ```
-Loading input files...
-Using states: ['Infected', 'Hospitalized', 'ICU', 'Recovered', 'Deceased']
-
 Demographics:
 - Age: 70
 - Sex: M
 - Vaccination Status: Vaccinated
 - Variant: Omicron
 
-Using matrix set: Matrix_Set_23
-
 Disease Progression Timeline:
    0.0 hours: Infected
-  40.3 hours: Infectious_Syptomatic
+  40.3 hours: Infectious_Symptomatic
   92.9 hours: Hospitalized
   212.9 hours: Recovered
 ```
 
-### 2. REST API
+### 2. REST API v2.0
 Start the API server:
 ```bash
-uvicorn api.dmp_api:app --reload
+uvicorn api.dmp_api_v2:app --reload
 ```
 
 Initialize the DMP:
 ```bash
 curl -X POST http://localhost:8000/initialize \
      -H "Content-Type: application/json" \
-     -d '{
-           "matrices_path": "data/combined_matrices.csv",
-           "mapping_path": "data/demographic_mapping.csv",
-           "states_path": "data/custom_states.txt"
-         }'
+     -d '{"use_state_machines": true}'
 ```
 
 Run a simulation:
@@ -106,12 +78,13 @@ Run a simulation:
 curl -X POST http://localhost:8000/simulate \
      -H "Content-Type: application/json" \
      -d '{
+           "disease_name": "Measles",
            "demographics": {
-             "Age": "25",
-             "Vaccination Status": "Vaccinated",
-             "Sex": "F",
-             "Variant": "Omicron"
-           }
+             "Age": "3",
+             "Vaccination Status": "Unvaccinated",
+             "Sex": "M"
+           },
+           "model_category": "vaccination"
          }'
 ```
 
@@ -181,8 +154,8 @@ Features:
 ## Project Structure
 ```
 api/
-- dmp_api.py: FastAPI endpoints
-- test_api.py: API testing suite
+- dmp_api_v2.py: FastAPI v2.0 endpoints
+- test_api_v2.py: API testing suite
 
 app/
 - graph_visualization.py: Main Streamlit application entry point
@@ -204,70 +177,61 @@ core/
 - simulation_functions.py: Core simulation logic
 
 data/
-- Example matrices and demographic mappings
-- Default configuration files
+- custom_states.txt: Default state definitions
+- default_states.txt: Alternative state definitions
+- legacy/: Legacy CSV files (no longer used)
+
+docs/
+- API_DOCUMENTATION.md: Complete API documentation
+
+examples/
+- (Placeholder for example scripts and use cases)
+
+results/
+- (Simulation output files - auto-generated)
+
+tests/
+- (Placeholder for test files)
 ```
 
-## Configuration Files
+## State Machine System
 
-### States File
-- Default: `data/default_states.txt`
-- One state per line
-- Example states: Infected, Hospitalized, ICU, Recovered, Deceased
+### State Machine Structure
+Each state machine contains:
+- **States**: Different stages of the disease (Infected → Hospitalized → Recovered)
+- **Edges**: Transitions between states with probabilities and timing
+- **Demographics**: Population characteristics (Age, Sex, Vaccination Status, etc.)
 
-### Matrix Requirements
-The combined matrices CSV file must follow a specific structure. For each matrix set:
+### Model Categories
+- **Default Models**: Basic disease progression models
+- **Variant-Specific Models**: Models tailored to specific virus variants
+- **Vaccination Models**: Models accounting for vaccination status
 
-1. Matrix Order (6 matrices per set):
-   - Transition Matrix: Probabilities of moving between states
-   - Distribution Type: Type of statistical distribution for time intervals
-   - Mean Matrix: Average time spent in each state
-   - Standard Deviation Matrix: Variation in time intervals
-   - Min Cutoff Matrix: Minimum allowed time in each state
-   - Max Cutoff Matrix: Maximum allowed time in each state
-
-2. Distribution Types:
-   - 0: Fixed time (uses mean value only)
-   - 1: Normal distribution
-   - 2: Uniform distribution
-   - 3: Log-normal distribution
-   - 4: Gamma distribution
-
-3. Matrix Restrictions:
-   - Transition Matrix: Values must sum to 1 for each row (or 0 for terminal states)
-   - All matrices must be square (n x n where n is number of states)
-   - Mean values must be within min/max cutoff range
-   - Non-zero transition probabilities must have valid distribution types
-   - All values must be non-negative
-
-### Demographic Mapping File
-CSV file mapping demographics to matrix sets:
-- Must include "Matrix_Set" column
-- Other columns define demographic categories
-- Supports wildcards (*) for flexible matching
-- Age ranges support both "N-M" and "N+" formats
+### Disease Templates
+Pre-built templates for common diseases:
+- **COVID-19**: Multiple variants (Delta, Omicron) with vaccination models
+- **Measles**: Vaccination status models
+- **Custom Diseases**: User-defined disease models
 
 ## Time Calculations
 
 1. Input Times:
-   - All times in matrices are specified in DAYS
-   - Example: mean time of 2.0 represents 2 days
+   - All times in state machines are specified in HOURS
+   - Example: mean time of 48.0 represents 48 hours
 
 2. Output Times:
-   - All output times are converted to HOURS
-   - Conversion: hours = days * 24
-   - Example: 2 days = 48 hours
+   - All output times are in HOURS
+   - Example: 48 hours = 2 days
 
 3. Time Generation:
    - Times generated based on specified distribution
    - Bounded by min/max cutoffs
    - Out-of-bounds times are regenerated
    - Available distributions handle different scenarios:
-     * Fixed: Always uses mean value
-     * Normal: Bell curve around mean
-     * Uniform: Random between (mean ± std_dev)
-     * Log-normal: Skewed distribution
-     * Gamma: Shape determined by mean and std dev
+     * Triangular: Most likely value with min/max bounds
+     * Uniform: Equal probability across min/max range
+     * Log-normal: Right-skewed distribution
+     * Gamma: Flexible right-skewed distribution
 
 Example Output:
 ```
@@ -277,42 +241,18 @@ Disease Progression Timeline:
   96.0 hours: Recovered              # 4 days after symptoms
 ```
 
-## Project Structure
-```
-api/
-- dmp_api.py: FastAPI endpoints
-- test_api.py: API testing suite
-
-app/
-- graph_visualization.py: Main Streamlit application entry point
-- state_machine/
-  - state_machine_creator.py: Interactive state machine creation
-  - state_machine_manager.py: State machine management and analysis
-  - state_machine_comparison.py: Side-by-side comparison functionality
-  - disease_configurations.py: Disease templates and configurations
-  - state_machine_db.py: Database operations
-  - utils/
-    - edge_editor.py: Edge parameter editing components
-    - graph_utils.py: Graph utility functions
-    - graph_visualizer.py: Cytoscape.js visualization components
-
-cli/
-- user_input.py: Command line interface
-
-core/
-- simulation_functions.py: Core simulation logic
-
-data/
-- Example matrices and demographic mappings
-- Default configuration files
-```
-
 ## Development
 
 Run tests:
 ```bash
-python3 -m api.test_api
+python3 -m api.test_api_v2
 ```
+
+## Documentation
+
+For detailed API documentation and advanced usage examples, see:
+- **API Documentation**: `docs/API_DOCUMENTATION.md` - Complete API reference with examples
+- **Quick Start Guide**: `docs/QUICK_START.md` - Getting started guide for new users
 
 ## License
 [Your license information here]
@@ -320,14 +260,12 @@ python3 -m api.test_api
 ## API Reference
 
 ### POST /initialize
-Initialize the DMP with configuration files.
+Initialize the DMP with state machine database.
 
 Request:
 ```json
 {
-    "matrices_path": "path/to/matrices.csv",
-    "mapping_path": "path/to/mapping.csv",
-    "states_path": "path/to/states.txt"  // Optional
+    "use_state_machines": true
 }
 ```
 
@@ -335,15 +273,57 @@ Response:
 ```json
 {
     "status": "success",
-    "message": "DMP initialized successfully",
-    "states": ["Infected", "Hospitalized", "ICU", "Recovered", "Deceased"],
-    "demographic_categories": ["Age", "Sex", "Vaccination Status", "Variant"],
-    "available_demographics": {
-        "Age": ["0-18", "19-64", "65+"],
-        "Sex": ["M", "F"],
-        "Vaccination Status": ["Vaccinated", "Unvaccinated"],
-        "Variant": ["Delta", "Omicron"]
-    }
+    "message": "DMP initialized with state machine database",
+    "mode": "state_machines"
+}
+```
+
+### GET /diseases
+Get all available diseases.
+
+Response:
+```json
+{
+    "status": "success",
+    "diseases": ["COVID-19", "Measles"]
+}
+```
+
+### GET /diseases/{disease_name}/variants
+Get variants for a specific disease.
+
+Response:
+```json
+{
+    "status": "success",
+    "variants": ["Delta", "Omicron"]
+}
+```
+
+### GET /state-machines
+List state machines with optional filtering.
+
+Response:
+```json
+{
+    "status": "success",
+    "state_machines": [
+        {
+            "id": 1,
+            "name": "COVID-19 Default Model",
+            "disease_name": "COVID-19",
+            "variant_name": null,
+            "model_category": "default",
+            "demographics": {
+                "Age": "*",
+                "Sex": "*",
+                "Vaccination Status": "*"
+            },
+            "states": ["Infected", "Infectious_Symptomatic", "Recovered"],
+            "created_at": "2024-01-15 10:30:00",
+            "updated_at": "2024-01-15 10:30:00"
+        }
+    ]
 }
 ```
 
@@ -353,12 +333,15 @@ Run a simulation with provided demographics.
 Request:
 ```json
 {
+    "disease_name": "COVID-19",
     "demographics": {
-                    "Age": "15",
-                    "Vaccination Status": "Vaccinated",
-                    "Sex": "F",
-                    "Variant": "Omicron"
-                }
+        "Age": "25",
+        "Vaccination Status": "Vaccinated",
+        "Sex": "F"
+    },
+    "variant_name": "Omicron",
+    "model_category": "variant",
+    "initial_state": "Infected"
 }
 ```
 
@@ -366,12 +349,24 @@ Response:
 ```json
 {
     "status": "success",
+    "mode": "state_machines",
     "timeline": [
         ["Infected", 0.0],
         ["Infectious_Symptomatic", 21.8],
         ["Recovered", 69.8]
     ],
-    "matrix_set": "Matrix_Set_14"
+    "state_machine": {
+        "id": 1,
+        "name": "COVID-19 | variant=Omicron | Age=25 | Sex=F | Vaccination Status=Vaccinated",
+        "disease_name": "COVID-19",
+        "variant_name": "Omicron",
+        "model_category": "variant",
+        "demographics": {
+            "Age": "25",
+            "Sex": "F",
+            "Vaccination Status": "Vaccinated"
+        }
+    }
 }
 ```
 

@@ -1,5 +1,0 @@
-State,Time,Age Range,Vaccination Status,Sex,Variant
-Infected,0.0,25,Vaccinated,F,Omicron
-Infectious_Asymptomatic,35.90223287070211,25,Vaccinated,F,Omicron
-Infectious_Symptomatic,122.37919533255231,25,Vaccinated,F,Omicron
-Deceased,231.97307814018512,25,Vaccinated,F,Omicron
