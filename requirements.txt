@@ -1,0 +1,13 @@
+fastapi==0.115.13
+Flask==3.1.1
+Flask_Cors==5.0.0
+matplotlib==3.8.4
+numpy==2.3.0
+pandas==2.3.0
+pydantic==2.11.7
+PyYAML==6.0.1
+PyYAML==6.0.2
+Requests==2.32.4
+scipy==1.15.3
+streamlit==1.39.0
+Werkzeug==3.1.3

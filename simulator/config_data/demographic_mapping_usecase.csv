@@ -1,0 +1,17 @@
+Age,Vaccination Status,Sex,Variant,Matrix_Set
+65+,Unvaccinated,M,Delta,Matrix_Set_1
+65+,Unvaccinated,F,Delta,Matrix_Set_1
+65+,Unvaccinated,M,Omicron,Matrix_Set_1
+65+,Unvaccinated,F,Omicron,Matrix_Set_1
+65+,Vaccinated,M,Delta,Matrix_Set_1
+65+,Vaccinated,F,Delta,Matrix_Set_1
+65+,Vaccinated,M,Omicron,Matrix_Set_1
+65+,Vaccinated,F,Omicron,Matrix_Set_1
+19-64,Vaccinated,F,Delta,Matrix_Set_2
+19-64,Vaccinated,M,Delta,Matrix_Set_2
+19-64,Vaccinated,F,Omicron,Matrix_Set_3
+19-64,Vaccinated,M,Omicron,Matrix_Set_3
+19-64,Unvaccinated,M,Delta,Matrix_Set_2
+19-64,Unvaccinated,F,Delta,Matrix_Set_2
+19-64,Unvaccinated,F,Omicron,Matrix_Set_3
+19-64,Unvaccinated,M,Omicron,Matrix_Set_3

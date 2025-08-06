@@ -4,7 +4,7 @@ import yaml
 import json
 
 import random
-random.seed(2)
+# random.seed(2)
 
 from enum import Flag, Enum
 
@@ -49,16 +49,26 @@ class Person:
         self.invisible = False
         self.states = {}
         self.timeline = {}
+        self.masked = False
         self.interventions = {
-            'mask': False,
             'vaccine': VaccinationState.NONE
         }
+        self.vaccination_state = 0
     
     def set_masked(self, masked):
-        self.interventions['mask'] = masked
+        self.masked = masked
     
     def get_masked(self):
-        return self.interventions['mask']
+        return getattr(self, 'masked', False)
+    
+    def is_masked(self):
+        """Check if this person is wearing a mask"""
+        return getattr(self, 'masked', False)
+    
+    def toggle_mask(self):
+        """Toggle the masking status"""
+        self.masked = not getattr(self, 'masked', False)
+        return self.masked
     
     def set_vaccinated(self, state):
         self.interventions['vaccine'] = state
@@ -73,6 +83,23 @@ class Person:
                 return True
         
         return False
+    
+    def update_mask_compliance(self, location_mask_policy=False, compliance_rate=1.0):
+        """
+        Update mask wearing based on location policy and personal compliance
+        
+        Args:
+            location_mask_policy: Whether the current location requires masks
+            compliance_rate: Probability of complying with mask policies (0.0-1.0)
+        """
+        if location_mask_policy:
+            # If location requires masks, comply based on compliance rate
+            import random
+            self.masked = random.random() < compliance_rate
+        else:
+            # If no policy, maintain current status or use personal preference
+            # Could extend this to include personal mask preference
+            pass
     
     def update_state(self, curtime, variants):
         '''
@@ -92,7 +119,7 @@ class Person:
                 elif timeline.start <= curtime:
                     self.states[disease] = self.states[disease] | state
                     if state == InfectionState.REMOVED or state == InfectionState.RECOVERED or state == InfectionState.HOSPITALIZED:
-                        self.invisible = True
+                        self.invisible = True # means agent cannot get reinfected 
 
             
 

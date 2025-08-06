@@ -1,16 +1,33 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from werkzeug.exceptions import BadRequest
-from Simulation.dmp.core.simulation_functions import run_simulation, states, default_initial_state
-from Simulation.dmp.cli.user_input import validate_matrices, find_matching_matrix, extract_matrices, parse_mapping_file
-import pandas as pd
-from io import StringIO
-import numpy as np
+from simulator import simulate
+from simulator.config import DMP_API, SERVER, SIMULATION
+import requests
+
 
 app = Flask(__name__)
 
 # Enable CORS
 CORS(app)
+
+# Initialize DMP API when the server starts
+def initialize_dmp_api():
+    BASE_URL = DMP_API["base_url"]
+    init_payload = {
+        "matrices_path": DMP_API["paths"]["matrices_path"],
+        "mapping_path": DMP_API["paths"]["mapping_path"],
+        "states_path": DMP_API["paths"]["states_path"]
+    }
+    
+    try:
+        init_response = requests.post(f"{BASE_URL}/initialize", json=init_payload)
+        init_response.raise_for_status()
+        print("DMP API successfully initialized!")
+        return True
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to initialize DMP API: {e}")
+        return False
 
 @app.route("/simulation/", methods=['POST', 'GET'])
 @cross_origin()
@@ -18,90 +35,36 @@ def run_simulation_endpoint():
     try:
         request.get_json(force=True)
     except BadRequest:
-        return jsonify({"error": "Bad Request"}), 400
+        return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
 
     if not request.json:
-        return jsonify({"error": "No data sent"}), 400
+        return jsonify({"error": SERVER["error_messages"]["no_data"]}), 400
 
-    # Simulation length in minutes
-    length = request.json.get('length', 10080)
+    # Initialize DMP API before running simulation
+    initialize_dmp_api()
+
+    # Get simulation length from request or use default
+    length = request.json.get('length', SIMULATION["default_max_length"])
+    location = request.json.get('location', SIMULATION["default_location"])
+    interventions = {}
+    
+    # Build interventions dict from request, using defaults for missing values
+    if not request.json or not any(key in request.json for key in SIMULATION["default_interventions"]):
+        for key in SIMULATION["default_interventions"]:
+            interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
+        print("Using default interventions:", interventions)
+    # if the interventions are provided from rerunner.py (AI-counterfactual-analysis repo/src/sparser/rerunner.py), use those 
+    elif isinstance(request.json, dict):
+        interventions = request.json
+        print("Using provided interventions:", interventions)
+        
+    
 
     try:
-        return simulate.run_simulator(request.json.get('matrices'), request.json.get('location', 'barnsdall'), length, {
-            'mask': request.json.get('mask', 0.4),
-            'vaccine': request.json.get('vaccine', 0.2),
-            'capacity': request.json.get('capacity', 1.0),
-            'lockdown': request.json.get('lockdown', 0),
-            'selfiso': request.json.get('selfiso', 0.5),
-        })
+        return simulate.run_simulator(location, length, interventions)
     except Exception as e:
+        print("Simulation error:", repr(e))
         return jsonify({"error": str(e)}), 400
-
-
-@app.route("/dmp/", methods=['POST'])
-@cross_origin()
-def run_dmp_simulation_endpoint():
-    """
-    Endpoint to run Disease Modeling Platform (DMP) simulation.
-    """
-    try:
-        # Force JSON parsing
-        request.get_json(force=True)
-    except BadRequest:
-        return jsonify({"error": "Bad Request"}), 400
-
-    if not request.json:
-        return jsonify({"error": "No data sent"}), 400
-
-    try:
-        # Parse input parameters
-        demographic_mapping = request.json.get('demographic_mapping')
-        combined_matrices = request.json.get('combined_matrices')
-        demographics = request.json.get('demographics', {})
-        initial_state = request.json.get('initial_state', default_initial_state)
-
-        # Convert string CSVs to pandas DataFrame
-        mapping_df = pd.read_csv(StringIO(demographic_mapping))
-        combined_matrix_df = pd.read_csv(StringIO(combined_matrices), header=None)
-
-        # Ensure 'Matrix_Set' column exists in the demographic mapping file
-        if "Matrix_Set" not in mapping_df.columns:
-            return jsonify({"error": "'Matrix_Set' column missing in demographic mapping"}), 400
-
-        # Extract demographic categories
-        demographic_categories = [col for col in mapping_df.columns if col != "Matrix_Set"]
-
-        # Find matching matrix set and extract matrices
-        matrix_set = find_matching_matrix(demographics, mapping_df, demographic_categories)
-        matrices = extract_matrices(matrix_set, combined_matrix_df)
-
-        # Validate matrices
-        validate_matrices(
-            transition_matrix=matrices["Transition Matrix"],
-            mean_matrix=matrices["Mean"],
-            std_dev_matrix=matrices["Standard Deviation"],
-            min_cutoff_matrix=matrices["Min Cut-Off"],
-            max_cutoff_matrix=matrices["Max Cut-Off"],
-            distribution_matrix=matrices["Distribution Type"]
-        )
-
-        # Run the simulation using positional arguments
-        simulation_data = run_simulation(
-            matrices["Transition Matrix"],  # Positional argument 1
-            matrices["Mean"],               # Positional argument 2
-            matrices["Standard Deviation"], # Positional argument 3
-            matrices["Min Cut-Off"],        # Positional argument 4
-            matrices["Max Cut-Off"],        # Positional argument 5
-            matrices["Distribution Type"],  # Positional argument 6
-            initial_state                   # Positional argument 7
-        )
-
-        # Return the simulation results as JSON
-        return jsonify({"status": "success", "simulation_data": simulation_data})
-
-    except Exception as e:
-        return jsonify({"error": f"Error during DMP simulation: {e}"}), 400
-
 
 
 @app.route("/", methods=['GET'])
@@ -110,14 +73,14 @@ def run_main():
     """
     Basic simulation endpoint for testing.
     """
-    return simulate.run_simulator(None, 'barnsdall', 10080, {
-        'mask': 0.0,
-        'vaccine': 0.0,
-        'capacity': 1.0,
-        'lockdown': 0,
-        'selfiso': 0.0
-    })
+    # Initialize DMP API before running simulation
+    initialize_dmp_api()
+    
+    # Use default values from config
+    return simulate.run_simulator()
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=6000)
+    # Initialize DMP API when the server starts
+    initialize_dmp_api()
+    app.run(host=SERVER["host"], port=SERVER["port"])

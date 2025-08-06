@@ -1,0 +1,8 @@
+=== Simulation Summary Report ===
+
+Total people: 2
+Total infections: 2
+Total movements: 4224
+
+Intervention Events:
+  vaccine: 43 events

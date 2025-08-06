@@ -1,0 +1,38 @@
+         7327 function calls (7152 primitive calls) in 12.429 seconds
+
+   Ordered by: cumulative time
+   List reduced from 730 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      2/1    0.000    0.000   12.424   12.424 /Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/app_3.py:97(run_main)
+        1    0.000    0.000   12.424   12.424 /Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/simulate.py:71(run_simulator)
+        1    0.000    0.000   12.424   12.424 /Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/simulator/data_interface.py:5(load_movement_pap_data)
+        1    0.000    0.000   12.424   12.424 /opt/anaconda3/lib/python3.12/site-packages/requests/api.py:62(get)
+        1    0.000    0.000   12.424   12.424 /opt/anaconda3/lib/python3.12/site-packages/requests/api.py:14(request)
+        1    0.000    0.000   12.414   12.414 /opt/anaconda3/lib/python3.12/site-packages/requests/sessions.py:500(request)
+        1    0.000    0.000   12.414   12.414 /opt/anaconda3/lib/python3.12/site-packages/requests/sessions.py:673(send)
+        1    0.000    0.000   12.414   12.414 /opt/anaconda3/lib/python3.12/site-packages/requests/adapters.py:535(send)
+        1    0.000    0.000   12.413   12.413 /opt/anaconda3/lib/python3.12/site-packages/urllib3/connectionpool.py:594(urlopen)
+        1    0.000    0.000   12.413   12.413 /opt/anaconda3/lib/python3.12/site-packages/urllib3/connectionpool.py:379(_make_request)
+        1    0.000    0.000   12.413   12.413 /opt/anaconda3/lib/python3.12/site-packages/urllib3/connectionpool.py:1087(_validate_conn)
+        1    0.000    0.000   12.413   12.413 /opt/anaconda3/lib/python3.12/site-packages/urllib3/connection.py:613(connect)
+        1    0.000    0.000   12.413   12.413 /opt/anaconda3/lib/python3.12/site-packages/urllib3/connection.py:190(_new_conn)
+        1    0.485    0.485   12.413   12.413 /opt/anaconda3/lib/python3.12/site-packages/urllib3/util/connection.py:27(create_connection)
+       23    0.000    0.000   11.523    0.501 /opt/anaconda3/lib/python3.12/selectors.py:402(select)
+       23   11.523    0.501   11.523    0.501 {method 'poll' of 'select.poll' objects}
+        1    0.000    0.000    0.405    0.405 /opt/anaconda3/lib/python3.12/socket.py:947(getaddrinfo)
+        1    0.405    0.405    0.405    0.405 {built-in method _socket.getaddrinfo}
+        1    0.000    0.000    0.008    0.008 /opt/anaconda3/lib/python3.12/site-packages/requests/sessions.py:750(merge_environment_settings)
+        1    0.000    0.000    0.008    0.008 /opt/anaconda3/lib/python3.12/site-packages/requests/utils.py:826(get_environ_proxies)
+        1    0.000    0.000    0.007    0.007 /opt/anaconda3/lib/python3.12/site-packages/requests/utils.py:765(should_bypass_proxies)
+        1    0.000    0.000    0.007    0.007 /opt/anaconda3/lib/python3.12/urllib/request.py:2684(proxy_bypass)
+        1    0.000    0.000    0.006    0.006 /opt/anaconda3/lib/python3.12/urllib/request.py:2670(proxy_bypass_macosx_sysconf)
+        1    0.005    0.005    0.005    0.005 {built-in method _scproxy._get_proxy_settings}
+        1    0.000    0.000    0.004    0.004 /Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/app_3.py:59(initialize_dmp_api)
+        1    0.000    0.000    0.004    0.004 /Users/navyamehrotra/Documents/Projects/Classes_Semester_2/Delineo/Simulation/dmp_functions.py:17(initialize_dmp)
+        2    0.000    0.000    0.004    0.002 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/parsers/readers.py:868(read_csv)
+        2    0.000    0.000    0.003    0.002 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/parsers/readers.py:583(_read)
+        2    0.000    0.000    0.002    0.001 /opt/anaconda3/lib/python3.12/site-packages/pandas/io/parsers/readers.py:1907(read)
+        2    0.000    0.000    0.002    0.001 /opt/anaconda3/lib/python3.12/site-packages/pandas/core/frame.py:694(__init__)
+
+
