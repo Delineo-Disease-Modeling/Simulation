@@ -8,8 +8,8 @@ def test_dmp_api():
     
     # Get absolute paths to data files
     data_dir = Path(__file__).parent.parent / "data"
-    matrices_path = str(data_dir / "combined_matrices_usecase.csv")
-    mapping_path = str(data_dir / "demographic_mapping_usecase.csv")
+    matrices_path = str(data_dir / "combined_matrices.csv")
+    mapping_path = str(data_dir / "demographic_mapping.csv")
     states_path = str(data_dir / "custom_states.txt")
     
     print("\n1. Testing DMP Initialization...")
@@ -27,7 +27,6 @@ def test_dmp_api():
         
         print("✓ Initialization successful")
         print("\nAvailable states:", init_data["states"])
-        print("\nAvailable demographics:", json.dumps(init_data["available_demographics"], indent=2))
         
     except requests.exceptions.RequestException as e:
         print(f"✗ Initialization failed: {str(e)}")
@@ -39,7 +38,7 @@ def test_dmp_api():
         test_cases = [
             {
                 "demographics": {
-                    "Age Range": "25",  # Should match "19-64" in mapping file
+                    "Age": "15",
                     "Vaccination Status": "Vaccinated",
                     "Sex": "F",
                     "Variant": "Omicron"
@@ -47,12 +46,29 @@ def test_dmp_api():
             },
             {
                 "demographics": {
-                    "Age Range": "70",  # Should match "65+" in mapping file
+                    "Age": "70",
                     "Vaccination Status": "Unvaccinated",
                     "Sex": "M",
                     "Variant": "Delta"
                 }
+            },
+            {
+                "demographics": {
+                    "Age": "70",
+                    "Vaccination Status": "Unvaccinated",
+                    "Sex": "M",
+                    "Variant": "Omicron"
+                }
             }
+            # },
+            # {
+            #     "demographics": {
+            #         "Age": "65",
+            #         "Vaccination Status": "Vaccinated",
+            #         "Sex": "M",
+            #         "Variant": "Delta"
+            #     }
+            # }
         ]
         
         for i, test_case in enumerate(test_cases, 1):

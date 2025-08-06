@@ -1,0 +1,103 @@
+This README explains a specific use case for a 35-year-old vaccinated female and details the logic behind the various matrix setups used in the simulation. The simulation is designed to model the transition from being susceptible to recovery or other states, using statistical distribution models to reflect the variability and uncertainty of real-world disease progression.
+
+Matrices Explanation
+Transition Probability Matrix
+This matrix defines the likelihood of transitioning from one state to another. Each row corresponds to a current state, and each column corresponds to a possible next state.
+
+States:
+
+Susceptible (0)
+Infected, Asymptomatic (1)
+Symptomatic (2)
+Hospitalized (3)
+ICU (4)
+Recovered (5)
+Deceased (6)
+Example matrix values:
+
+Copy code
+0.0, 0.5, 0.4, 0.0, 0.0, 0.1, 0.0
+0.0, 0.0, 0.7, 0.2, 0.0, 0.1, 0.0
+0.0, 0.0, 0.0, 0.6, 0.2, 0.0, 0.2
+0.0, 0.0, 0.0, 0.0, 0.5, 0.2, 0.3
+0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0
+0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0
+Interpretation:
+
+A 35-year-old vaccinated female has a 50% chance of becoming asymptomatic after exposure and a 40% chance of becoming symptomatic directly. A small 10% chance is assigned for rapid recovery without symptoms.
+Once symptomatic, there is a 60% chance of hospitalization for severe symptoms, a 20% chance of ICU admission, and a 20% chance of direct recovery.
+Distribution Type Matrix
+This matrix specifies which statistical distribution to use for sampling the time interval spent in a state before transitioning to the next. The types of distributions used are:
+
+1: Normal distribution (used for predictable transitions).
+2: Exponential distribution (used for transitions that occur rapidly and randomly).
+3: Uniform distribution (used for transitions that have equal probability over a range).
+4: Gamma distribution (used for transitions with a buildup over time).
+5: Beta distribution (used for bounded, patient-specific transitions).
+Example matrix values:
+
+Copy code
+1, 1, 1, 1, 1, 1, 1
+2, 2, 1, 1, 1, 1, 1
+1, 1, 1, 2, 2, 1, 1
+1, 1, 2, 1, 2, 1, 1
+1, 2, 1, 2, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1
+Interpretation:
+
+Normal distribution (Type 1) dominates the matrix, reflecting relatively predictable disease progression for a vaccinated person.
+Exponential distribution (Type 2) is used for transitions into severe states like hospitalization or ICU, where randomness and rapid deterioration are more common.
+Mean Time Matrix
+This matrix represents the average time spent in each state before transitioning to the next.
+
+Example matrix values (in hours):
+
+Copy code
+1.0, 5.0, 4.0, 3.0, 6.0, 0.0, 0.0
+3.0, 4.0, 5.0, 6.0, 8.0, 0.0, 0.0
+5.0, 6.0, 4.0, 7.0, 10.0, 0.0, 0.0
+7.0, 8.0, 6.0, 12.0, 9.0, 0.0, 0.0
+9.0, 10.0, 7.0, 14.0, 16.0, 0.0, 0.0
+0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+Interpretation:
+
+A vaccinated individual spends, on average, 5 hours in the asymptomatic state, and 6 hours in a symptomatic state before hospitalization.
+ICU stays are modeled to last around 16 hours for severe cases.
+Standard Deviation Matrix
+This matrix defines the variability (spread) in the time spent in each state.
+
+Example matrix values:
+
+Copy code
+1.0, 1.5, 2.0, 1.0, 2.0, 0.0, 0.0
+1.0, 2.0, 2.5, 3.0, 2.5, 0.0, 0.0
+1.5, 2.5, 1.5, 3.5, 3.0, 0.0, 0.0
+2.0, 3.0, 2.0, 4.0, 3.5, 0.0, 0.0
+3.0, 4.0, 3.0, 5.0, 4.0, 0.0, 0.0
+0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+Interpretation:
+
+The standard deviation reflects the uncertainty and variability in how long individuals spend in each state. For example, the time in the ICU (row 5) has a higher standard deviation of 4 hours, reflecting a more variable recovery time in severe cases.
+Min and Max Cutoff Matrices
+These matrices define the minimum and maximum cutoffs for the time spent in each state.
+
+Minimum Cutoff Matrix (example):
+
+Copy code
+0, 2, 2, 1, 1, 0, 0
+2, 3, 4, 3, 5, 0, 0
+3, 4, 5, 4, 7, 0, 0
+4, 5, 6, 5, 9, 0, 0
+5, 6, 7, 6, 10, 0, 0
+Maximum Cutoff Matrix (example):
+
+Copy code
+5, 8, 7, 6, 9, 0, 0
+7, 10, 9, 10, 12, 0, 0
+8, 12, 10, 12, 15, 0, 0
+9, 14, 12, 15, 18, 0, 0
+10, 16, 14, 18, 20, 0, 0
+Interpretation:
+
+These cutoffs ensure that time intervals for each transition are bounded within realistic limits. For example, ICU stays (row 5) are expected to last between 6 to 20 hours, depending on the severity of the case.
