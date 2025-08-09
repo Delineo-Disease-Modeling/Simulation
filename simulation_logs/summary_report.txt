@@ -5,4 +5,4 @@ Total infections: 2
 Total movements: 4224
 
 Intervention Events:
-  vaccine: 43 events
+  vaccine: 2928 events

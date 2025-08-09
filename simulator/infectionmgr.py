@@ -1,5 +1,5 @@
 from .pap import InfectionState, InfectionTimeline, VaccinationState
-from .infection_models.v2_wells_riley import CAT
+from .infection_models.v4_wells_riley import CAT
 from .config import DMP_API, INFECTION_MODEL
 import pandas as pd
 from io import StringIO
