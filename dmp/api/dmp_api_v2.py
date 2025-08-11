@@ -6,6 +6,7 @@ import os
 import sys
 from pathlib import Path
 import json
+import time
 
 # Add the parent directory to the Python path for imports
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -207,10 +208,9 @@ async def run_dmp_simulation(request: SimulationRequest):
             get_model_info
         )
         
-        # Find matching state machine with model path-based hierarchical fallback
+        # Find matching state machine with simple, clear fallback rules
         saved_machines = db.list_state_machines()
         matching_machine = None
-        best_match_score = -1
         
         # Determine the model path to search for
         search_paths = []
@@ -219,7 +219,7 @@ async def run_dmp_simulation(request: SimulationRequest):
             # Start with the exact model path
             search_paths.append(request.model_path)
             
-            # Add parent paths for fallback
+            # Add parent paths for fallback (e.g., variant.Delta if variant.Delta.general not found)
             current_path = request.model_path
             while True:
                 parent_path = get_parent_model_path(request.disease_name, current_path)
@@ -236,86 +236,63 @@ async def run_dmp_simulation(request: SimulationRequest):
         
         print(f"Search paths (in order): {search_paths}")
         
-        # Search for matching state machines
-        for machine in saved_machines:
-            machine_data = db.load_state_machine(machine[0])
-            if not machine_data:
-                continue
+        # Search for matching state machines using simple rules
+        for search_path in search_paths:
+            compatible_machines = []
             
-            # Check disease name
-            if machine_data["disease_name"] != request.disease_name:
-                continue
+            # First, collect all compatible machines for this search path
+            for machine in saved_machines:
+                machine_data = db.load_state_machine(machine[0])
+                if not machine_data:
+                    continue
+                
+                # Check disease name
+                if machine_data["disease_name"] != request.disease_name:
+                    continue
+                
+                # Check if this machine matches the current search path
+                machine_model_path = machine_data.get("model_path", "default")
+                if machine_model_path != search_path:
+                    continue
+                
+                # Simple demographic matching rules:
+                # 1. If machine has a demographic defined and it doesn't match request, skip this machine
+                # 2. If machine doesn't have a demographic defined, it's OK (wildcard)
+                # 3. If all demographics are compatible, use this machine
+                
+                machine_demographics = machine_data["demographics"]
+                demographics_compatible = True
+                
+                for key, value in request.demographics.items():
+                    if key in machine_demographics:
+                        # Machine has this demographic defined - must match
+                        if key == "Age":
+                            # Special handling for age range matching
+                            if not _age_in_range(str(value), machine_demographics[key]):
+                                demographics_compatible = False
+                                break
+                        else:
+                            # Normal demographic matching
+                            if machine_demographics[key] != str(value):
+                                demographics_compatible = False
+                                break
+                    # If machine doesn't have this demographic defined, it's OK (wildcard)
+                
+                if demographics_compatible:
+                    compatible_machines.append(machine_data)
             
-            # Check if this machine matches any of our search paths
-            machine_model_path = machine_data.get("model_path", "default")
-            path_match = False
-            
-            for search_path in search_paths:
-                if machine_model_path == search_path:
-                    path_match = True
-                    break
-            
-            if not path_match:
-                continue
-            
-            # Demographic matching
-            machine_demographics = machine_data["demographics"]
-            match_score = 0
-            demographics_match = True
-            
-            # Check demographics
-            for key, value in request.demographics.items():
-                if key in machine_demographics:
-                    if key == "Age":
-                        # Special handling for age range matching
-                        if machine_demographics[key] == "*":
-                            pass  # Wildcard accepts any age
-                        elif not _age_in_range(str(value), machine_demographics[key]):
-                            # Age doesn't match range
-                            demographics_match = False
-                            break
-                    else:
-                        # Normal demographic matching
-                        if machine_demographics[key] != "*" and machine_demographics[key] != str(value):
-                            # Specific demographic doesn't match
-                            demographics_match = False
-                            break
-                else:
-                    # Demographics not specified in machine - neutral
-                    pass
-            
-            if not demographics_match:
-                continue
-            
-            # Calculate match score based on how many demographics match
-            total_request_demographics = len(request.demographics)
-            matched_demographics = 0
-            
-            for key, value in request.demographics.items():
-                if key in machine_demographics:
-                    if key == "Age":
-                        if machine_demographics[key] == "*" or _age_in_range(str(value), machine_demographics[key]):
-                            matched_demographics += 1
-                    else:
-                        if machine_demographics[key] == "*" or machine_demographics[key] == str(value):
-                            matched_demographics += 1
-            
-            if total_request_demographics > 0:
-                match_score = (matched_demographics / total_request_demographics) * 100
-            else:
-                match_score = 100  # No demographics to match
-            
-            # Prefer exact model path matches
-            if machine_model_path == request.model_path:
-                match_score += 1000  # Bonus for exact path match
-            
-            # Prefer machines with more specific demographics
-            specified_demographics = len([k for k in machine_demographics.keys() if machine_demographics[k] != "*"])
-            match_score += specified_demographics * 10
-            
-            if match_score > best_match_score:
-                best_match_score = match_score
-                matching_machine = machine_data
+            # If we found compatible machines, pick the most specific one
+            if compatible_machines:
+                # Sort by specificity: machines with more defined demographics are more specific
+                compatible_machines.sort(
+                    key=lambda m: len([k for k in m["demographics"].keys() if m["demographics"][k] != "*"]),
+                    reverse=True
+                )
+                
+                matching_machine = compatible_machines[0]
+                print(f"Found matching machine: {matching_machine['name']} with path: {search_path}")
+                print(f"Demographics: {matching_machine['demographics']}")
+                break
         
         if not matching_machine:
             # No matching state machine found
@@ -361,9 +338,13 @@ async def run_dmp_simulation(request: SimulationRequest):
         )
         
         return {
-            "status": "success",
-            "mode": "state_machines",
+            "success": True,
+            "simulation_id": f"sim_{matching_machine['id']}_{int(time.time())}",
+            "model_path": matching_machine.get("model_path", "default"),
             "timeline": timeline,
+            "total_duration": timeline[-1][1] if timeline else 0,
+            "final_state": timeline[-1][0] if timeline else None,
+            "states_visited": [entry[0] for entry in timeline],
             "state_machine": {
                 "id": matching_machine["id"],
                 "name": matching_machine["name"],
@@ -378,7 +359,7 @@ async def run_dmp_simulation(request: SimulationRequest):
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Error during simulation: {str(e)}"
+            detail=f"Internal server error: {str(e)}"
         )
 
 # Add error handlers

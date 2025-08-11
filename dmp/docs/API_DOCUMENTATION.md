@@ -130,12 +130,21 @@ Influenza, Ebola, and Zika are placeholder only with no models implemented. Requ
 
 ## Fallback Strategy
 
-The API implements a hierarchical fallback strategy for model matching:
+The API implements a simple, predictable fallback strategy for model matching:
 
 1. **Exact match**: Try the exact `model_path` provided
 2. **Parent match**: Try the parent path (e.g., `variant.Delta` if `variant.Delta.general` not found)
 3. **Default match**: Try `default.general`
 4. **Error**: Return error if no matching state machine found
+
+### Demographic Matching Rules
+
+The API uses simple, clear rules for demographic compatibility:
+
+- **If a state machine has a demographic defined** → **must match exactly** (or be within age range)
+- **If a state machine doesn't have a demographic defined** → **OK (wildcard)** - can be used
+- **More specific matches are prioritized** - machines with more defined demographics win over general ones
+- **First compatible machine found wins** - no complex scoring, just simple fallback order
 
 ### Example Fallback Scenarios
 
@@ -143,13 +152,40 @@ The API implements a hierarchical fallback strategy for model matching:
 - Request: `model_path: "variant.Delta.general"`
 - Result: Uses exact match
 
-**Scenario 2: Parent Match**
-- Request: `model_path: "variant.Delta.severe"` (doesn't exist)
-- Fallback: Tries `variant.Delta.general`
+**Scenario 2: Parent Match with Demographics**
+- Request: `model_path: "variant.Delta.general"` with demographics `{"Age": "4", "Vaccination Status": "Unvaccinated"}`
+- Fallback: Tries `variant.Delta.Unvaccinated` (if demographics are compatible)
+- Result: Uses first compatible machine found
 
 **Scenario 3: Default Match**
 - Request: `model_path: "variant.Unknown.general"` (doesn't exist)
 - Fallback: Tries `default.general`
+- Result: Uses first compatible machine found
+
+### Demographic Compatibility Examples
+
+**Machine A**: `{"Age": "5-14", "Vaccination Status": "Unvaccinated"}`
+- **Request**: `{"Age": "4", "Vaccination Status": "Unvaccinated"}`
+- **Result**: ❌ **Incompatible** (Age 4 not in 5-14 range)
+
+**Machine B**: `{"Vaccination Status": "Unvaccinated"}` (no Age defined)
+- **Request**: `{"Age": "4", "Vaccination Status": "Unvaccinated"}`
+- **Result**: ✅ **Compatible** (Age not defined = wildcard, Vaccination matches)
+
+**Machine C**: `{"Age": "0-4", "Vaccination Status": "Vaccinated"}`
+- **Request**: `{"Age": "4", "Vaccination Status": "Unvaccinated"}`
+- **Result**: ❌ **Incompatible** (Vaccination status mismatch)
+
+### Specificity Priority Example
+
+**Available Machines for `vaccination.Unvaccinated.general`:**
+1. `{"Age": "0-4", "Vaccination Status": "Unvaccinated"}` ← **Most specific (2 demographics)**
+2. `{"Age": "5-18", "Vaccination Status": "Unvaccinated"}` ← **Specific (2 demographics)**
+3. `{"Vaccination Status": "Unvaccinated"}` ← **General (1 demographic)**
+
+**Request**: `{"Age": "3", "Vaccination Status": "Unvaccinated"}`
+
+**Result**: ✅ **Machine 1 wins** because it has the most specific demographics that match the request
 
 ## Error Handling
 
