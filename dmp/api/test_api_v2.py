@@ -224,7 +224,7 @@ def test_covid_delta_variant():
     simulation_request = {
         "disease_name": "COVID-19",
         "demographics": {
-            "Age": "66",
+            "Age": "5",
             "Sex": "Male",
             "Vaccination Status": "Unvaccinated"
         },

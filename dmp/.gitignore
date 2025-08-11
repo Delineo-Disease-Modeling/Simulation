@@ -44,11 +44,6 @@ Thumbs.db
 # Logs
 *.log
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
 # Results
 results/*.csv
 

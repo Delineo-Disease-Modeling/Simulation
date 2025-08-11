@@ -26,7 +26,7 @@ Run a disease simulation using the specified parameters.
     "Vaccination Status": "Unvaccinated"
   },
   "model_path": "vaccination.Unvaccinated.general",
-  "initial_state": "Susceptible"
+  "initial_state": "Exposed"
 }
 ```
 
@@ -43,14 +43,15 @@ Run a disease simulation using the specified parameters.
   "simulation_id": "sim_12345",
   "model_path": "vaccination.Unvaccinated.general",
   "timeline": [
-    ["Susceptible", 0.0],
-    ["Exposed", 2.5],
-    ["Infectious", 12.3],
-    ["Recovered", 168.7]
+    ["Exposed", 0.0],
+    ["Infectious_Presymptomatic", 216.7],
+    ["Infectious_Symptomatic", 272.9],
+    ["Hospitalized", 400.7],
+    ["Recovered", 533.8]
   ],
-  "total_duration": 168.7,
+  "total_duration": 533.8,
   "final_state": "Recovered",
-  "states_visited": ["Susceptible", "Exposed", "Infectious", "Recovered"]
+  "states_visited": ["Exposed", "Infectious_Presymptomatic", "Infectious_Symptomatic", "Hospitalized", "Recovered"]
 }
 ```
 
