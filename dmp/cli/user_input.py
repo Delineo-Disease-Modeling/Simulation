@@ -58,89 +58,142 @@ class DMPLocal:
             return []
     
     def find_matching_state_machine(self, disease_name: str, demographics: Dict[str, str], 
-                                  variant_name: Optional[str] = None, 
-                                  model_category: Optional[str] = None) -> Optional[Dict]:
-        """Find a matching state machine based on disease and demographics."""
+                                  model_path: Optional[str] = None) -> Optional[Dict]:
+        """Find a matching state machine using new model_path logic with specificity prioritization."""
         try:
+            # Import the disease configuration functions
+            from app.state_machine.disease_configurations import (
+                get_parent_model_path, get_default_model_path
+            )
+            
             saved_machines = self.db.list_state_machines()
             
-            # Filter by disease name
-            candidates = [machine for machine in saved_machines if machine[2] == disease_name]
+            # Determine the model path to search for
+            search_paths = []
             
-            # Filter by variant if specified
-            if variant_name:
-                candidates = [machine for machine in candidates if machine[3] == variant_name]
-            
-            # Filter by model category if specified
-            if model_category:
-                candidates = [machine for machine in candidates if machine[4] == model_category]
-            
-            # Find best match based on demographics
-            best_match = None
-            best_score = 0
-            
-            for machine in candidates:
-                machine_data = self.db.load_state_machine(machine[0])
-                if not machine_data:
-                    continue
+            if model_path:
+                # Start with the exact model path
+                search_paths.append(model_path)
                 
-                machine_demographics = machine_data.get("demographics", {})
-                score = self._calculate_demographic_match(demographics, machine_demographics)
-                
-                if score > best_score:
-                    best_score = score
-                    best_match = machine_data
+                # Add parent paths for fallback (e.g., variant.Delta if variant.Delta.general not found)
+                current_path = model_path
+                while True:
+                    parent_path = get_parent_model_path(disease_name, current_path)
+                    if parent_path:
+                        search_paths.append(parent_path)
+                        current_path = parent_path
+                    else:
+                        break
             
-            return best_match
+            # Add default model path as final fallback
+            default_path = get_default_model_path(disease_name)
+            if default_path and default_path not in search_paths:
+                search_paths.append(default_path)
+            
+            print(f"Search paths (in order): {search_paths}")
+            
+            # Search for matching state machines using simple rules
+            for search_path in search_paths:
+                compatible_machines = []
+                
+                # First, collect all compatible machines for this search path
+                for machine in saved_machines:
+                    machine_data = self.db.load_state_machine(machine[0])
+                    if not machine_data:
+                        continue
+                    
+                    # Check disease name
+                    if machine_data["disease_name"] != disease_name:
+                        continue
+                    
+                    # Check if this machine matches the current search path
+                    machine_model_path = machine_data.get("model_path", "default")
+                    if machine_model_path != search_path:
+                        continue
+                    
+                    # Simple demographic matching rules:
+                    # 1. If machine has a demographic defined and it doesn't match request, skip this machine
+                    # 2. If machine doesn't have a demographic defined, it's OK (wildcard)
+                    # 3. If all demographics are compatible, use this machine
+                    
+                    machine_demographics = machine_data["demographics"]
+                    demographics_compatible = True
+                    
+                    for key, value in demographics.items():
+                        if key in machine_demographics:
+                            # Machine has this demographic defined - must match
+                            if key == "Age":
+                                # Special handling for age range matching
+                                if not self._age_in_range(str(value), machine_demographics[key]):
+                                    demographics_compatible = False
+                                    break
+                            else:
+                                # Normal demographic matching
+                                if machine_demographics[key] != str(value):
+                                    demographics_compatible = False
+                                    break
+                        # If machine doesn't have this demographic defined, it's OK (wildcard)
+                    
+                    if demographics_compatible:
+                        compatible_machines.append(machine_data)
+                
+                # If we found compatible machines, pick the most specific one
+                if compatible_machines:
+                    # Sort by specificity: machines with more defined demographics are more specific
+                    compatible_machines.sort(
+                        key=lambda m: len([k for k in m["demographics"].keys() if m["demographics"][k] != "*"]),
+                        reverse=True
+                    )
+                    
+                    matching_machine = compatible_machines[0]
+                    print(f"Found matching machine: {matching_machine['name']} with path: {search_path}")
+                    print(f"Demographics: {matching_machine['demographics']}")
+                    return matching_machine
+            
+            # No matching machine found
+            print(f"No matching state machine found for {disease_name} with demographics {demographics}")
+            return None
             
         except Exception as e:
             print(f"Error finding matching state machine: {e}")
             return None
     
-    def _calculate_demographic_match(self, input_demographics: Dict[str, str], 
-                                   machine_demographics: Dict[str, str]) -> int:
-        """Calculate how well demographics match (higher score = better match)."""
-        score = 0
-        
-        for key, input_value in input_demographics.items():
-            machine_value = machine_demographics.get(key, "*")
+    def _age_in_range(self, age_value: str, age_range: str) -> bool:
+        """Check if a single age value falls within an age range"""
+        try:
+            # Convert age value to integer
+            age = int(age_value)
             
-            # Wildcard matches everything
-            if machine_value == "*":
-                score += 1
-            # Exact match
-            elif machine_value == input_value:
-                score += 2
-            # Range matching (e.g., "0-4" matches "3")
-            elif "-" in machine_value:
-                try:
-                    range_start, range_end = map(int, machine_value.split("-"))
-                    input_num = int(input_value)
-                    if range_start <= input_num <= range_end:
-                        score += 2
-                except ValueError:
-                    pass
-            # "N+" format (e.g., "65+" matches "70")
-            elif machine_value.endswith("+"):
-                try:
-                    min_value = int(machine_value.rstrip("+"))
-                    input_num = int(input_value)
-                    if input_num >= min_value:
-                        score += 2
-                except ValueError:
-                    pass
-        
-        return score
+            # Parse age range (e.g., "5-14", "65+", "0-18")
+            if age_range == "*":
+                return True
+            
+            if "+" in age_range:
+                # Handle ranges like "65+"
+                min_age = int(age_range.replace("+", ""))
+                return age >= min_age
+            
+            if "-" in age_range:
+                # Handle ranges like "5-14", "0-18"
+                min_age, max_age = map(int, age_range.split("-"))
+                return min_age <= age <= max_age
+            
+            # Single age value (e.g., "25")
+            range_age = int(age_range)
+            return age == range_age
+            
+        except (ValueError, TypeError):
+            # If parsing fails, fall back to exact string matching
+            return age_value == age_range
     
     def run_simulation(self, disease_name: str, demographics: Dict[str, str], 
-                      variant_name: Optional[str] = None, 
-                      model_category: Optional[str] = None,
+                      model_path: Optional[str] = None,
                       initial_state: Optional[str] = None) -> Optional[Dict]:
         """Run a simulation using the state machine database."""
         try:
             # Find matching state machine
             state_machine = self.find_matching_state_machine(
-                disease_name, demographics, variant_name, model_category
+                disease_name, demographics, model_path
             )
             
             if not state_machine:
@@ -162,25 +215,27 @@ class DMPLocal:
             
             # Run simulation
             timeline = run_simulation(
-                transition_matrix=matrices["Transition Matrix"],
+        transition_matrix=matrices["Transition Matrix"],
                 mean_matrix=matrices["Mean Matrix"],
                 std_dev_matrix=matrices["Standard Deviation Matrix"],
                 min_cutoff_matrix=matrices["Min Cutoff Matrix"],
                 max_cutoff_matrix=matrices["Max Cutoff Matrix"],
                 distribution_matrix=matrices["Distribution Type Matrix"],
                 initial_state_idx=initial_state_idx,
-                states=states
-            )
-            
+        states=states
+    )
+    
             return {
-                "status": "success",
+                "success": True,
                 "timeline": timeline,
+                "total_duration": timeline[-1][1] if timeline else 0,
+                "final_state": timeline[-1][0] if timeline else None,
+                "states_visited": [entry[0] for entry in timeline],
                 "state_machine": {
                     "id": state_machine.get("id"),
                     "name": state_machine.get("name"),
                     "disease_name": state_machine.get("disease_name"),
-                    "variant_name": state_machine.get("variant_name"),
-                    "model_category": state_machine.get("model_category"),
+                    "model_path": state_machine.get("model_path", "default"),
                     "demographics": state_machine.get("demographics"),
                     "states": states
                 }
@@ -209,14 +264,15 @@ class DMPLocal:
                         "disease_name": machine[2],
                         "variant_name": machine[3],
                         "model_category": machine[4],
-                        "created_at": machine[5],
-                        "updated_at": machine[6],
+                        "model_path": machine[5],  # New column
+                        "created_at": machine[6],  # Updated index
+                        "updated_at": machine[7],  # Updated index
                         "demographics": machine_data.get("demographics", {}),
                         "states": machine_data.get("states", [])
                     })
             
             return machines
-            
+        
         except Exception as e:
             print(f"Error listing state machines: {e}")
             return []
@@ -229,8 +285,7 @@ def main():
                        help="Action to perform")
     parser.add_argument("--disease", help="Disease name")
     parser.add_argument("--demographics", help="Demographics as JSON string")
-    parser.add_argument("--variant", help="Variant name (for COVID-19)")
-    parser.add_argument("--model-category", help="Model category")
+    parser.add_argument("--model-path", help="Model path (e.g., 'variant.Delta.general', 'vaccination.Unvaccinated.general')")
     parser.add_argument("--initial-state", help="Initial state for simulation")
     parser.add_argument("--output", help="Output file for results")
     
@@ -273,14 +328,14 @@ def main():
         result = dmp.run_simulation(
             disease_name=args.disease,
             demographics=demographics,
-            variant_name=args.variant,
-            model_category=args.model_category,
+            model_path=args.model_path,
             initial_state=args.initial_state
         )
         
         if result:
             print("Simulation successful!")
             print(f"State machine: {result['state_machine']['name']}")
+            print(f"Model path: {result['state_machine']['model_path']}")
             print("\nTimeline:")
             for state, time in result['timeline']:
                 print(f"  {time:>6.1f} hours: {state}")

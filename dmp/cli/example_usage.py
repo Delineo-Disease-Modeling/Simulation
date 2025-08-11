@@ -56,11 +56,12 @@ def main():
     result = dmp.run_simulation(
         disease_name="Measles",
         demographics=demographics,
-        model_category="vaccination"
+        model_path="vaccination.Unvaccinated.general"
     )
     
     if result:
         print(f"   State machine: {result['state_machine']['name']}")
+        print(f"   Model path: {result['state_machine']['model_path']}")
         print("   Timeline:")
         for state, time in result['timeline']:
             print(f"     {time:>6.1f} hours: {state}")
@@ -71,16 +72,15 @@ def main():
     # 5. Run a COVID-19 simulation with variant
     print("5. Running COVID-19 simulation with Omicron variant:")
     covid_demographics = {
-        "Age": "25",
-        "Sex": "F",
-        "Vaccination Status": "Vaccinated"
+        "Age": "66",
+        "Sex": "Male",
+        "Vaccination Status": "Unvaccinated"
     }
     
     covid_result = dmp.run_simulation(
         disease_name="COVID-19",
         demographics=covid_demographics,
-        variant_name="Omicron",
-        model_category="variant"
+        model_path="variant.Omicron.general"
     )
     
     if covid_result:

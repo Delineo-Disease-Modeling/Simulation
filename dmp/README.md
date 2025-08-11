@@ -50,16 +50,16 @@ uvicorn api.dmp_api_v2:app --reload --port 8000
 **Example API Request:**
 ```bash
 curl -X POST http://localhost:8000/simulate \
-  -H "Content-Type: application/json" \
-  -d '{
+     -H "Content-Type: application/json" \
+     -d '{
     "disease_name": "Measles",
-    "demographics": {
+           "demographics": {
       "Age": "3",
       "Sex": "M",
       "Vaccination Status": "Unvaccinated"
     },
     "model_path": "vaccination.Unvaccinated.general"
-  }'
+         }'
 ```
 
 ## Model Structure
@@ -213,9 +213,9 @@ dmp/
                    "demographics": ["Age", "Sex"]
                }
            }
-       }
-   }
-   ```
+                }
+}
+```
 
 2. **Add disease templates** with states, transitions, and parameters
 
