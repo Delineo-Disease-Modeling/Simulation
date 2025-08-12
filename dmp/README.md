@@ -158,27 +158,27 @@ The API implements hierarchical fallback for model matching:
 ### Placeholder Diseases
 Influenza, Ebola, and Zika are placeholder only with no models implemented.
 
-## Command Line Interface
+## Local Integration
 
 For direct database access and local integration:
 
 ```bash
 # List available diseases
-python3 -m cli.user_input --action list-diseases
+python3 -m core.dmp_local --action list-diseases
 
 # List variants for a disease
-python3 -m cli.user_input --action list-variants --disease COVID-19
+python3 -m core.dmp_local --action list-variants --disease COVID-19
 
 # List state machines
-python3 -m cli.user_input --action list-machines --disease Measles
+python3 -m core.dmp_local --action list-machines --disease Measles
 
 # Run simulation
-python3 -m cli.user_input --action simulate \
+python3 -m core.dmp_local --action simulate \
     --disease Measles \
     --demographics '{"Age": "3", "Sex": "M", "Vaccination Status": "Unvaccinated"}'
 ```
 
-**Benefits of CLI:**
+**Benefits of Local Integration:**
 - **Faster performance** - Direct database access, no API overhead
 - **Local integration** - Easy to use in Python scripts and batch processing
 - **Same functionality** - Uses the same state machine database as the web interface
@@ -192,9 +192,10 @@ dmp/
 │   └── state_machine/     # State machine components
 ├── api/                   # API server
 │   └── dmp_api_v2.py
-├── cli/                   # Command line interface
-│   └── user_input.py
-├── core/                  # Core simulation functions
+├── core/                  # Core DMP functionality and local client
+│   ├── dmp_local.py       # Local DMP client for direct database access
+│   ├── simulation_functions.py  # Core simulation functions
+│   └── example_usage.py   # Example usage of the local client
 ├── docs/                  # Documentation
 └── requirements.txt       # Dependencies
 ```
