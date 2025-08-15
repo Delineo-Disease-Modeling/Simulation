@@ -614,7 +614,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
             if simulator.enable_logging and simulator.logger:
                 simulator.logger.log_infection_event(person, None, person.household, variant, 0)
 
-        # Assign masked and vaccination states
+        # Assign masked state
         if random.random() < simulator.iv_weights['mask']:
             person.set_masked(True)
             print(f"Person {person.id} assigned mask")
@@ -622,7 +622,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                 simulator.logger.log_intervention_effect(person, 'mask', 'complied', 0)
 
 
-        
+        # Assigning vaccination state
         if random.random() < simulator.iv_weights['vaccine']:
             min_doses = SIMULATION["vaccination_options"]["min_doses"]
             max_doses = SIMULATION["vaccination_options"]["max_doses"]
