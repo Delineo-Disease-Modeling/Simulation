@@ -1,5 +1,6 @@
 import numpy as np
 from typing import List, Tuple
+import streamlit as st
 
 def run_simulation(transition_matrix, mean_matrix, std_dev_matrix, 
                   min_cutoff_matrix, max_cutoff_matrix, distribution_matrix,
@@ -21,6 +22,9 @@ def run_simulation(transition_matrix, mean_matrix, std_dev_matrix,
     Returns:
         List of (state_name, time) tuples where time is in hours
     """
+    # Reset random seed for each simulation to ensure different results
+    np.random.seed()
+    
     HOURS_PER_DAY = 24  # Convert days to hours
     
     # Initialize current state with the provided index
@@ -40,7 +44,25 @@ def run_simulation(transition_matrix, mean_matrix, std_dev_matrix,
             break
             
         # Choose next state based on transition probabilities
-        next_state = np.random.choice(len(states), p=transition_probs)
+        try:
+            next_state = np.random.choice(len(states), p=transition_probs)
+        except ValueError as e:
+            # Provide detailed error information
+            prob_sum = np.sum(transition_probs)
+            non_zero_probs = []
+            for i, prob in enumerate(transition_probs):
+                if prob > 0:
+                    non_zero_probs.append((states[i], prob))
+            
+            error_msg = f"Transition probabilities do not sum to 1.0 for state '{states[current_state]}'\n"
+            error_msg += f"  Sum of probabilities: {prob_sum:.6f}\n"
+            error_msg += f"  Non-zero probabilities:\n"
+            for target_state, prob in non_zero_probs:
+                error_msg += f"    -> {target_state}: {prob:.6f}\n"
+            error_msg += f"  Missing probability: {1.0 - prob_sum:.6f}\n"
+            error_msg += f"  To fix: Add edge(s) with total probability of {1.0 - prob_sum:.6f} or adjust existing probabilities"
+            
+            raise ValueError(error_msg)
         
         # If we stay in the same state, increment counter but don't add to timeline
         if next_state == current_state:
@@ -88,7 +110,7 @@ def generate_transition_time(mean: float, std_dev: float,
         max_cutoff: Maximum allowed time
         distribution_type: Type of distribution (0-4)
             0: Fixed (mean)
-            1: Normal
+            1: Triangular (Used to be normal)
             2: Uniform
             3: Log-normal
             4: Gamma
@@ -100,11 +122,13 @@ def generate_transition_time(mean: float, std_dev: float,
         if distribution_type == 0:  # Fixed time
             return mean
             
-        elif distribution_type == 1:  # Normal
-            time = np.random.normal(mean, std_dev)
+        # elif distribution_type == 1:  # Normal
+        #     time = np.random.normal(mean, std_dev)
+        elif distribution_type == 1:  # Triangular, mode is mean
+            time = np.random.triangular(min_cutoff, mean, max_cutoff)
             
         elif distribution_type == 2:  # Uniform
-            time = np.random.uniform(mean - std_dev, mean + std_dev)
+            time = np.random.uniform(min_cutoff, max_cutoff)
             
         elif distribution_type == 3:  # Log-normal
             # Convert mean and std_dev to log-normal parameters
@@ -145,8 +169,36 @@ def validate_matrices(transition_matrix, mean_matrix, std_dev_matrix,
         raise ValueError("Transition probabilities must be between 0 and 1")
         
     row_sums = np.sum(transition_matrix, axis=1)
-    if not np.allclose(row_sums, 1.0) and not np.allclose(row_sums, 0.0):
-        raise ValueError("Transition matrix rows must sum to 1 or 0")
+    problematic_rows = []
+    
+    for i, row_sum in enumerate(row_sums):
+        # Check if row has any transitions (non-zero probabilities)
+        has_transitions = np.any(transition_matrix[i, :] > 0)
+        
+        if has_transitions and not np.isclose(row_sum, 1.0, atol=1e-10):
+            # Find the non-zero probabilities in this row
+            non_zero_probs = []
+            for j, prob in enumerate(transition_matrix[i, :]):
+                if prob > 0:
+                    non_zero_probs.append((j, prob))
+            
+            problematic_rows.append({
+                'row_index': i,
+                'row_sum': row_sum,
+                'non_zero_probabilities': non_zero_probs
+            })
+    
+    if problematic_rows:
+        error_msg = "Transition matrix rows must sum to 1.0. Found problematic rows:\n\n"
+        for row_info in problematic_rows:
+            error_msg += f"Row {row_info['row_index']} (State {row_info['row_index']}):\n"
+            error_msg += f"  Sum of probabilities: {row_info['row_sum']:.6f}\n"
+            error_msg += f"  Non-zero probabilities:\n"
+            for col_idx, prob in row_info['non_zero_probabilities']:
+                error_msg += f"    -> State {col_idx}: {prob:.6f}\n"
+            error_msg += f"  Missing probability: {1.0 - row_info['row_sum']:.6f}\n\n"
+        
+        raise ValueError(error_msg)
     
     # Check other matrices
     if not np.all(mean_matrix >= 0):

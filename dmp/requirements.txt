@@ -13,6 +13,12 @@ pydantic>=2.4.0
 matplotlib>=3.8.0
 seaborn>=0.13.0
 
+# Streamlit extensions
+streamlit-javascript>=0.1.5
+
+# HTTP requests (for API testing and external calls)
+requests>=2.31.0
+
 # Testing
 pytest>=7.4.0
 httpx>=0.25.0  # For async HTTP requests in tests 

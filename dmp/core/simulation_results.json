@@ -1,0 +1,48 @@
+{
+  "success": true,
+  "timeline": [
+    [
+      "Exposed",
+      0.0
+    ],
+    [
+      "Infectious_Presymptomatic",
+      271.10248611556887
+    ],
+    [
+      "Infectious_Symptomatic",
+      391.28699437504014
+    ],
+    [
+      "Recovered",
+      515.8866331495415
+    ]
+  ],
+  "total_duration": 515.8866331495415,
+  "final_state": "Recovered",
+  "states_visited": [
+    "Exposed",
+    "Infectious_Presymptomatic",
+    "Infectious_Symptomatic",
+    "Recovered"
+  ],
+  "state_machine": {
+    "id": 45,
+    "name": "Measles | vaccination=Unvaccinated | Age=0-4",
+    "disease_name": "Measles",
+    "model_path": "vaccination.Unvaccinated.general",
+    "demographics": {
+      "Age": "0-4"
+    },
+    "states": [
+      "Exposed",
+      "Infectious_Asymptomatic",
+      "Infectious_Presymptomatic",
+      "Infectious_Symptomatic",
+      "Hospitalized",
+      "ICU",
+      "Recovered",
+      "Deceased"
+    ]
+  }
+}

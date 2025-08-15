@@ -1,0 +1,13 @@
+parameter,value
+R_0,900
+d,0.1
+t_i,600
+r,1860
+m_i,0.5
+V,3000
+fv_list,0.9
+p_list,0.7
+t_room,10000
+t_close,100000
+a_filter,7
+distance,0.1
