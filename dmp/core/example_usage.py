@@ -72,7 +72,7 @@ def main():
     # 5. Run a COVID-19 simulation with variant
     print("5. Running COVID-19 simulation with Omicron variant:")
     covid_demographics = {
-        "Age": "5",
+        "Age": "66",
         "Sex": "Male",
         "Vaccination Status": "Unvaccinated"
     }

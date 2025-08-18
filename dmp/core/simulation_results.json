@@ -7,18 +7,18 @@
     ],
     [
       "Infectious_Presymptomatic",
-      236.50358724648632
+      214.30296859220988
     ],
     [
       "Infectious_Symptomatic",
-      351.12019141474445
+      332.9845204785604
     ],
     [
       "Recovered",
-      547.3170197648856
+      493.11099918199045
     ]
   ],
-  "total_duration": 547.3170197648856,
+  "total_duration": 493.11099918199045,
   "final_state": "Recovered",
   "states_visited": [
     "Exposed",

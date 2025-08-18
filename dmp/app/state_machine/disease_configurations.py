@@ -149,6 +149,19 @@ DISEASE_TEMPLATES = {
         "demographic_options": {},
         "edges": []
     },
+    # "Test Disease": {
+    #     "states": [
+    #         "State 1",
+    #         "State 2",
+    #         "State 3"
+    #     ],
+    #     "description": "Test Disease - placeholder for future implementation",
+    #     "typical_transitions": [],
+    #     "parameters": {},
+    #     "model_categories": [],
+    #     "demographic_options": {},
+    #     "edges": []
+    # },
     "Ebola": {
         "states": [],
         "description": "Ebola - placeholder for future implementation",

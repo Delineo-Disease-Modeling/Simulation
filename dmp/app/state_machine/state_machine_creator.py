@@ -328,38 +328,42 @@ def create_state_machine(states):
                 st.success("Template cleared. You can now create a custom state machine.")
                 st.rerun()
         
-        # Apply disease template if a predefined disease is selected (only for new machines)
+        # Auto-load states when a predefined disease is selected (only for new machines)
         if selected_disease != "Custom Disease" and selected_disease in get_available_diseases() and st.session_state.editing_mode != "edit":
             template = get_disease_template(selected_disease)
             if template and template['states']:
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.info(f"📋 **{selected_disease} Template Available**: {template['description']}")
-                with col2:
-                    if st.button(f"Apply {selected_disease} Template", key="apply_disease_template"):
-                        # Preserve current model category and vaccination status
-                        current_model_category = st.session_state.get('model_category', 'default')
-                        current_vaccination_status = st.session_state.get('vaccination_status', None)
-                        current_vaccination_model_category = st.session_state.get('vaccination_model_category', 'default')
-                        
-                        # Update states with template states
-                        st.session_state.states = template['states'].copy()
-                        # Load predefined edges if available
-                        predefined_edges = get_disease_edges(selected_disease)
-                        if predefined_edges:
+                # Auto-load states for the selected disease
+                st.session_state.states = template['states'].copy()
+                st.success(f"✅ **{selected_disease} states loaded**: {len(template['states'])} states automatically loaded")
+                
+                # Check if disease has predefined edges for complete template
+                predefined_edges = get_disease_edges(selected_disease)
+                if predefined_edges:
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.info(f"📋 **Complete {selected_disease} Template Available**: {template['description']}")
+                        st.write(f"💡 **Template includes**: {len(template['states'])} states + {len(predefined_edges)} predefined edges with default parameters")
+                    with col2:
+                        if st.button(f"Apply Complete {selected_disease} Template", key="apply_complete_template"):
+                            # Preserve current model category and vaccination status
+                            current_model_category = st.session_state.get('model_category', 'default')
+                            current_vaccination_status = st.session_state.get('vaccination_status', None)
+                            current_vaccination_model_category = st.session_state.get('vaccination_model_category', 'default')
+                            
+                            # Load predefined edges
                             st.session_state.graph_edges = predefined_edges
-                            st.success(f"✅ Applied {selected_disease} template with {len(template['states'])} states and {len(predefined_edges)} predefined edges")
-                        else:
-                            st.success(f"✅ Applied {selected_disease} template with {len(template['states'])} states")
-                        
-                        # Restore model category and vaccination status
-                        st.session_state.model_category = current_model_category
-                        st.session_state.vaccination_status = current_vaccination_status
-                        st.session_state.vaccination_model_category = current_vaccination_model_category
-                        
-                        st.session_state.template_applied = True
-                        st.session_state.applied_template_name = selected_disease
-                        st.rerun()
+                            st.success(f"✅ Applied complete {selected_disease} template with {len(template['states'])} states and {len(predefined_edges)} predefined edges")
+                            
+                            # Restore model category and vaccination status
+                            st.session_state.model_category = current_model_category
+                            st.session_state.vaccination_status = current_vaccination_status
+                            st.session_state.vaccination_model_category = current_vaccination_model_category
+                            
+                            st.session_state.template_applied = True
+                            st.session_state.applied_template_name = selected_disease
+                            st.rerun()
+                else:
+                    st.info(f"📋 **{selected_disease} states loaded**: {len(template['states'])} states available. No predefined edges - you'll need to create them manually.")
                 
                 # Show template info
                 with st.expander(f"View {selected_disease} Template Details", expanded=False):
@@ -372,12 +376,14 @@ def create_state_machine(states):
                         st.write(f"• {transition}")
                     
                     # Show predefined edges if available
-                    predefined_edges = get_disease_edges(selected_disease)
                     if predefined_edges:
                         st.write("**Predefined Edges:**")
                         st.write(f"✅ Template includes {len(predefined_edges)} predefined edges with default framework values")
                         st.write("⚠️ **Important**: You'll need to configure the transition probabilities, timing, and other parameters with your own values.")
                         st.write("The template provides the structure - you provide the specific parameters for your model.")
+                    else:
+                        st.write("**Predefined Edges:**")
+                        st.write("No predefined edges available. You'll need to create edges manually.")
             elif template:
                 st.warning(f"⚠️ {selected_disease} template is not yet defined. Please use the Disease Configurations tab to define it.")
         
