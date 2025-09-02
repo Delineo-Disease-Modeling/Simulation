@@ -457,6 +457,23 @@ def move_people(simulator, items, is_household, current_timestep):
 
             person.location = place
 
+#Code for tracking an individual agent
+
+#Takes in disease simulator class + parameters
+#Iterates through simulator's people array to find valid target
+def select_target_person(simulator, sex, age):
+    target = Person()
+    target.id = -1
+    for candidate in simulator.people:
+        if candidate.sex == sex and candidate.age == age:
+            target = candidate
+    return target
+
+#Takes in the selected target + what iteration we're on
+#Returns a string stating whether the target was masked and vaccinated on that iteration
+def get_target_stamp(target, iteration):
+    return "On iteration " + iteration + ", masked was " + Person.get_masked(target) + " and vaccination was " + Person.get_vaccinated(target) + ".\n"
+
 def run_simulator(location=None, max_length=None, interventions=None, save_file=False, enable_logging = True, log_dir = "simulation_logs"):
     location = location or SIMULATION["default_location"]
     max_length = max_length or SIMULATION["default_max_length"]
@@ -657,6 +674,24 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     movement_json = {}
     infectivity_json = {}
 
+    # Check if we're tracking an agent: if yes, get parameters
+    print("Would you like to track an agent? Please type 'y' or 'n' WITH NO SPACES AND WITHOUT THE QUOTES\n")
+    track_check = input()
+    track_flag = False
+    track_age = -1
+    track_sex = -1
+    if track_check == 'y':
+        track_flag = True
+        print("Please type an age you want to look for, as an integer with no spaces\n")
+        track_age = int(input())
+        print("Please type 0 if you want to track a male and 1 otherwise, without spaces")
+        track_sex = int(input())
+
+    #If we are, select a valid target
+    target = Person()
+    if track_flag == True:
+        target = select_target_person(simulator, track_sex, track_age)
+
     # Main simulation loop
     print("=== STARTING SIMULATION LOOP ===")
     iteration = 0
@@ -769,6 +804,8 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                                         break
                             simulator.logger.log_infection_event(person, infector, location, variant, last_timestep)
 
+            if track_flag == True:
+                get_target_stamp(target, iteration)
                         
         except Exception as e:
             print(f"Error during infection modeling at timestep {last_timestep}: {e}")
