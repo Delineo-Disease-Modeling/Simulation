@@ -191,6 +191,8 @@ class SimulationLogger:
                 'variant': variant,
                 'timestep': timestep
             }
+            #adds people infected by the infector for agent tracker
+            infector_person.add_person_infected(infected_person.id)
     
     def log_intervention_effect(self, person, intervention_type, effect, timestep, location=None): 
         """Log when interventions affect person behavior"""
@@ -461,18 +463,29 @@ def move_people(simulator, items, is_household, current_timestep):
 
 #Takes in disease simulator class + parameters
 #Iterates through simulator's people array to find valid target
+#id = -1 serves as a way to check if we are targeting a real person
 def select_target_person(simulator, sex, age):
     target = Person()
     target.id = -1
+    closest = 99999
     for candidate in simulator.people:
-        if candidate.sex == sex and candidate.age == age:
-            target = candidate
+        if candidate.sex == sex:
+            if abs(age - candidate.age) < closest:
+                target = candidate
+                closest = age - candidate.age
     return target
 
 #Takes in the selected target + what iteration we're on
 #Returns a string stating whether the target was masked and vaccinated on that iteration
 def get_target_stamp(target, iteration):
-    return "On iteration " + iteration + ", masked was " + Person.get_masked(target) + " and vaccination was " + Person.get_vaccinated(target) + ".\n"
+    return_str = "On iteration " + iteration + ", target interventions:\n"
+    if (target.is_masked()): 
+        return_str += "Target was masked\n"
+    else: 
+        return_str += "Target was not masked\n"
+    return_str += "Target vaccination state: " + target.get_vaccinated() + "\n"
+    return_str += "People target has infected so far: " + target.get_persons_infected() + "\n"
+    return return_str
 
 def run_simulator(location=None, max_length=None, interventions=None, save_file=False, enable_logging = True, log_dir = "simulation_logs"):
     location = location or SIMULATION["default_location"]
@@ -813,6 +826,8 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         
         infectivity_json[last_timestep] = {i: j for i, j in newlyInfected.items()}
         result[last_timestep] = {variant: dict(infected) for variant, infected in variantInfected.items()}
+
+        print(get_target_stamp(target, iteration))
         
         last_timestep += simulator.timestep
         

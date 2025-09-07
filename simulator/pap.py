@@ -54,6 +54,9 @@ class Person:
             'vaccine': VaccinationState.NONE
         }
         self.vaccination_state = 0
+        #new code to agent tracker: persons infected
+        #creates an array of IDs of individuals infected by this person
+        self.persons_infected = {}
     
     def set_masked(self, masked):
         self.masked = masked
@@ -121,6 +124,12 @@ class Person:
                     if state == InfectionState.REMOVED or state == InfectionState.RECOVERED or state == InfectionState.HOSPITALIZED:
                         self.invisible = True # means agent cannot get reinfected 
 
+    #code for infected persons list
+    def add_person_infected(self, victim_id):
+        self.persons_infected.append(victim_id)
+
+    def get_persons_infected(self):
+        return self.persons_infected
             
 
 class Population:
