@@ -192,7 +192,7 @@ class SimulationLogger:
                 'timestep': timestep
             }
             #adds people infected by the infector for agent tracker
-            infector_person.add_person_infected(infected_person.id)
+            infector_person.add_person_infected(infected_person)
     
     def log_intervention_effect(self, person, intervention_type, effect, timestep, location=None): 
         """Log when interventions affect person behavior"""
@@ -486,6 +486,14 @@ def get_target_stamp(target, iteration):
     return_str += "Target vaccination state: " + target.get_vaccinated() + "\n"
     return_str += "People target has infected so far: " + target.get_persons_infected() + "\n"
     return return_str
+
+#Tallies up the overall impact of all infection chains starting from the uarget
+#Returns an integer of "total indirect infections"
+def tally_target_chains(target):
+    tally = 0
+    for victim in target.get_persons_infected():
+        tally += tally_target_chains(victim)
+    return tally + len(target.get_persons_infected())
 
 def run_simulator(location=None, max_length=None, interventions=None, save_file=False, enable_logging = True, log_dir = "simulation_logs"):
     location = location or SIMULATION["default_location"]
@@ -817,6 +825,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                                         break
                             simulator.logger.log_infection_event(person, infector, location, variant, last_timestep)
 
+            #agent tracker update - get stamp
             if track_flag == True:
                 get_target_stamp(target, iteration)
                         
