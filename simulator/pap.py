@@ -125,8 +125,8 @@ class Person:
                         self.invisible = True # means agent cannot get reinfected 
 
     #code for infected persons list
-    def add_person_infected(self, victim):
-        self.persons_infected.append(victim)
+    def add_person_infected(self, victim_id):
+        self.persons_infected.append(victim_id)
 
     def get_persons_infected(self):
         return self.persons_infected

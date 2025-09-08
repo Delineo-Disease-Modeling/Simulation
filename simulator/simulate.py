@@ -192,7 +192,7 @@ class SimulationLogger:
                 'timestep': timestep
             }
             #adds people infected by the infector for agent tracker
-            infector_person.add_person_infected(infected_person)
+            infector_person.add_person_infected(infected_person.id)
     
     def log_intervention_effect(self, person, intervention_type, effect, timestep, location=None): 
         """Log when interventions affect person behavior"""
@@ -488,11 +488,11 @@ def get_target_stamp(target, iteration):
     return return_str
 
 #Tallies up the overall impact of all infection chains starting from the uarget
-#Returns an integer of "total indirect infections"
-def tally_target_chains(target):
+#Returns an integer of "total indirect infections
+def tally_target_chains(target, simulator):
     tally = 0
-    for victim in target.get_persons_infected():
-        tally += tally_target_chains(victim)
+    for victim_id in target.get_persons_infected():
+        tally += tally_target_chains(simulator.people.get(victim_id))
     return tally + len(target.get_persons_infected())
 
 def run_simulator(location=None, max_length=None, interventions=None, save_file=False, enable_logging = True, log_dir = "simulation_logs"):
@@ -850,6 +850,9 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     print(f"Final timestep: {last_timestep}")
     print(f"Result timesteps: {len(result)}")
     print(f"Movement timesteps: {len(movement_json)}")
+    #agent tracker update - gives target's total infectivity
+    if track_flag == True:
+        print(f"Total people indirectly infected by target: {tally_target_chains(target)}")
 
     if simulator.enable_logging and simulator.logger: 
         print("=== EXPORTING LOGS ===")
