@@ -49,6 +49,17 @@ Main simulation logic and configuration files.
 
 ## Getting Started
 
+Things you will need to install beforehand
+
+Install Python and set up your IDE's Python environment
+
+NO MODULE ERROR: If you receive an error message "ModuleNotFoundError: No module named [module name]"
+What you need to do is, in whatever environment you want to run the simulator, type
+"python -m pip install [module name]" into the terminal to install the module.
+
+Modules you will probably have to install (if you receive any error messages, install what it says is missing)
+flask, flask_cors, numpy, pandas, pyyaml, requests
+
 To run a simulation:
 
 ```bash
