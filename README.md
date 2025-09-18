@@ -60,6 +60,9 @@ What you need to do is, in whatever environment you want to run the simulator, t
 Modules you will probably have to install (if you receive any error messages, install what it says is missing)
 flask, flask_cors, numpy, pandas, pyyaml, requests
 
+USE CELL DATA: Hopkins DNS is giving us issues at the moment, so we cannot use Hopkins WiFi to run the simulation.
+For this reason, please use cell data when running the simulation for the time being.
+
 To run a simulation:
 
 ```bash
