@@ -42,7 +42,7 @@ def simulation(cz_id, length, interventions):
         
         # Upload generated data to DB
         if length == 10080:
-            resp = requests.post('https://db.delineo.me/simdata', json={
+            resp = requests.post('https://covidmod.isi.jhu.edu/api/db/simdata', json={
                 'czone_id': int(cz_id),
                 'simdata': data
             })
