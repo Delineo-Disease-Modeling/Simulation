@@ -9,7 +9,13 @@ import json
 app = Flask(__name__)
 
 # Enable CORS
-CORS(app)
+CORS(app,
+  origins=['http://localhost:5173', 'https://coviddev.isi.jhu.edu', 'http://coviddev.isi.jhu.edu', 'https://covidweb.isi.jhu.edu', 'http://covidweb.isi.jhu.edu'],
+  methods=['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  allow_headers=['Content-Type', 'Authorization'],
+  expose_headers=['Set-Cookie'],
+  supports_credentials=True
+)
 
 # Initialize DMP API when the server starts
 def initialize_dmp_api():
