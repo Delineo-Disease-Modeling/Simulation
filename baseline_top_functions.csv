@@ -1,0 +1,21 @@
+function,filename,cumulative_time,total_time,calls,time_per_call
+<method 'append' of 'bytearray' objects>,~,7.09e-07,7.09e-07,1,7.09e-07
+<method 'decode' of 'bytearray' objects>,~,0.000691486,0.000691486,4041,1.711175451620886e-07
+<method 'extend' of 'bytearray' objects>,~,7.08e-07,7.08e-07,1,7.08e-07
+<method 'find' of 'bytearray' objects>,~,0.00011497,0.00011497,659,1.7446130500758726e-07
+<method 'translate' of 'bytearray' objects>,~,1.2043000000000001e-05,1.2043000000000001e-05,22,5.47409090909091e-07
+<method 'count' of 'bytes' objects>,~,0.000665835,0.000665835,4041,1.647698589458055e-07
+<method 'decode' of 'bytes' objects>,~,0.036789840000000004,0.036789840000000004,209703,1.7543783350738903e-07
+<method 'join' of 'bytes' objects>,~,0.045200173,0.0029651810000000003,17496,2.5834575331504347e-06
+<method 'rstrip' of 'bytes' objects>,~,0.000379772,0.000379772,1346,2.82148588410104e-07
+<method 'split' of 'bytes' objects>,~,0.00041858700000000005,0.00041858700000000005,2848,1.4697577247191014e-07
+<method 'get' of 'mappingproxy' objects>,~,5.5301000000000005e-05,5.5301000000000005e-05,520,1.0634807692307694e-07
+<method 'values' of 'mappingproxy' objects>,~,3.4254e-05,3.4254e-05,215,1.5932093023255815e-07
+<method 'items' of 'mappingproxy' objects>,~,1.167e-06,1.167e-06,7,1.6671428571428573e-07
+<method 'copy' of 'mappingproxy' objects>,~,1.001e-06,1.001e-06,3,3.336666666666667e-07
+<method 'setter' of 'property' objects>,~,6.668e-06,6.668e-06,24,2.7783333333333337e-07
+<function FrozenList.__getitem__ at 0x1381f37e0>,~,1.2500000000000002e-07,1.2500000000000002e-07,1,1.2500000000000002e-07
+<method 'copy' of 'list' objects>,~,4.59e-07,4.59e-07,2,2.295e-07
+<method 'append' of 'list' objects>,~,0.013745636,0.013745636,159975,8.592365057040163e-08
+<method 'insert' of 'list' objects>,~,3.958e-06,3.958e-06,26,1.5223076923076922e-07
+<method 'extend' of 'list' objects>,~,0.0012181120000000001,0.001011601,3080,3.9549090909090915e-07

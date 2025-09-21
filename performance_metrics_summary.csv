@@ -1,0 +1,4 @@
+Metric,Baseline,Optimized,Improvement (%)
+Total Runtime (s),6.42,6.11,4.828660436137066
+Total Function Calls,11479380.0,11378671.0,0.877303478062404
+Average Time per Call (ms),0.0005585524137192081,0.0005358670986268957,4.061447866863331

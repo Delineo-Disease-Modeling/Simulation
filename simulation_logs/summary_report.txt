@@ -1,8 +1,5 @@
 === Simulation Summary Report ===
 
-Total people: 2
-Total infections: 2
-Total movements: 4224
-
-Intervention Events:
-  vaccine: 2928 events
+Total people: 6320
+Total infections: 1680
+Total movements: 5000

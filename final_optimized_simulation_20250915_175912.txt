@@ -1,0 +1,63 @@
+Final Optimized Simulation Profiling Report
+Generated: 2025-09-15 17:59:12.296814
+Total Runtime: 0.01 seconds
+================================================================================
+
+         4302 function calls (4183 primitive calls) in 0.010 seconds
+
+   Ordered by: cumulative time
+   List reduced from 572 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.010    0.010 /opt/anaconda3/lib/python3.12/site-packages/requests/api.py:103(post)
+        1    0.000    0.000    0.010    0.010 /opt/anaconda3/lib/python3.12/site-packages/requests/api.py:14(request)
+        1    0.000    0.000    0.010    0.010 /opt/anaconda3/lib/python3.12/site-packages/requests/sessions.py:500(request)
+        1    0.000    0.000    0.005    0.005 /opt/anaconda3/lib/python3.12/site-packages/requests/sessions.py:673(send)
+        1    0.000    0.000    0.005    0.005 /opt/anaconda3/lib/python3.12/site-packages/requests/adapters.py:590(send)
+        1    0.000    0.000    0.005    0.005 /opt/anaconda3/lib/python3.12/site-packages/urllib3/connectionpool.py:592(urlopen)
+        1    0.000    0.000    0.005    0.005 /opt/anaconda3/lib/python3.12/site-packages/urllib3/connectionpool.py:377(_make_request)
+        1    0.000    0.000    0.004    0.004 /opt/anaconda3/lib/python3.12/site-packages/urllib3/connection.py:534(getresponse)
+        1    0.000    0.000    0.004    0.004 /opt/anaconda3/lib/python3.12/http/client.py:1384(getresponse)
+        1    0.000    0.000    0.004    0.004 /opt/anaconda3/lib/python3.12/http/client.py:324(begin)
+        1    0.000    0.000    0.004    0.004 /opt/anaconda3/lib/python3.12/http/client.py:291(_read_status)
+        4    0.000    0.000    0.004    0.001 {method 'readline' of '_io.BufferedReader' objects}
+        1    0.000    0.000    0.004    0.004 /opt/anaconda3/lib/python3.12/socket.py:694(readinto)
+        1    0.004    0.004    0.004    0.004 {method 'recv_into' of '_socket.socket' objects}
+        1    0.000    0.000    0.004    0.004 /opt/anaconda3/lib/python3.12/site-packages/requests/sessions.py:750(merge_environment_settings)
+        1    0.000    0.000    0.004    0.004 /opt/anaconda3/lib/python3.12/site-packages/requests/utils.py:816(get_environ_proxies)
+        1    0.000    0.000    0.003    0.003 /opt/anaconda3/lib/python3.12/site-packages/requests/utils.py:755(should_bypass_proxies)
+        1    0.000    0.000    0.003    0.003 /opt/anaconda3/lib/python3.12/urllib/request.py:2684(proxy_bypass)
+        1    0.000    0.000    0.003    0.003 /opt/anaconda3/lib/python3.12/urllib/request.py:2670(proxy_bypass_macosx_sysconf)
+        1    0.003    0.003    0.003    0.003 {built-in method _scproxy._get_proxy_settings}
+        1    0.000    0.000    0.001    0.001 /opt/anaconda3/lib/python3.12/site-packages/urllib3/connection.py:418(request)
+        1    0.000    0.000    0.001    0.001 /opt/anaconda3/lib/python3.12/http/client.py:1320(endheaders)
+        2    0.000    0.000    0.001    0.000 /opt/anaconda3/lib/python3.12/http/client.py:1027(send)
+        1    0.000    0.000    0.001    0.001 /opt/anaconda3/lib/python3.12/http/client.py:1082(_send_output)
+        1    0.000    0.000    0.001    0.001 /opt/anaconda3/lib/python3.12/site-packages/urllib3/connection.py:324(connect)
+        1    0.000    0.000    0.001    0.001 /opt/anaconda3/lib/python3.12/site-packages/urllib3/connection.py:192(_new_conn)
+        1    0.000    0.000    0.001    0.001 /opt/anaconda3/lib/python3.12/site-packages/urllib3/util/connection.py:27(create_connection)
+        1    0.000    0.000    0.001    0.001 /opt/anaconda3/lib/python3.12/site-packages/requests/sessions.py:457(prepare_request)
+        1    0.000    0.000    0.001    0.001 /opt/anaconda3/lib/python3.12/socket.py:947(getaddrinfo)
+        1    0.001    0.001    0.001    0.001 {built-in method _socket.getaddrinfo}
+        1    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/urllib/request.py:2579(_proxy_bypass_macosx_sysconf)
+        1    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/requests/utils.py:207(get_netrc_auth)
+        1    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:1349(_find_and_load)
+        5    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/re/__init__.py:280(_compile)
+        1    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:1304(_find_and_load_unlocked)
+        4    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/re/_compiler.py:740(compile)
+        1    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:911(_load_unlocked)
+        3    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/re/__init__.py:226(compile)
+        1    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:989(exec_module)
+        1    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:1062(get_code)
+        1    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/site-packages/requests/models.py:351(prepare)
+        1    0.000    0.000    0.000    0.000 {method 'connect' of '_socket.socket' objects}
+        4    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/re/_parser.py:969(parse)
+        1    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:1183(get_data)
+     11/4    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/re/_parser.py:452(_parse_sub)
+        1    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/urllib/parse.py:1150(_splitport)
+        2    0.000    0.000    0.000    0.000 {method 'read' of '_io.BufferedReader' objects}
+     11/4    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/re/_parser.py:512(_parse)
+        2    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/fnmatch.py:19(fnmatch)
+        2    0.000    0.000    0.000    0.000 /opt/anaconda3/lib/python3.12/fnmatch.py:64(fnmatchcase)
+
+
