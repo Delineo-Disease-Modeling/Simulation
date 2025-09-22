@@ -177,6 +177,8 @@ Useful paths:
 - Simulator app: `app.py`
 - Simulator logic: `simulator/`
 
+New developer? See the detailed simulator guide: `simulator/DEVELOPER_GUIDE.md`.
+
 ---
 
 ## Testing
