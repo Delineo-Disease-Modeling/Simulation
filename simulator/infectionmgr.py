@@ -11,6 +11,18 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
 class InfectionManager:
+    """Manage infection state transitions and DMP timeline integration.
+
+    Features:
+    - Caching of DMP timelines keyed by demographics and variant
+    - Batched, concurrent DMP API requests with retries and connection pooling
+    - Fallback internal timelines when DMP is unavailable
+    - Fast-path checks for infection spread within locations
+
+    Developer utilities (non-functional helpers):
+    - Context manager support to ensure resources are cleaned up
+    - cache_stats() helper to introspect cache and pending request sizes
+    """
     def __init__(self, matrices_dict, timestep=None, people=[]):
         self.matrices_dict = matrices_dict  
         self.timestep = timestep or INFECTION_MODEL["default_timestep"]
@@ -44,128 +56,18 @@ class InfectionManager:
                 if InfectionState.INFECTED in v:
                     self.infected.append(p)
                     self._infected_set.add(p.id)
+
+    def __enter__(self):
+        """Allow `with InfectionManager(...) as mgr:` usage."""
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        """Ensure threads and HTTP sessions are released on exit."""
+        self.close()
+        # Do not suppress exceptions
+        return False
     
-    # def run_model(self, num_timesteps=4, file=None, curtime=0, deltaInfected=[], omicronInfected=[]):
-    #     if file != None:
-    #         file.write(f'====== TIMESTEP {curtime} ======\n')
-    #         file.write(f'delta: {[i.id for i in self.infected if i.states.get("delta") != None]}\n')
-    #         file.write(f'omicron: {[i.id for i in self.infected if i.states.get("omicron") != None]}\n')
-    #         file.write(f"delta count: {len([i.id for i in self.infected if i.states.get('delta') != None])}\n")
-    #         file.write(f"omicron count: {len([i.id for i in self.infected if i.states.get('omicron') != None])}\n")
-
-    #     # keep an array of number of people infected at each time step
-    #     for i in self.infected:
-    #         if i.states.get('delta') != None and i.states['delta'] != InfectionState.SUSCEPTIBLE:
-    #             deltaInfected[i.id] = int(i.states['delta'].value)
-    #         elif i.states.get('omicron') != None and i.states['omicron'] != InfectionState.SUSCEPTIBLE:
-    #             omicronInfected[i.id] = int(i.states['omicron'].value)
-        
-    #     for i in self.infected:
-    #         i.update_state(curtime)
-        
-    #     for i in self.infected:
-    #         if i.invisible == True:
-    #             continue
-
-    #         for p in i.location.population:
-    #             if i == p or p.invisible == True:
-    #                 continue
-
-    #             new_infections = []
-
-    #             for disease, state in i.states.items():   
-    #                 # Ignore those who cannot infect others
-    #                 if InfectionState.INFECTIOUS not in state:
-    #                     continue
-                            
-    #                 # Ignore those already infected, hospitalized, or recovered
-    #                 if p.states.get(disease) != None and InfectionState.INFECTED in p.states[disease]:
-    #                     continue
-                    
-    #                 # Repeat the probability the number of timesteps we passed over the interval
-    #                 # for _ in range(num_timesteps):
-    #                 if (disease == "delta" and CAT(p, True, num_timesteps, 7e4)) or (disease == "omicron" and CAT(p, True, num_timesteps, 7e4)):
-    #                     new_infections.append(disease)
-    #                     break
-                
-    #             for disease in new_infections:
-    #                 # If a person is infected with more than one disease at the same time
-    #                 # and the model does not support being infected with multiple diseases,
-    #                 # this loop is used to remedy that case
-                    
-    #                 self.infected.append(p) # add to list of infected regardless
-                    
-    #                 # Set infection state if they were only infected once, or if multidisease is True
-    #                 if len(new_infections) == 1 or self.multidisease == True:
-    #                     p.states[disease] = InfectionState.INFECTED
-    #                     self.create_timeline(p, disease, curtime)
-                        
-    #                     if file != None:
-    #                         file.write(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}\n')
-    #                     continue
-                    
-    #                 # TODO: Handle case where a person is infected by multiple diseases at once
-    #                 #p.state = InfectionState.INFECTED
-    #                 print(f'{i.id} infected {p.id} @ location {p.location.id}')
-            
-    #         # print(len(all_p))
-
-    # def run_model(self, num_timesteps=4, file=None, curtime=0, variantInfected={}, newlyInfected={}):
-    #     if file is not None:
-    #         file.write(f'====== TIMESTEP {curtime} ======\n')
-    #         for variant in variantInfected.keys():
-    #             infected_ids = [i.id for i in self.infected if variant in i.states and i.states[variant] != InfectionState.SUSCEPTIBLE]
-    #             file.write(f'{variant}: {infected_ids}\n')
-    #             file.write(f"{variant} count: {len(infected_ids)}\n")
-
-    #     # Update the infection counts for each variant
-    #     for i in self.infected:
-    #         for disease in variantInfected.keys():
-    #             if disease in i.states and i.states[disease] != InfectionState.SUSCEPTIBLE:
-    #                 variantInfected[disease][i.id] = int(i.states[disease].value)
-
-    #     # Update the state of each person based on the current time
-    #     for i in self.infected:
-    #         i.update_state(curtime, self.matrices_dict.keys())
-
-    #     # Evaluate the possibility of new infections
-    #     for i in self.infected:
-    #         if i.invisible:
-    #             continue
-
-    #         for p in i.location.population:
-    #             if i == p or p.invisible:
-    #                 continue
-
-    #             new_infections = []
-
-    #             for disease, state in i.states.items():
-    #                 if InfectionState.INFECTIOUS not in state:
-    #                     continue
-    #                 if p.states.get(disease) is not None and InfectionState.INFECTED in p.states[disease]:
-    #                     continue
-
-    #                 mask_modifier = self.calculate_mask_transmission_modifier(i, p)
-    #                 base_transmission_prob = 7e3 * (1 - mask_modifier)
-
-                    
-    #                 # Assuming CAT function can h andle the matrix without needing to specify a disease
-    #                 if CAT(p, True, num_timesteps, base_transmission_prob):
-    #                     new_infections.append(disease)
-                        
-    #                     if newlyInfected.get(disease) == None:
-    #                         newlyInfected[disease] = {}
-    #                     newlyInfected[disease][str(i.id)] = [ *newlyInfected.get(str(i.id), []), str(p.id) ]
-                        
-    #                     break
-
-    #             for disease in new_infections:
-    #                 self.infected.append(p)  # Add to list of infected regardless
-    #                 if len(new_infections) == 1 or self.multidisease:
-    #                     self.create_timeline(p, disease, curtime)
-                        
-    #                     if file is not None:
-    #                         file.write(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}\n')
+    
     
     def run_model(self, num_timesteps=4, file=None, curtime=0, variantInfected={}, newlyInfected={}):
         if file is not None:
@@ -345,6 +247,18 @@ class InfectionManager:
         # Clear pending requests
         self._pending_timeline_requests.clear()
     
+    def cache_stats(self):
+        """Return a lightweight snapshot of internal cache/batching state for debugging."""
+        try:
+            max_workers = getattr(self._executor, "_max_workers", None)
+        except Exception:
+            max_workers = None
+        return {
+            "cache_size": len(self._dmp_cache),
+            "pending_requests": len(self._pending_timeline_requests),
+            "max_workers": max_workers,
+        }
+    
     def _make_api_request(self, base_url, payload):
         """Make API request with connection pooling"""
         try:
@@ -407,13 +321,4 @@ class InfectionManager:
             }
         }
     
-    def create_timeline(self, person, disease, curtime):
-        """Backward compatibility wrapper"""
-        self.create_timeline_cached(person, disease, curtime)
     
-    def __del__(self):
-        """Cleanup resources"""
-        if hasattr(self, '_executor'):
-            self._executor.shutdown(wait=False)
-        if hasattr(self, '_session'):
-            self._session.close()

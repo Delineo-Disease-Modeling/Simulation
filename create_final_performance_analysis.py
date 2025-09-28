@@ -12,6 +12,7 @@ import pstats
 import io
 from datetime import datetime
 import os
+import argparse
 
 def analyze_profiling_files():
     """Analyze all available profiling files and extract performance metrics"""
@@ -236,7 +237,11 @@ def create_performance_visualizations():
     plt.savefig(filename, dpi=300, bbox_inches='tight')
     print(f"\nPerformance visualization saved as: {filename}")
     
-    plt.show()
+    try:
+        plt.show()
+    except Exception:
+        # In headless environments, show can fail; continue silently
+        pass
     
     return filename
 
@@ -334,15 +339,51 @@ def generate_optimization_report():
     print(f"Optimization report saved as: {report_filename}")
     return report_filename
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Create performance visualizations and optimization report from profiling outputs.")
+    parser.add_argument("--no-visuals", action="store_true", help="Skip generating the visualization PNG")
+    parser.add_argument("--no-report", action="store_true", help="Skip generating the markdown report")
+    parser.add_argument("--only-report", action="store_true", help="Generate only the markdown report")
+    parser.add_argument("--outdir", type=str, default=".", help="Directory to save outputs (PNG and MD)")
+    parser.add_argument("--headless", action="store_true", help="Do not attempt to show plots (useful on headless systems)")
+    return parser.parse_args()
+
+
+def main():
     print("=== DISEASE SIMULATION PERFORMANCE ANALYSIS ===")
-    
-    # Create performance visualizations
-    viz_file = create_performance_visualizations()
-    
-    # Generate comprehensive report
-    report_file = generate_optimization_report()
-    
+    args = parse_args()
+
+    # Ensure output directory exists and switch working dir for outputs
+    outdir = os.path.abspath(args.outdir)
+    os.makedirs(outdir, exist_ok=True)
+    cwd_before = os.getcwd()
+    os.chdir(outdir)
+
+    viz_file = None
+    report_file = None
+
+    try:
+        if args.only-report:
+            report_file = generate_optimization_report()
+        else:
+            # Visuals unless explicitly skipped
+            if not args.no-visuals:
+                if args.headless:
+                    # Avoid showing plots in headless mode
+                    plt.ioff()
+                viz_file = create_performance_visualizations()
+            # Report unless explicitly skipped
+            if not args.no-report:
+                report_file = generate_optimization_report()
+    finally:
+        os.chdir(cwd_before)
+
     print(f"\nAnalysis complete!")
-    print(f"Visualization: {viz_file}")
-    print(f"Report: {report_file}")
+    if viz_file:
+        print(f"Visualization: {os.path.join(outdir, os.path.basename(viz_file))}")
+    if report_file:
+        print(f"Report: {os.path.join(outdir, os.path.basename(report_file))}")
+
+
+if __name__ == "__main__":
+    main()
