@@ -503,7 +503,8 @@ def move_people(simulator, items, is_household, current_timestep):
     for id, people in items:
         place = simulator.get_household(str(id)) if is_household else simulator.get_facility(str(id))
         if place is None:
-            raise Exception(f"Place {id} was not found in the simulator data ({is_household})")
+            logging.warning(f"Skipping movement: place {id} not found (is_household={is_household}) at timestep {current_timestep}")
+            continue
 
         # Cache capacity and intervention weights
         capacity_weight = simulator.iv_weights.get('capacity', 1.0)
@@ -632,6 +633,23 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         print("ERROR: No patterns data found!")
         return {"movement": {}, "result": {}}
     
+    # Fallback: if homes/places were not provided by the stream, derive them from the first pattern
+    if (not homes_data or len(homes_data) == 0) or (not places_data or len(places_data) == 0):
+        try:
+            pattern_keys = sorted(patterns.keys(), key=lambda x: int(x) if str(x).isdigit() else float('inf'))
+            if pattern_keys:
+                first_key = pattern_keys[0]
+                first_pattern = patterns[first_key]
+                if isinstance(first_pattern, dict):
+                    if not homes_data:
+                        homes_data = first_pattern.get("homes", {}) or {}
+                        print(f"[Fallback] Initialized homes_data from patterns[{first_key}]: {len(homes_data)} homes")
+                    if not places_data:
+                        places_data = first_pattern.get("places", {}) or {}
+                        print(f"[Fallback] Initialized places_data from patterns[{first_key}]: {len(places_data)} places")
+        except Exception as e:
+            print(f"[Fallback] Failed to initialize homes/places from patterns: {e}")
+
     simulator = DiseaseSimulator(intervention_weights=interventions, enable_logging=enable_logging, log_dir=log_dir)
     
     # Build households
