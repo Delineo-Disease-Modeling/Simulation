@@ -74,7 +74,6 @@ See `simulator/config.py`:
 Tip: Prefer repo-relative or environment-based paths. The repo currently includes absolute defaults; adjust for your environment or pass explicit files to the DMP `/initialize` endpoint.
 
 ---
-
 ## Local Setup
 
 - Python 3.10+ recommended.
@@ -86,39 +85,71 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 # If you plan to run the DMP locally:
 pip install -r dmp/requirements.txt  # includes uvicorn
-```
-
-Run services:
-- DMP (in `Simulation/dmp/`):
-```bash
-uvicorn api.dmp_api:app --reload
-```
-- Simulator (in `Simulation/`):
-```bash
+{{ ... }}
 python app.py
 ```
 
 ---
 
-## Typical Development Workflows
+## Containerization and CI/CD
 
-- Modify simulation behavior (movements/interventions):
-  - Edit `simulator/simulate.py` (`move_people`, `DiseaseSimulator`, intervention effects).
-  - Adjust defaults in `simulator/config.py` under `SIMULATION`.
+You can run both the DMP and Simulator with Docker Compose for a consistent local and prod experience.
 
-- Change infection progression or DMP integration:
-  - Edit `simulator/infectionmgr.py` for batching, caching, and API payloads.
-  - Update mappings in `config.py` (`DMP_API.state_mapping`, `time_conversion_factor`).
-  - Update infection probability logic in `infection_models/`.
+Artifacts (in `Simulation/`):
 
-- Add logging or metrics:
-  - Extend `SimulationLogger` in `simulate.py` (person, movement, infection, intervention, location, contact logs; CSV export and summary report).
+- `Dockerfile.dmp` — FastAPI DMP image (served by `uvicorn`, port `8000`).
+- `Dockerfile.sim` — Flask Simulator image (served by `gunicorn`, port `1880`).
+- `docker-compose.yml` — Orchestrates `dmp` and `simulator` services.
+- `.dockerignore` — Reduces build context size.
+- `Makefile` — Convenience targets: `build`, `up`, `down`, `logs`, `ps`, `push`, `clean`.
 
-- Test API end-to-end:
-  - Start DMP with `uvicorn`.
-  - `curl` simulator endpoints:
-    - GET `http://localhost:1880/`
-    - POST `http://localhost:1880/simulation/` with a JSON body containing interventions.
+Run with Compose:
+
+```bash
+cd Simulation
+docker compose build
+docker compose up -d
+# or
+make build && make up
+```
+
+Endpoints:
+
+- DMP: `http://localhost:8000`
+- Simulator: `http://localhost:1880`
+
+Initialize DMP inside the container (uses repo-relative paths baked into the image):
+
+```bash
+curl -X POST http://localhost:8000/initialize \
+  -H "Content-Type: application/json" \
+  -d '{
+        "matrices_path": "/app/simulator/config_data/combined_matrices.csv",
+        "mapping_path":  "/app/simulator/config_data/demographic_mapping.csv",
+        "states_path":   "/app/simulator/config_data/custom_states.txt"
+      }'
+```
+
+Environment variables (read by `simulator/config.py`):
+
+- `SERVER_HOST`, `SERVER_PORT` — Flask server bind (defaults `0.0.0.0:1880`).
+- `DMP_BASE_URL` — DMP API base URL (default `http://dmp:8000` in Compose).
+- `DMP_MATRICES_PATH`, `DMP_MAPPING_PATH`, `DMP_STATES_PATH` — DMP init files.
+- Simulation knobs: `SIM_DEFAULT_TIMESTEP`, `SIM_DEFAULT_MAX_LENGTH`, `SIM_DEFAULT_LOCATION`, `SIM_DEFAULT_MASK`, `SIM_DEFAULT_VACCINE`, `SIM_DEFAULT_CAPACITY`, `SIM_DEFAULT_LOCKDOWN`, `SIM_DEFAULT_SELFISO`, `SIM_DEFAULT_RANDSEED`.
+- Infection model: `INFECTION_TRANSMISSION_RATE`, `INFECTION_DEFAULT_TIMESTEP`, `FALLBACK_*`, etc.
+
+Dev with live code:
+
+- Uncomment the `volumes` section in `docker-compose.yml` to bind‑mount the source and switch to `--reload` servers if desired. Images default to production servers for performance.
+
+CI/CD (GitHub Actions + GHCR):
+
+- Workflow template: `Simulation/.github/workflows/docker-images.yml` (move to repo root `/.github/workflows/` for actual CI).
+- Builds and pushes:
+  - `ghcr.io/<org>/delineo-dmp:latest`
+  - `ghcr.io/<org>/delineo-simulator:latest`
+- Configure `IMAGE_OWNER` (org/user). Optional deploy via SSH requires repo secrets: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KEY`, `DEPLOY_PORT`, `DEPLOY_PATH`.
+- Deploy step logs into GHCR on the server, pulls latest images, and runs `docker compose up -d` at `DEPLOY_PATH`.
 
 ---
 

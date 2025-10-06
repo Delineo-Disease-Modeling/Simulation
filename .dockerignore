@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+*.coverage
+.coverage*
+.mypy_cache/
+.pytype/
+
+# Git
+.git/
+.gitignore
+
+# OS
+.DS_Store
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Logs
+logs/
+*.log
+simulation_logs_*/
+
+# Virtual envs
+.venv/
+venv/
+
+# Large archives
+*.zip
+*.tar
+*.tar.gz
+
+# Node/streamlit caches (if any)
+node_modules/
+.streamlit/
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+Dockerfile*
+!Dockerfile.sim
+!Dockerfile.dmp
+
+docker-compose.override.yml

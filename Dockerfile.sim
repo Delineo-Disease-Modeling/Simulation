@@ -1,0 +1,35 @@
+# Simulator (Flask) container
+FROM python:3.11-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# System deps (optional): ca-certificates for HTTPS
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy app source
+COPY . /app
+
+# Install Python deps
+# Root requirements contain common libs; add gunicorn explicitly for prod serving
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    pip install gunicorn
+
+# Env defaults (can be overridden by compose)
+ENV SERVER_HOST=0.0.0.0 \
+    SERVER_PORT=1880 \
+    DMP_BASE_URL=http://dmp:8000
+
+# Expose simulator port
+EXPOSE 1880
+
+# Launch with gunicorn binding to configured port
+# app:app refers to /app/app.py's Flask app instance named `app`
+CMD ["bash", "-lc", "exec gunicorn -w 2 -k gthread -b 0.0.0.0:${SERVER_PORT} app:app"]

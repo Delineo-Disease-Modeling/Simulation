@@ -1,0 +1,26 @@
+# DMP (FastAPI + uvicorn) container
+FROM python:3.11-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy app source
+COPY . /app
+
+# Install DMP-specific deps
+RUN pip install --upgrade pip && \
+    pip install -r dmp/requirements.txt
+
+ENV PORT=8000
+EXPOSE 8000
+
+# Start uvicorn serving FastAPI app at dmp/api/dmp_api.py
+CMD ["bash", "-lc", "exec uvicorn dmp.api.dmp_api:app --host 0.0.0.0 --port ${PORT}"]

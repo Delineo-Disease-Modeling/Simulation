@@ -30,7 +30,7 @@ def stream_data(url):
         print(f"Line count: {linecount}")
 
 def main(): 
-    stream_data("https://db.delineo.me/patterns/1?stream=true")
+    stream_data("https://covidweb.isi.jhu.edu/api/db/patterns/1?stream=true")
 
 
 if __name__ == "__main__":

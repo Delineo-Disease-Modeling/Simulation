@@ -72,6 +72,77 @@ This starts the simulator at `http://0.0.0.0:1880` (see `simulator/config.py`).
 
 ---
 
+## Run with Docker (recommended)
+
+You can run both the DMP API and the Simulator using Docker Compose.
+
+Files:
+
+- `Dockerfile.dmp` — builds the FastAPI DMP image (served by `uvicorn`).
+- `Dockerfile.sim` — builds the Flask Simulator image (served by `gunicorn`).
+- `docker-compose.yml` — orchestrates the two services.
+- `.dockerignore`, `Makefile` — faster builds and convenience commands.
+
+Start both services:
+
+```bash
+cd Simulation
+docker compose build
+docker compose up -d
+# or using Makefile shortcuts
+make build && make up
+```
+
+Endpoints:
+
+- DMP: `http://localhost:8000`
+- Simulator: `http://localhost:1880`
+
+Initialize DMP (in container):
+
+```bash
+curl -X POST http://localhost:8000/initialize \
+  -H "Content-Type: application/json" \
+  -d '{
+        "matrices_path": "/app/simulator/config_data/combined_matrices.csv",
+        "mapping_path":  "/app/simulator/config_data/demographic_mapping.csv",
+        "states_path":   "/app/simulator/config_data/custom_states.txt"
+      }'
+```
+
+Run a simulation:
+
+```bash
+curl -X POST http://localhost:1880/simulation/ \
+  -H "Content-Type: application/json" \
+  -d '{
+        "length": 72000,
+        "location": "barnsdall",
+        "mask": 0.2,
+        "vaccine": 0.5,
+        "capacity": 0.8,
+        "lockdown": 0,
+        "selfiso": 0.1,
+        "randseed": true
+      }'
+```
+
+Environment variables (overrides): see `simulator/config.py`. Common ones:
+
+- `SERVER_PORT` (default 1880)
+- `DMP_BASE_URL` (default `http://dmp:8000` inside Compose)
+- `DMP_MATRICES_PATH`, `DMP_MAPPING_PATH`, `DMP_STATES_PATH`
+
+Stop services:
+
+```bash
+docker compose down
+# or
+make down
+```
+
+---
+
 ## Running the DMP API
 
 The DMP provides two endpoints:
@@ -171,6 +242,10 @@ You can override `DMP_API.paths` at runtime by calling the DMP `/initialize` end
 - Optionally install DMP extras: `pip install -r dmp/requirements.txt`
 - Start services as in Quick Start
 
+Using Docker for development:
+
+- You can bind‑mount the source by uncommenting the `volumes` section in `docker-compose.yml` and use `--reload` dev commands if desired. The provided images run production servers by default (`gunicorn` for simulator, `uvicorn` for DMP).
+
 Useful paths:
 
 - DMP API app: `dmp/api/dmp_api.py`
@@ -211,6 +286,24 @@ python -m api.test_api
   - Change DMP port by running uvicorn with `--port` (e.g., `uvicorn api.dmp_api:app --reload --port 8001`) and update `DMP_API.base_url`.
 
 ---
+
+## CI/CD (GitHub Actions + GHCR)
+
+This repo includes a workflow template to build and push images to GitHub Container Registry (GHCR):
+
+- `Simulation/.github/workflows/docker-images.yml` (move to repo root `.github/workflows/` if needed)
+
+Configure:
+
+- Set `IMAGE_OWNER` to your GitHub org/user.
+- Optionally add deploy secrets to enable SSH deploy (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KEY`, `DEPLOY_PORT`, `DEPLOY_PATH`).
+
+On push to `main` (changes under `Simulation/**`), the workflow builds and pushes:
+
+- `ghcr.io/<org>/delineo-dmp:latest`
+- `ghcr.io/<org>/delineo-simulator:latest`
+
+Optional SSH deploy step pulls latest images on your server and runs `docker compose up -d` at `DEPLOY_PATH`.
 
 ## License
 

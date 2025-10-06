@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  dmp:
+    build:
+      context: .
+      dockerfile: Dockerfile.dmp
+    image: ghcr.io/your-org/delineo-dmp:latest
+    environment:
+      - PORT=8000
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.sim
+    image: ghcr.io/your-org/delineo-simulator:latest
+    environment:
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=1880
+      - DMP_BASE_URL=http://dmp:8000
+    depends_on:
+      - dmp
+    ports:
+      - "1880:1880"
+    restart: unless-stopped
+
+# For local dev with live code, you can mount the source (uncomment):
+#    volumes:
+#      - ./:/app

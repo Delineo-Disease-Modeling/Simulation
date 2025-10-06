@@ -577,7 +577,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         random.seed(0)
     
     # Load people and places using the new streaming method
-    data_stream = StreamDataLoader.stream_data("https://db.delineo.me/patterns/1?stream=true")
+    data_stream = StreamDataLoader.stream_data("https://covidweb.isi.jhu.edu/api/db/patterns/1?stream=true")
     
     # Extract initial data from the stream
     people_data = {}

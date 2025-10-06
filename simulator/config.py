@@ -1,19 +1,30 @@
 """
 Configuration settings for the Delineo simulation system.
 This centralizes hardcoded values that were previously scattered across files.
+Now parameterized via environment variables to support Docker and deployments.
 """
+
+import os
+from pathlib import Path
+
+# Base directory for repo-relative defaults
+_BASE_DIR = Path(__file__).resolve().parent
+_CONFIG_DATA_DIR = _BASE_DIR / "config_data"
 
 # DMP API settings
 DMP_API = {
-    "base_url": "http://localhost:8000",
+    "base_url": os.getenv("DMP_BASE_URL", "http://dmp:8000"),  # default to docker service name
     "paths": {
-        # Default paths for initialization
-        # "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/config_data/combined_matrices.csv",
-        # "mapping_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/config_data/demographic_mapping.csv",
-        # "states_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/config_data/custom_states.txt"
-        "matrices_path": "/Users/navyamehrotra/Documents/Projects/Delineo/Simulation/simulator/config_data/combined_matrices.csv",
-        "mapping_path": "/Users/navyamehrotra/Documents/Projects/Delineo/Simulation/simulator/config_data/demographic_mapping.csv",
-        "states_path": "/Users/navyamehrotra/Documents/Projects/Delineo/Simulation/simulator/config_data/custom_states.txt"
+        # Default paths for initialization; can be overridden with env vars
+        "matrices_path": os.getenv(
+            "DMP_MATRICES_PATH", str(_CONFIG_DATA_DIR / "combined_matrices.csv")
+        ),
+        "mapping_path": os.getenv(
+            "DMP_MAPPING_PATH", str(_CONFIG_DATA_DIR / "demographic_mapping.csv")
+        ),
+        "states_path": os.getenv(
+            "DMP_STATES_PATH", str(_CONFIG_DATA_DIR / "custom_states.txt")
+        ),
     },
     # Mapping from DMP API state names to internal infection states
     "state_mapping": {
@@ -23,60 +34,91 @@ DMP_API = {
         "Hospitalized": "HOSPITALIZED",
         "ICU": "HOSPITALIZED",
         "Recovered": "RECOVERED",
-        "Deceased": "REMOVED"
+        "Deceased": "REMOVED",
     },
     # Time conversion factor from API time units to simulation time units
-    "time_conversion_factor": 60
+    "time_conversion_factor": int(os.getenv("DMP_TIME_FACTOR", "60")),
 }
 
 # Infection model parameters
 INFECTION_MODEL = {
     # Fallback transmission rate used in CAT function when primary calculation method fails
-    "transmission_rate": 7e3,
+    "transmission_rate": float(os.getenv("INFECTION_TRANSMISSION_RATE", "7000")),
     # Whether multiple diseases can infect the same person simultaneously
-    "allow_multidisease": True,
+    "allow_multidisease": os.getenv("ALLOW_MULTIDISEASE", "true").lower() == "true",
     # Default timestep for infection manager (minutes)
-    "default_timestep": 15,
+    "default_timestep": int(os.getenv("INFECTION_DEFAULT_TIMESTEP", "15")),
     # Fallback timeline values used only when DMP API fails to provide a timeline
     "fallback_timeline": {
-        "infected_duration": 1440,      # 24 hours in minutes (fallback value)
-        "infectious_delay": 240,        # 4 hours in minutes (fallback value)
-        "recovery_duration": 10080      # 7 days in minutes (fallback value)
+        "infected_duration": int(os.getenv("FALLBACK_INFECTED_DURATION", "1440")),
+        "infectious_delay": int(os.getenv("FALLBACK_INFECTIOUS_DELAY", "240")),
+        "recovery_duration": int(os.getenv("FALLBACK_RECOVERY_DURATION", "10080")),
     },
     # Initial timeline values for newly infected people before DMP updates
     "initial_timeline": {
-        "duration": 10800  # 180 hours in minutes
-    }
+        "duration": int(os.getenv("INITIAL_TIMELINE_DURATION", "10800"))
+    },
 }
 
 # Simulation defaults
 SIMULATION = {
-    "default_timestep": 60,             # Default timestep in minutes
-    "default_location": "barnsdall",    # Default location for simulation
-    "default_max_length": 72000,        # Default simulation length (50 days in minutes)
-    "log_interval": 6000,               # Interval for printing progress logs
+    "default_timestep": int(os.getenv("SIM_DEFAULT_TIMESTEP", "60")),  # minutes
+    "default_location": os.getenv("SIM_DEFAULT_LOCATION", "barnsdall"),
+    "default_max_length": int(os.getenv("SIM_DEFAULT_MAX_LENGTH", "72000")),
+    "log_interval": int(os.getenv("SIM_LOG_INTERVAL", "6000")),
     "vaccination_options": {
-        "min_doses": 1,                 # Minimum number of vaccine doses
-        "max_doses": 2                  # Maximum number of vaccine doses
+        "min_doses": int(os.getenv("SIM_VAX_MIN_DOSES", "1")),
+        "max_doses": int(os.getenv("SIM_VAX_MAX_DOSES", "2")),
     },
     "default_interventions": {
-        "mask": 0.0,                    # Proportion of population wearing masks
-        "vaccine": 0.0,                 # Proportion of population vaccinated
-        "capacity": 1.0,                # Capacity multiplier for facilities
-        "lockdown": 0,                  # Probability of lockdown enforcement
-        "selfiso": 0.0,                 # Probability of self-isolation when symptomatic
-        "randseed": True               # Whether to use random seed
+        "mask": float(os.getenv("SIM_DEFAULT_MASK", "0.0")),
+        "vaccine": float(os.getenv("SIM_DEFAULT_VACCINE", "0.0")),
+        "capacity": float(os.getenv("SIM_DEFAULT_CAPACITY", "1.0")),
+        "lockdown": int(os.getenv("SIM_DEFAULT_LOCKDOWN", "0")),
+        "selfiso": float(os.getenv("SIM_DEFAULT_SELFISO", "0.0")),
+        "randseed": os.getenv("SIM_DEFAULT_RANDSEED", "true").lower() == "true",
     },
-    "default_infected_ids": ['160', '43', '47', '4', '36', '9', '14', '19', '27', '22', '3', '5', '6', '7', '8', '10', '11', '12', '13', '15', '16', '17', '18', '20', '21', '23', '24', '25', '26'],
-    "variants": ['Delta', 'Omicron']    # Available disease variants
+    "default_infected_ids": [
+        "160",
+        "43",
+        "47",
+        "4",
+        "36",
+        "9",
+        "14",
+        "19",
+        "27",
+        "22",
+        "3",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11",
+        "12",
+        "13",
+        "15",
+        "16",
+        "17",
+        "18",
+        "20",
+        "21",
+        "23",
+        "24",
+        "25",
+        "26",
+    ],
+    "variants": ["Delta", "Omicron"],
 }
 
 # Server configuration
 SERVER = {
-    "host": "0.0.0.0",
-    "port": 1880,
+    "host": os.getenv("SERVER_HOST", "0.0.0.0"),
+    "port": int(os.getenv("SERVER_PORT", "1880")),
     "error_messages": {
         "bad_request": "Bad Request",
-        "no_data": "No data sent"
-    }
-} 
+        "no_data": "No data sent",
+    },
+}
+ 
