@@ -449,7 +449,7 @@ def move_people(simulator, items, is_household, current_timestep):
                     person.location.remove_member(person_id)
                     person.household.add_member(person)
 
-                    if simulator.enable_logging and simulator.logger: 
+                    if simulator.enable_logging and simulator.logger and original_location.id != person.household.id: 
                         reason = 'capacity_limit' if at_capacity else ('lockdown' if hit_lockdown else 'self_isolation')
                         simulator.logger.log_movement(person, original_location, person.household, current_timestep, reason)
 
@@ -459,7 +459,7 @@ def move_people(simulator, items, is_household, current_timestep):
             person.location.remove_member(person_id)
             place.add_member(person)
             
-            if simulator.enable_logging and simulator.logger: 
+            if simulator.enable_logging and simulator.logger and original_location.id != place.id: 
                 simulator.logger.log_movement(person, original_location, place, current_timestep, 'normal')
 
             person.location = place
@@ -527,7 +527,7 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
         print("ERROR: No patterns data found!")
         return {"movement": {}, "result": {}}
     
-    simulator = DiseaseSimulator(timestep=60, enable_logging=False, intervention_weights=simdata['interventions'])
+    simulator = DiseaseSimulator(timestep=60, enable_logging=True, intervention_weights=simdata['interventions'])
     
     # Build households
     print("=== BUILDING HOUSEHOLDS ===")
@@ -822,7 +822,7 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
     print(f"Non-empty movement: {len(non_empty_movement)}")
     
     if non_empty_movement:
-        sample_timestep = list(non_empty_movement.keys())[0]
+        sample_timestep = list(non_empty_movement.keys())[1]
         sample_movement = non_empty_movement[sample_timestep]
         print(f"Sample movement (timestep {sample_timestep}):")
         print(f"  Homes: {len(sample_movement.get('homes', {}))}")
