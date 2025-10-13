@@ -54,6 +54,7 @@ class Person:
             'vaccine': VaccinationState.NONE
         }
         self.vaccination_state = 0
+        self.iv_threshold = 0.0
     
     def set_masked(self, masked):
         self.masked = masked
@@ -114,9 +115,9 @@ class Person:
 
         for disease, value in self.timeline.items():
             for state, timeline in value.items():
-                if timeline.end <= curtime:
+                if timeline.end >= int(curtime):
                     self.states[disease] = self.states[disease] & ~state
-                elif timeline.start <= curtime:
+                elif timeline.start <= int(curtime):
                     self.states[disease] = self.states[disease] | state
                     if state == InfectionState.REMOVED or state == InfectionState.RECOVERED or state == InfectionState.HOSPITALIZED:
                         self.invisible = True # means agent cannot get reinfected 

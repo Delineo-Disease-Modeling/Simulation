@@ -4,11 +4,11 @@ import logging
 import sys
 import os
 from typing import Dict, Any, Generator, Optional
+from simulator.config import DELINEO
 
-BASE_URL = "https://db.delineo.me/"
+BASE_URL = DELINEO['DB_URL']
 
-
-def stream_data(url = "https://db.delineo.me/patterns/1?stream=true"):
+def stream_data(url = f"{BASE_URL}patterns/1?stream=true"):
     with requests.get(url, stream=True) as response:
         response.raise_for_status()
         print("Connected to stream!")
@@ -34,7 +34,7 @@ def stream_data(url = "https://db.delineo.me/patterns/1?stream=true"):
         print(f"Line count: {linecount}")
 
 def load_movement_pap_data(cz_id=1): 
-    url = "https://db.delineo.me/patterns/2"
+    url = f"{BASE_URL}patterns/{cz_id}"
     
     try:
         response = requests.get(url)
@@ -164,7 +164,7 @@ class StreamDataLoader:
             logging.error(f"Unexpected Error: {e}")
             raise
 
-def load_movement_pap_data_streaming(url: str = 'https://db.delineo.me/patterns/1?stream=true') -> Generator[Dict[str, Any], None, None]:
+def load_movement_pap_data_streaming(url: str = f'{BASE_URL}patterns/1?stream=true') -> Generator[Dict[str, Any], None, None]:
     """
     Load movement and PAP data via streaming.
     
@@ -179,6 +179,6 @@ def load_movement_pap_data_streaming(url: str = 'https://db.delineo.me/patterns/
         raise
 
 if __name__ == "__main__":
-    for data_chunk in StreamDataLoader.stream_data("https://db.delineo.me/patterns/1?stream=true"):
+    for data_chunk in StreamDataLoader.stream_data(f"{BASE_URL}patterns/1?stream=true"):
         print(f"Received data: {data_chunk}")
     

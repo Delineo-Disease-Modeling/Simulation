@@ -1,18 +1,15 @@
 from .pap import Person, Household, Facility, InfectionState, VaccinationState
 from .infectionmgr import *
-from .config import SIMULATION, INFECTION_MODEL
+from .config import DELINEO, SIMULATION, INFECTION_MODEL
 from io import StringIO
 import pandas as pd
 import json
 import os
 from .data_interface import StreamDataLoader
-import requests
 import random 
 import logging 
-from datetime import datetime, timedelta 
 from collections import defaultdict
-import csv 
-
+from math import ceil
 
 curdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -379,7 +376,7 @@ class SimulationLogger:
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
 class DiseaseSimulator:
-    def __init__(self, timestep=None, intervention_weights={}, enable_logging = True, log_dir = "simulation_logs"):
+    def __init__(self, timestep=None, intervention_weights=[], enable_logging = True, log_dir = "simulation_logs"):
         self.timestep = timestep or SIMULATION["default_timestep"]  # in minutes
         self.iv_weights = intervention_weights
         self.people = {}
@@ -387,27 +384,36 @@ class DiseaseSimulator:
         self.facilities = {}
         self.logger = SimulationLogger(log_dir, enable_logging) if enable_logging else None
         self.enable_logging = enable_logging 
-    
-    def add_person(self, person):
-        self.people[person.id] = person  
         
-    def get_person(self, id):
-        return self.people.get(id) 
-
-    def add_household(self, household):
-        self.households[household.id] = household
-
+    def get_interventions(self, curtime: int):
+        best_time = 0
+        weights = self.iv_weights[0]
+        
+        for w in self.iv_weights:
+            # Mult by 60 because interventions are sent back in hours
+            if w['time'] * 60 < int(curtime) and best_time < w['time']:
+                best_time = w['time']
+                weights = w
+        
+        return weights
     
-    def get_household(self, id):
-        return self.households.get(id)
+    def add_person(self, person: Person):
+        self.people[str(person.id)] = person  
+        
+    def get_person(self, id) -> Person:
+        return self.people.get(str(id)) 
 
+    def add_household(self, household: Household):
+        self.households[str(household.id)] = household
 
-    def add_facility(self, facility):
-        self.facilities[facility.id] = facility
+    def get_household(self, id) -> Household:
+        return self.households.get(str(id))
 
+    def add_facility(self, facility: Facility):
+        self.facilities[str(facility.id)] = facility
     
-    def get_facility(self, id):
-        return self.facilities.get(id)
+    def get_facility(self, id) -> Facility:
+        return self.facilities.get(str(id))
 
 def move_people(simulator, items, is_household, current_timestep):
     for id, people in items:
@@ -422,13 +428,15 @@ def move_people(simulator, items, is_household, current_timestep):
                 continue
 
             original_location = person.location 
+            
+            interventions = simulator.get_interventions(current_timestep)
 
             # If we hit capacity limit, then we are going to send the person home instead
             # Otherwise, if we are enforcing a lockdown, they may randomly decide to head home
             if not is_household:
-                at_capacity = place.total_count >= place.capacity * simulator.iv_weights['capacity'] if place.capacity != -1 else False
-                hit_lockdown = place != person.location and random.random() < simulator.iv_weights['lockdown']
-                self_iso = person.get_state(InfectionState.SYMPTOMATIC) and random.random() < simulator.iv_weights['selfiso']
+                at_capacity = place.total_count >= place.capacity * interventions['capacity'] if place.capacity != -1 else False
+                hit_lockdown = place != person.location and random.random() < interventions['lockdown']
+                self_iso = person.get_state(InfectionState.SYMPTOMATIC) and random.random() < interventions['selfiso']
                 
                 if simulator.enable_logging and simulator.logger: 
                     if at_capacity: 
@@ -451,41 +459,29 @@ def move_people(simulator, items, is_household, current_timestep):
             person.location.remove_member(person_id)
             place.add_member(person)
             
-
             if simulator.enable_logging and simulator.logger: 
                 simulator.logger.log_movement(person, original_location, place, current_timestep, 'normal')
 
             person.location = place
 
-def run_simulator(location=None, max_length=None, interventions=None, save_file=False, enable_logging = True, log_dir = "simulation_logs"):
-    location = location or SIMULATION["default_location"]
-    max_length = max_length or SIMULATION["default_max_length"]
-    
+def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "simulation_logs"):
     print(f"=== SIMULATION DEBUG START ===")
-    print(f"max_length: {max_length}")
+    print(f"max_length: {simdata['length']}")
     print(f"save_file: {save_file}")
     
-    # Merge provided interventions with defaults
-    default_interventions = SIMULATION["default_interventions"].copy()
-    if interventions:
-        default_interventions.update(interventions)
-    interventions = default_interventions
-    
     # Set random seed if user specifies
-    if not interventions['randseed']:
+    if not simdata['randseed']:
         random.seed(0)
     
     # Load people and places using the new streaming method
-    data_stream = StreamDataLoader.stream_data("https://db.delineo.me/patterns/1?stream=true")
+    data_stream = StreamDataLoader.stream_data(f"{DELINEO['DB_URL']}patterns/{simdata['czone_id']}?stream=true")
     
     # Extract initial data from the stream
     people_data = {}
     homes_data = {}
     places_data = {}
     patterns = {}
-    with open('simulator/barnsdall/patterns.json', 'r') as file:
-        patterns = json.load(file)
-        print(f"Loaded {len(patterns)} patterns from pattern_simple.json")
+
     print("=== LOADING DATA FROM STREAM ===")
     chunk_count = 0
     for data in data_stream:
@@ -531,7 +527,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         print("ERROR: No patterns data found!")
         return {"movement": {}, "result": {}}
     
-    simulator = DiseaseSimulator(intervention_weights=interventions)
+    simulator = DiseaseSimulator(timestep=60, enable_logging=False, intervention_weights=simdata['interventions'])
     
     # Build households
     print("=== BUILDING HOUSEHOLDS ===")
@@ -542,7 +538,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
             cbg = data.get("cbg")
         else:
             cbg = data
-        simulator.add_household(Household(cbg, id))
+        simulator.add_household(Household(cbg, str(id)))
     print(f"Added {len(simulator.households)} households")
 
     # Build facilities
@@ -567,13 +563,13 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
             except ValueError:
                 capacity = -1
         
-        simulator.add_facility(Facility(id, cbg, label, capacity))
+        simulator.add_facility(Facility(str(id), cbg, label, capacity))
     print(f"Added {len(simulator.facilities)} facilities")
 
     # Get default infected IDs and variants from config
-    default_infected = SIMULATION["default_infected_ids"]
     variants = SIMULATION["variants"]
-    
+    default_infected = random.sample(list(people_data.keys()), len(variants)) #SIMULATION["default_infected_ids"]
+
     print(f"=== INFECTION SETUP ===")
     print(f"Default infected IDs: {default_infected}")
     print(f"Variants: {variants}")
@@ -583,12 +579,15 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         raise ValueError("Not enough infected IDs to assign each variant uniquely")
 
     # Randomly match infected IDs with variants
-    random.shuffle(default_infected)
     variant_assignments = {id: variant for id, variant in zip(default_infected, variants)}
     print(f"Variant assignments: {variant_assignments}")
 
     # Build people
     print("=== BUILDING PEOPLE ===")
+    
+    # Intervention threshold
+    iv_threshold = [ceil((100.0 * i) / len(people_data)) / 100.0 for i in range(len(people_data))]
+    
     people_added = 0
     for id, data in people_data.items():
         household = simulator.get_household(str(data['home']))
@@ -613,23 +612,16 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
             # logging initial infections at the beginning of the simulation
             if simulator.enable_logging and simulator.logger:
                 simulator.logger.log_infection_event(person, None, person.household, variant, 0)
-
-        # Assign masked state
-        if random.random() < simulator.iv_weights['mask']:
-            person.set_masked(True)
-            print(f"Person {person.id} assigned mask")
-            if simulator.enable_logging and simulator.logger: 
-                simulator.logger.log_intervention_effect(person, 'mask', 'complied', 0)
-
-
-        # Assigning vaccination state
-        if random.random() < simulator.iv_weights['vaccine']:
-            min_doses = SIMULATION["vaccination_options"]["min_doses"]
-            max_doses = SIMULATION["vaccination_options"]["max_doses"]
-            doses = random.randint(min_doses, max_doses)
-            person.set_vaccinated(VaccinationState(random.randint(min_doses, max_doses)))
-            if simulator.enable_logging and simulator.logger: 
-                simulator.logger.log_intervention_effect(person, 'vaccine', f'received_{doses}_doses', 0)
+                
+        interventions = simulator.get_interventions(0)
+        
+        # Set each person's intervention "threshold"
+        # Basically, if masking % or vaccination % is >= their threshold
+        # then they abide by that specific intervention
+        # this means that people who tend to mask will more consistently mask
+        # instead of randomizing it every timestep
+        person.iv_threshold = random.choice(iv_threshold)
+        iv_threshold.remove(person.iv_threshold)
 
         simulator.add_person(person)
         household.add_member(person)
@@ -639,17 +631,17 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
             simulator.logger.log_person_demographics(person, 0)
     
     print(f"Added {people_added} people")
-    
+        
     # Create infection manager with DMP API
-    infectionmgr = InfectionManager({}, people=simulator.people.values())
-    
+    infectionmgr = InfectionManager(infected_ids=[p.id for p in simulator.people.values() for d in variants if p.states.get(d, InfectionState.SUSCEPTIBLE) != InfectionState.SUSCEPTIBLE])
+
     # Prepare simulation
     last_timestep = 0
-    timestamps = sorted([int(k) for k in patterns.keys() if k.isdigit()])
+    timestamps = sorted([int(k) for k in patterns.keys()])
     print(f"=== SIMULATION PREPARATION ===")
     print(f"Sorted timestamps: {timestamps[:10]}...")  # First 10
     print(f"Starting timestep: {last_timestep}")
-    print(f"Max length: {max_length}")
+    print(f"Max length: {simdata['length']}")
     
     result = {}
     variantInfected = {variant: {} for variant in variants}
@@ -663,8 +655,8 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     while len(timestamps) > 0:
         iteration += 1
         
-        if (last_timestep > max_length):
-            print(f"Breaking: timestep {last_timestep} > max_length {max_length}")
+        if (last_timestep > simdata['length']):
+            print(f"Breaking: timestep {last_timestep} > max_length {simdata['length']}")
             break
         
         log_interval = SIMULATION["log_interval"]
@@ -675,6 +667,22 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         if len(timestamps) > 0 and last_timestep >= timestamps[0]:
             current_timestamp = str(timestamps[0])
             print(f"Processing timestamp {current_timestamp}")
+            
+            interventions = simulator.get_interventions(current_timestamp)
+            
+            # Set people's intervention states and update infection states
+            for (id, data) in simulator.people.items():
+                simulator.people[id].update_state(current_timestamp, variants)
+                
+                if data.iv_threshold <= interventions['mask']:
+                    simulator.people[id].set_masked(True)
+                
+                if data.iv_threshold <= interventions['vaccine']:
+                    min_doses = SIMULATION["vaccination_options"]["min_doses"]
+                    max_doses = SIMULATION["vaccination_options"]["max_doses"]
+                    person.set_vaccinated(VaccinationState(random.randint(min_doses, max_doses)))
+                    
+            print(f"Updated per-person interventions for #{current_timestamp}")
             
             if current_timestamp in patterns:
                 data = patterns[current_timestamp]
@@ -737,7 +745,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                         for variant in variants
                     }
                 
-            infectionmgr.run_model(1, None, last_timestep, variantInfected, newlyInfected)
+            infectionmgr.run_model(simulator, last_timestep, variantInfected, newlyInfected, None)
 
             if simulator.enable_logging and simulator.logger: 
                 for person in simulator.people.values(): 
@@ -773,7 +781,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         except Exception as e:
             print(f"Error during infection modeling at timestep {last_timestep}: {e}")
             newlyInfected = {}
-        
+                            
         infectivity_json[last_timestep] = {i: j for i, j in newlyInfected.items()}
         result[last_timestep] = {variant: dict(infected) for variant, infected in variantInfected.items()}
         

@@ -71,10 +71,14 @@ SIMULATION = {
     "variants": ['Delta', 'Omicron']    # Available disease variants
 }
 
+DELINEO = {
+    "DB_URL": "http://127.0.0.1:1890/"
+}
+
 # Server configuration
 SERVER = {
     "host": "0.0.0.0",
-    "port": 1880,
+    "port": 1870,
     "error_messages": {
         "bad_request": "Bad Request",
         "no_data": "No data sent"

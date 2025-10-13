@@ -1,15 +1,21 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
+from jsonschema import validate, ValidationError, SchemaError
 from werkzeug.exceptions import BadRequest
 from simulator import simulate
-from simulator.config import DMP_API, SERVER, SIMULATION
+from simulator.config import DMP_API, SERVER
 import requests
-
 
 app = Flask(__name__)
 
 # Enable CORS
-CORS(app)
+CORS(app,
+  origins=['http://localhost:5173', 'https://coviddev.isi.jhu.edu', 'http://coviddev.isi.jhu.edu', 'https://covidweb.isi.jhu.edu', 'http://covidweb.isi.jhu.edu'],
+  methods=['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  allow_headers=['Content-Type', 'Authorization'],
+  expose_headers=['Set-Cookie'],
+  supports_credentials=True
+)
 
 # Initialize DMP API when the server starts
 def initialize_dmp_api():
@@ -28,8 +34,33 @@ def initialize_dmp_api():
     except requests.exceptions.RequestException as e:
         print(f"Failed to initialize DMP API: {e}")
         return False
+    
+simulation_schema = {
+    "type": "object",
+    "properties": {
+        "czone_id": { "type": "integer", "minimum": 1 },
+        "length": { "type": "integer", "minimum": 1 },
+        "randseed": { "type": "boolean" },
+        "interventions": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "time": { "type": "integer", "minimum": 0 },
+                    "mask": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "vaccine": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "capacity": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "lockdown": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "selfiso": { "type": "number", "minimum": 0, "maximum": 1 },
+                },
+                "required": [ "time", "mask", "vaccine", "capacity", "lockdown", "selfiso" ]
+            }
+        }
+    },
+    "required": [ "czone_id", "length", "interventions" ]
+}
 
-@app.route("/simulation/", methods=['POST', 'GET'])
+@app.route("/simulation/", methods=['POST'])
 @cross_origin()
 def run_simulation_endpoint():
     try:
@@ -39,29 +70,21 @@ def run_simulation_endpoint():
 
     if not request.json:
         return jsonify({"error": SERVER["error_messages"]["no_data"]}), 400
-
+    
+    try:
+        validate(instance=request.json, schema=simulation_schema)
+    except ValidationError as e:
+        return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
+    except SchemaError as e:
+        return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
+    except:
+        return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
+        
     # Initialize DMP API before running simulation
     initialize_dmp_api()
 
-    # Get simulation length from request or use default
-    length = request.json.get('length', SIMULATION["default_max_length"])
-    location = request.json.get('location', SIMULATION["default_location"])
-    interventions = {}
-    
-    # Build interventions dict from request, using defaults for missing values
-    if not request.json or not any(key in request.json for key in SIMULATION["default_interventions"]):
-        for key in SIMULATION["default_interventions"]:
-            interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
-        print("Using default interventions:", interventions)
-    # if the interventions are provided from rerunner.py (AI-counterfactual-analysis repo/src/sparser/rerunner.py), use those 
-    elif isinstance(request.json, dict):
-        interventions = request.json
-        print("Using provided interventions:", interventions)
-        
-    
-
     try:
-        return simulate.run_simulator(location, length, interventions)
+        return simulate.run_simulator(request.json)
     except Exception as e:
         print("Simulation error:", repr(e))
         return jsonify({"error": str(e)}), 400
