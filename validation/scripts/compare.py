@@ -72,19 +72,26 @@ def main():
     parser.add_argument('--artifacts', default=os.path.join(os.path.dirname(__file__), '..', 'artifacts'))
     parser.add_argument('--agg', default='weekly', choices=['daily','weekly'])
     parser.add_argument('--reports', default=os.path.join(os.path.dirname(__file__), '..', 'reports'))
+    parser.add_argument('--geo', default='us', help='Geographic identifier (e.g., us, washington_maryland)')
+    parser.add_argument('--horizon', default='1,2,3,4', help='Comma-separated forecast horizons')
     args = parser.parse_args()
 
     os.makedirs(args.reports, exist_ok=True)
 
-    # Load ground truth
-    gt_path_weekly = os.path.join(args.processed_dir, 'ground_truth_weekly_cases.csv')
-    gt_path_daily = os.path.join(args.processed_dir, 'ground_truth_daily_cases.csv')
+    # Load ground truth - try geo-specific files first, then fall back to generic
+    if args.geo != 'us':
+        gt_path_weekly = os.path.join(args.processed_dir, f'ground_truth_weekly_cases_{args.geo}.csv')
+        gt_path_daily = os.path.join(args.processed_dir, f'ground_truth_daily_cases_{args.geo}.csv')
+    else:
+        gt_path_weekly = os.path.join(args.processed_dir, 'ground_truth_weekly_cases.csv')
+        gt_path_daily = os.path.join(args.processed_dir, 'ground_truth_daily_cases.csv')
+    
     if args.agg == 'weekly' and os.path.exists(gt_path_weekly):
         ground = pd.read_csv(gt_path_weekly)
     elif os.path.exists(gt_path_daily):
         ground = pd.read_csv(gt_path_daily)
     else:
-        raise FileNotFoundError('Ground truth processed CSV not found. Run prepare_data.py first.')
+        raise FileNotFoundError(f'Ground truth processed CSV not found at {gt_path_weekly} or {gt_path_daily}. Run prepare_data.py first.')
 
     # Load simulator series
     sim_path = os.path.join(args.artifacts, 'sim_timeseries.csv')

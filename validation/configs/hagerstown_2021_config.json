@@ -1,0 +1,51 @@
+{
+  "name": "Hagerstown MD 2021 Validation",
+  "description": "Validation configuration for Hagerstown, MD (Washington County) using 2021 COVID-19 data",
+  "location": {
+    "name": "Hagerstown",
+    "county": "Washington",
+    "state": "Maryland",
+    "fips": "24043",
+    "population": 39728,
+    "county_population": 154705
+  },
+  "time_period": {
+    "start_date": "2021-03-01",
+    "end_date": "2021-03-31",
+    "duration_days": 31,
+    "duration_minutes": 44640,
+    "description": "March 2021 - Single month validation period"
+  },
+  "data_source": {
+    "name": "New York Times COVID-19 Dataset",
+    "url": "https://github.com/nytimes/covid-19-data",
+    "level": "county",
+    "metrics": ["cases", "deaths"]
+  },
+  "simulation": {
+    "location_key": "hagerstown",
+    "length_minutes": 44640,
+    "step_minutes": 60,
+    "interventions": {
+      "mask": 0.3,
+      "vaccine": 0.15,
+      "capacity": 0.75,
+      "lockdown": 0,
+      "selfiso": 0.2,
+      "randseed": true
+    },
+    "initial_infected_count": 10,
+    "variants": ["Delta"]
+  },
+  "validation": {
+    "aggregation": "weekly",
+    "metrics": ["MAE", "RMSE", "sMAPE"],
+    "horizons": [1, 2, 3, 4]
+  },
+  "notes": [
+    "March 2021 was chosen as it represents a period with moderate case counts",
+    "Vaccination was ramping up during this period (15% coverage assumed)",
+    "Mask mandates were still in effect in Maryland (30% compliance assumed)",
+    "Delta variant was beginning to emerge but not yet dominant"
+  ]
+}

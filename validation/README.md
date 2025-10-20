@@ -63,6 +63,28 @@ Outputs go to `artifacts/` (JSON/CSV) and `reports/`.
 - artifacts/: Simulator outputs serialized as CSV/JSON and alignment tables.
 - reports/: HTML/PNG summaries.
 
+## County-Level Validation (Hagerstown, MD)
+
+For detailed validation using real 2021 data from Hagerstown, MD (Washington County), see **[HAGERSTOWN_VALIDATION.md](HAGERSTOWN_VALIDATION.md)**.
+
+**Quick start for Hagerstown validation**:
+```bash
+# Run complete validation for March 2021
+python scripts/run_hagerstown_validation.py --month 2021-03
+```
+
+This will:
+1. Fetch real COVID-19 data for Washington County, MD from the NYT dataset
+2. Prepare and aggregate the data to weekly totals
+3. Run the simulator with Hagerstown location and appropriate interventions
+4. Compare results and generate validation metrics
+
+**New scripts for county-level validation**:
+- `scripts/fetch_county_data.py`: Download county-level COVID data from NYT dataset
+- `scripts/prepare_county_data.py`: Aggregate county data for validation
+- `scripts/run_hagerstown_validation.py`: Complete orchestration script
+- `configs/hagerstown_2021_config.json`: Pre-configured validation parameters
+
 ## Notes
 - No changes to the simulator are required. We target `POST /simulation/` from `Simulation/app.py`.
 - DMP is initialized automatically by `app.py` and through Docker health checks per `docker-compose.yml`.
