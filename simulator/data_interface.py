@@ -101,61 +101,72 @@ class StreamDataLoader:
             
             logging.info(f"Attempting to stream data from: {url}")
             
+            with requests.get(url, stream=True, headers=headers, timeout=timeout) as response:
+                response.raise_for_status()  # Raise an exception for bad status codes
+                for line in response.iter_lines():
+                    if line:  # Ensure the line is not empty
+                        try:
+                            json_data = json.loads(line.decode('utf-8'))
+                            yield json_data
+                        except json.JSONDecodeError as e:
+                            print(f"Error decoding JSON: {e} - Line: {line.decode('utf-8')}")
+            
+            
             # Raw bytes reading approach for more flexible parsing
-            with requests.get(url, 
-                              stream=True, 
-                              headers=headers, 
-                              timeout=timeout) as response:
-                # Raise an exception for bad responses
-                response.raise_for_status()
+            # with requests.get(url, 
+            #                   stream=True, 
+            #                   headers=headers, 
+            #                   timeout=timeout) as response:
+            #     # Raise an exception for bad responses
+            #     response.raise_for_status()
                 
-                logging.info("Connection established. Streaming data...")
+            #     logging.info("Connection established. Streaming data...")
                 
-                # Track if we've processed the first chunk (PAP data)
-                first_chunk = True
+            #     # Track if we've processed the first chunk (PAP data)
+            #     first_chunk = True
                 
-                # Buffer to accumulate partial data
-                buffer = b''
-                decoder = json.JSONDecoder()
+            #     # Buffer to accumulate partial data
+            #     buffer = b''
+            #     decoder = json.JSONDecoder()
                 
-                # Read the response in chunks
-                for chunk in response.iter_content(chunk_size=1024):
-                    if not chunk:
-                        continue
+            #     # Read the response in chunks
+            #     for chunk in response.iter_content(chunk_size=1024):
+            #         if not chunk:
+            #             continue
                     
-                    # Accumulate chunk
-                    buffer += chunk
+            #         # Accumulate chunk
+            #         buffer += chunk
                     
-                    try:
-                        # Try to decode buffer as string
-                        buffer_str = buffer.decode('utf-8')
+            #         try:
+            #             # Try to decode buffer as string
+            #             buffer_str = buffer.decode('utf-8')
                         
-                        # Try to parse JSON objects
-                        while True:
-                            try:
-                                # Attempt to parse a JSON object
-                                result, index = decoder.raw_decode(buffer_str)
+            #             # Try to parse JSON objects
+            #             while True:
+            #                 try:
+            #                     # Attempt to parse a JSON object
+            #                     result, index = decoder.raw_decode(buffer_str)
                                 
-                                # If successful, process the parsed object
-                                yield result
+            #                     # If successful, process the parsed object
+            #                     yield result
                                 
-                                # Remove processed part from buffer
-                                buffer_str = buffer_str[index:].lstrip()
-                                buffer = buffer_str.encode('utf-8')
+            #                     # Remove processed part from buffer
+            #                     buffer_str = buffer_str[index:].lstrip()
+            #                     buffer = buffer_str.encode('utf-8')
                             
-                            except json.JSONDecodeError:
-                                # Not a complete JSON object, wait for more data
-                                break
+            #                 except json.JSONDecodeError:
+            #                     # Not a complete JSON object, wait for more data
+            #                     break
                     
-                    except UnicodeDecodeError as ude:
-                        logging.error(f"Unicode Decode Error: {ude}")
-                        # Reset buffer to avoid continuous errors
-                        buffer = b''
+            #         except UnicodeDecodeError as ude:
+            #             logging.error(f"Unicode Decode Error: {ude}")
+            #             # Reset buffer to avoid continuous errors
+            #             buffer = b''
                     
-                    except Exception as e:
-                        logging.error(f"Error processing chunk: {e}")
-                        # Reset buffer to avoid continuous errors
-                        buffer = b''
+            #         except Exception as e:
+            #             logging.error(f"Error processing chunk: {e}")
+            #             # Reset buffer to avoid continuous errors
+            #             buffer = b''
         
         except requests.exceptions.RequestException as e:
             logging.error(f"Request Error: {e}")

@@ -73,10 +73,6 @@ def run_simulation_endpoint():
     
     try:
         validate(instance=request.json, schema=simulation_schema)
-    except ValidationError as e:
-        return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
-    except SchemaError as e:
-        return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
     except:
         return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
         
@@ -84,7 +80,7 @@ def run_simulation_endpoint():
     initialize_dmp_api()
 
     try:
-        return simulate.run_simulator(request.json)
+        return simulate.run_simulator(request.json, enable_logging=False)
     except Exception as e:
         print("Simulation error:", repr(e))
         return jsonify({"error": str(e)}), 400

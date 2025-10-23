@@ -49,10 +49,10 @@ class InfectionManager:
                     
                     # Use base transmission probability without pre-applying mask effects
                     # Let CAT handle mask effects internally
-                    base_transmission_prob = 7e3
+                    base_transmission_prob = 7e12
                     
                     # Call CAT with all required parameters
-                    if CAT(p, True, 1, base_transmission_prob, infector_masked, susceptible_masked):
+                    if CAT(p, True, 1, base_transmission_prob, None, infector_masked, susceptible_masked):
                         print(f"New infection detected, ({i.id} -> {p.id}) infector_masked: {infector_masked}, susceptible_masked: {susceptible_masked}")
                         
                         if p.id not in self.infected:

@@ -1,7 +1,6 @@
 from .pap import Person, Household, Facility, InfectionState, VaccinationState
 from .infectionmgr import *
 from .config import DELINEO, SIMULATION, INFECTION_MODEL
-from io import StringIO
 import pandas as pd
 import json
 import os
@@ -206,7 +205,7 @@ class SimulationLogger:
             'location_capacity': getattr(location, 'capacity', -1) if location else -1
         }
 
-        self.intervention_logs.append(intervention_log)
+        self.intervention_logs.append(intervention_log.copy())
 
     def log_location_state(self, location, timestep):
         population = location.population if hasattr(location, 'population') else []
@@ -474,7 +473,7 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
         random.seed(0)
     
     # Load people and places using the new streaming method
-    data_stream = StreamDataLoader.stream_data(f"{DELINEO['DB_URL']}patterns/{simdata['czone_id']}?stream=true")
+    data_stream = StreamDataLoader.stream_data(f"{DELINEO['DB_URL']}patterns/{simdata['czone_id']}?stream=true", timeout=360)
     
     # Extract initial data from the stream
     people_data = {}
@@ -501,6 +500,8 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
         if "patterns" in data:
             patterns.update(data["patterns"])
             print(f"  Patterns: {len(data['patterns'])} items")
+        else:
+            print(f"Unknown data: {list(data.keys())}")
     
     print(f"=== FINAL DATA LOADED ===")
     print(f"Total people: {len(people_data)}")
@@ -527,7 +528,7 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
         print("ERROR: No patterns data found!")
         return {"movement": {}, "result": {}}
     
-    simulator = DiseaseSimulator(timestep=60, enable_logging=True, intervention_weights=simdata['interventions'])
+    simulator = DiseaseSimulator(timestep=60, enable_logging=enable_logging, intervention_weights=simdata['interventions'])
     
     # Build households
     print("=== BUILDING HOUSEHOLDS ===")
@@ -612,9 +613,7 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
             # logging initial infections at the beginning of the simulation
             if simulator.enable_logging and simulator.logger:
                 simulator.logger.log_infection_event(person, None, person.household, variant, 0)
-                
-        interventions = simulator.get_interventions(0)
-        
+                        
         # Set each person's intervention "threshold"
         # Basically, if masking % or vaccination % is >= their threshold
         # then they abide by that specific intervention
@@ -622,7 +621,7 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
         # instead of randomizing it every timestep
         person.iv_threshold = random.choice(iv_threshold)
         iv_threshold.remove(person.iv_threshold)
-
+        
         simulator.add_person(person)
         household.add_member(person)
         people_added += 1
@@ -641,6 +640,7 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
     print(f"=== SIMULATION PREPARATION ===")
     print(f"Sorted timestamps: {timestamps[:10]}...")  # First 10
     print(f"Starting timestep: {last_timestep}")
+    print(f"Total length: {len(timestamps)}")
     print(f"Max length: {simdata['length']}")
     
     result = {}
@@ -675,12 +675,17 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
                 simulator.people[id].update_state(current_timestamp, variants)
                 
                 if data.iv_threshold <= interventions['mask']:
+                    if simulator.enable_logging and simulator.logger and not simulator.people[id].is_masked(): 
+                        simulator.logger.log_intervention_effect(simulator.people[id], 'mask', f'complied', current_timestamp)
                     simulator.people[id].set_masked(True)
                 
                 if data.iv_threshold <= interventions['vaccine']:
                     min_doses = SIMULATION["vaccination_options"]["min_doses"]
                     max_doses = SIMULATION["vaccination_options"]["max_doses"]
-                    person.set_vaccinated(VaccinationState(random.randint(min_doses, max_doses)))
+                    doses = random.randint(min_doses, max_doses)
+                    if simulator.enable_logging and simulator.logger and simulator.people[id].get_vaccinated() == VaccinationState.NONE: 
+                        simulator.logger.log_intervention_effect(simulator.people[id], 'vaccine', f'received_{doses}_doses', current_timestamp)
+                    simulator.people[id].set_vaccinated(VaccinationState(doses))
                     
             print(f"Updated per-person interventions for #{current_timestamp}")
             
