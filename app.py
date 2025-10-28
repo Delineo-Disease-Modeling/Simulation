@@ -1,9 +1,11 @@
+from io import BytesIO
+import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from jsonschema import validate, ValidationError, SchemaError
 from werkzeug.exceptions import BadRequest
 from simulator import simulate
-from simulator.config import DMP_API, SERVER
+from simulator.config import DELINEO, DMP_API, SERVER
 import requests
 
 app = Flask(__name__)
@@ -80,7 +82,25 @@ def run_simulation_endpoint():
     initialize_dmp_api()
 
     try:
-        return simulate.run_simulator(request.json, enable_logging=False)
+        final_result = simulate.run_simulator(request.json, enable_logging=False)
+        
+        print('sending data...')
+
+        resp = requests.post(f'{DELINEO['DB_URL']}simdata', data={
+            'czone_id': int(request.json['czone_id']),
+        }, files={
+            'simdata': ('simdata.json', BytesIO(json.dumps(final_result['result']).encode()), 'text/plain'),
+            'patterns': ('patterns.json', BytesIO(json.dumps(final_result['movement']).encode()), 'text/plain')
+        })
+        
+        if resp.ok:
+            print('sent!')
+        else:
+            print(f'error sending data... {resp.status_code}')
+            return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
+        
+        return jsonify({ "data": { 'id': resp.json()['data']['id'] } })
+
     except Exception as e:
         print("Simulation error:", repr(e))
         return jsonify({"error": str(e)}), 400

@@ -473,7 +473,7 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
         random.seed(0)
     
     # Load people and places using the new streaming method
-    data_stream = StreamDataLoader.stream_data(f"{DELINEO['DB_URL']}patterns/{simdata['czone_id']}?stream=true", timeout=360)
+    data_stream = StreamDataLoader.stream_data(f"{DELINEO['DB_URL']}patterns/{simdata['czone_id']}?length={simdata['length']}", timeout=360)
     
     # Extract initial data from the stream
     people_data = {}

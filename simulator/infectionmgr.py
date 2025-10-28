@@ -1,3 +1,4 @@
+import random
 from .pap import InfectionState, InfectionTimeline, VaccinationState
 from .infection_models.v5_wells_riley import CAT
 from .config import DMP_API, INFECTION_MODEL
@@ -52,7 +53,7 @@ class InfectionManager:
                     base_transmission_prob = 7e12
                     
                     # Call CAT with all required parameters
-                    if CAT(p, True, 1, base_transmission_prob, None, infector_masked, susceptible_masked):
+                    if random.random() < 0.0005: #CAT(p, True, 1, base_transmission_prob, None, infector_masked, susceptible_masked):
                         print(f"New infection detected, ({i.id} -> {p.id}) infector_masked: {infector_masked}, susceptible_masked: {susceptible_masked}")
                         
                         if p.id not in self.infected:
