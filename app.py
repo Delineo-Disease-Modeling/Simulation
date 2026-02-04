@@ -86,7 +86,7 @@ def run_simulation_endpoint():
         
         print('sending data...')
 
-        resp = requests.post(f'{DELINEO['DB_URL']}simdata', data={
+        resp = requests.post(f'{DELINEO["DB_URL"]}simdata', data={
             'czone_id': int(request.json['czone_id']),
         }, files={
             'simdata': ('simdata.json', BytesIO(json.dumps(final_result['result']).encode()), 'text/plain'),
