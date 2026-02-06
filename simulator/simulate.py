@@ -4,6 +4,7 @@ from .config import DELINEO, SIMULATION, INFECTION_MODEL
 import pandas as pd
 import json
 import os
+import gzip
 from .data_interface import StreamDataLoader
 import random 
 import logging 
@@ -12,8 +13,29 @@ from math import ceil
 
 curdir = os.path.dirname(os.path.abspath(__file__))
 
+class IncrementalJSONWriter:
+    def __init__(self, filename):
+        self.filename = filename
+        # Use gzip.open for compressed writing
+        self.f = gzip.open(filename, 'wt', encoding='utf-8')
+        self.f.write('{')
+        self.first = True
+
+    def add(self, key, value):
+        if not self.first:
+            self.f.write(',')
+        else:
+            self.first = False
+        
+        # We manually structure the key-value pair to avoid dumping a huge wrapper dict
+        self.f.write(f'"{key}":')
+        json.dump(value, self.f)
+
+    def close(self):
+        self.f.write('}')
+        self.f.close()
+
 class Maskingeffects: 
-    
     MASK_EFFECTIVENESS = {
         'source_control' : 0.7, # what should these values be?
         'wearer_protection': 0.5, 
@@ -463,26 +485,6 @@ def move_people(simulator, items, is_household, current_timestep):
 
             person.location = place
 
-class IncrementalJSONWriter:
-    def __init__(self, filename):
-        self.filename = filename
-        self.f = open(filename, 'w')
-        self.f.write('{')
-        self.first = True
-
-    def add(self, key, value):
-        if not self.first:
-            self.f.write(',')
-        else:
-            self.first = False
-        
-        # We manually structure the key-value pair to avoid dumping a huge wrapper dict
-        self.f.write(f'"{key}":')
-        json.dump(value, self.f)
-
-    def close(self):
-        self.f.write('}')
-        self.f.close()
 
 def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "simulation_logs", output_dir=None):
     print(f"=== SIMULATION DEBUG START ===")
@@ -614,8 +616,8 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
 
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
-        simdata_writer = IncrementalJSONWriter(os.path.join(output_dir, 'simdata.json'))
-        patterns_writer = IncrementalJSONWriter(os.path.join(output_dir, 'patterns.json'))
+        simdata_writer = IncrementalJSONWriter(os.path.join(output_dir, 'simdata.json.gz'))
+        patterns_writer = IncrementalJSONWriter(os.path.join(output_dir, 'patterns.json.gz'))
 
     variantInfected = {variant: {} for variant in variants}
     
@@ -749,8 +751,8 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
     
     if output_dir:
         return {
-            "simdata": os.path.join(output_dir, 'simdata.json'),
-            "patterns": os.path.join(output_dir, 'patterns.json')
+            "simdata": os.path.join(output_dir, 'simdata.json.gz'),
+            "patterns": os.path.join(output_dir, 'patterns.json.gz')
         }
     else:
         print(f"Logs exported to {log_dir}/")

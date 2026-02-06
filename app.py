@@ -106,8 +106,8 @@ def run_simulation_endpoint():
             resp = requests.post(f'{DELINEO["DB_URL"]}simdata', data={
                 'czone_id': int(request.json['czone_id']),
             }, files={
-                'simdata': ('simdata.json', f_sim, 'application/json'),
-                'patterns': ('patterns.json', f_pat, 'application/json')
+                'simdata': ('simdata.json.gz', f_sim, 'application/gzip'),
+                'patterns': ('patterns.json.gz', f_pat, 'application/gzip')
             })
         
         if resp.ok:
