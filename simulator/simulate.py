@@ -463,75 +463,74 @@ def move_people(simulator, items, is_household, current_timestep):
 
             person.location = place
 
-def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "simulation_logs"):
+class IncrementalJSONWriter:
+    def __init__(self, filename):
+        self.filename = filename
+        self.f = open(filename, 'w')
+        self.f.write('{')
+        self.first = True
+
+    def add(self, key, value):
+        if not self.first:
+            self.f.write(',')
+        else:
+            self.first = False
+        
+        # We manually structure the key-value pair to avoid dumping a huge wrapper dict
+        self.f.write(f'"{key}":')
+        json.dump(value, self.f)
+
+    def close(self):
+        self.f.write('}')
+        self.f.close()
+
+def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "simulation_logs", output_dir=None):
     print(f"=== SIMULATION DEBUG START ===")
     print(f"max_length: {simdata['length']}")
-    print(f"save_file: {save_file}")
     
     # Set random seed if user specifies
     if not simdata['randseed']:
         random.seed(0)
     
     # Load people and places using the new streaming method
-    data_stream = StreamDataLoader.stream_data(f"{DELINEO['DB_URL']}patterns/{simdata['czone_id']}?length={simdata['length']}", timeout=360)
+    # This generator yields standard dicts that we can consume sequentially
+    url = f"{DELINEO['DB_URL']}patterns/{simdata['czone_id']}?length={simdata['length']}"
+    data_stream = StreamDataLoader.stream_data(url, timeout=360)
+    stream_iterator = iter(data_stream)
     
-    # Extract initial data from the stream
+    # --- PHASE 1: Load Static Data (PapData) ---
+    # We expect the first chunk to contain the bulk of static data (people, homes, places)
+    # The server sends: papdata_file_content \n pattern_chunk_1 \n pattern_chunk_2 ...
+    
     people_data = {}
     homes_data = {}
     places_data = {}
-    patterns = {}
+    patterns_buffer = {}
+    
+    try:
+        print("=== WAITING FOR STATIC DATA ===")
+        first_chunk = next(stream_iterator)
+        
+        if "people" in first_chunk: people_data = first_chunk["people"]
+        if "homes" in first_chunk: homes_data = first_chunk["homes"]
+        if "places" in first_chunk: places_data = first_chunk["places"]
+        if "patterns" in first_chunk: patterns_buffer.update(first_chunk["patterns"])
+        
+        print(f"Loaded static data: {len(people_data)} people, {len(homes_data)} homes, {len(places_data)} places")
 
-    print("=== LOADING DATA FROM STREAM ===")
-    chunk_count = 0
-    for data in data_stream:
-        chunk_count += 1
-        print(f"Chunk {chunk_count} - Keys: {list(data.keys())}")
-        
-        # Merge data from each chunk
-        if "people" in data:
-            people_data.update(data["people"])
-            print(f"  People: {len(data['people'])} items")
-        if "homes" in data:
-            homes_data.update(data["homes"])
-            print(f"  Homes: {len(data['homes'])} items")
-        if "places" in data:
-            places_data.update(data["places"])
-            print(f"  Places: {len(data['places'])} items")
-        if "patterns" in data:
-            patterns.update(data["patterns"])
-            print(f"  Patterns: {len(data['patterns'])} items")
-        else:
-            print(f"Unknown data: {list(data.keys())}")
-    
-    print(f"=== FINAL DATA LOADED ===")
-    print(f"Total people: {len(people_data)}")
-    print(f"Total homes: {len(homes_data)}")
-    print(f"Total places: {len(places_data)}")
-    print(f"Total patterns: {len(patterns)}")
-    
-    # Debug patterns structure
-    if patterns:
-        pattern_keys = sorted(patterns.keys(), key=lambda x: int(x) if x.isdigit() else float('inf'))
-        print(f"Pattern timestamps: {pattern_keys[:10]}...")  # First 10
-        
-        # Check first pattern structure
-        first_key = pattern_keys[0]
-        first_pattern = patterns[first_key]
-        print(f"First pattern ({first_key}): {type(first_pattern)}")
-        if isinstance(first_pattern, dict):
-            print(f"  Keys: {list(first_pattern.keys())}")
-            if "homes" in first_pattern:
-                print(f"  Homes in pattern: {len(first_pattern['homes'])}")
-            if "places" in first_pattern:
-                print(f"  Places in pattern: {len(first_pattern['places'])}")
-    else:
-        print("ERROR: No patterns data found!")
-        return {"movement": {}, "result": {}}
-    
+    except StopIteration:
+        print("ERROR: Stream is empty!")
+        return {"error": "No data received from server"}
+    except Exception as e:
+        print(f"ERROR: Failed to load static data: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}
+
+    # Initialize Simulator
     simulator = DiseaseSimulator(timestep=60, enable_logging=enable_logging, intervention_weights=simdata['interventions'])
     
     # Build households
-    print("=== BUILDING HOUSEHOLDS ===")
     for id, data in homes_data.items():
         if isinstance(data, list):
             cbg = data[0] if len(data) > 0 else None
@@ -540,10 +539,8 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
         else:
             cbg = data
         simulator.add_household(Household(cbg, str(id)))
-    print(f"Added {len(simulator.households)} households")
-
+        
     # Build facilities
-    print("=== BUILDING FACILITIES ===")
     for id, data in places_data.items():
         if isinstance(data, list) and len(data) >= 2:
             cbg = data[0] if len(data) > 0 else None
@@ -565,40 +562,23 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
                 capacity = -1
         
         simulator.add_facility(Facility(str(id), cbg, label, capacity))
-    print(f"Added {len(simulator.facilities)} facilities")
 
-    # Get default infected IDs and variants from config
+    # Initialize Variants
     variants = SIMULATION["variants"]
-    default_infected = random.sample(list(people_data.keys()), len(variants)) #SIMULATION["default_infected_ids"]
-
-    print(f"=== INFECTION SETUP ===")
-    print(f"Default infected IDs: {default_infected}")
-    print(f"Variants: {variants}")
-    
-    # Ensure no more variants than infected individuals
-    if len(variants) > len(default_infected):
-        raise ValueError("Not enough infected IDs to assign each variant uniquely")
-
-    # Randomly match infected IDs with variants
+    default_infected = random.sample(list(people_data.keys()), min(len(people_data), len(variants)))
     variant_assignments = {id: variant for id, variant in zip(default_infected, variants)}
-    print(f"Variant assignments: {variant_assignments}")
-
-    # Build people
-    print("=== BUILDING PEOPLE ===")
     
-    # Intervention threshold
+    # Build people
     iv_threshold = [ceil((100.0 * i) / len(people_data)) / 100.0 for i in range(len(people_data))]
     
-    people_added = 0
     for id, data in people_data.items():
         household = simulator.get_household(str(data['home']))
         if household is None:
-            print(f"ERROR: Person {id} assigned to non-existent house {data['home']}")
             continue
         
         person = Person(id, data['sex'], data['age'], household)
         
-        # Infect person with a uniquely assigned variant
+        # Infect person if selected
         if str(id) in variant_assignments:
             variant = variant_assignments[str(id)]
             person.states[variant] = InfectionState.INFECTED | InfectionState.INFECTIOUS
@@ -609,204 +589,170 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
                     InfectionState.INFECTIOUS: InfectionTimeline(0, initial_duration)
                 }
             }
-            print(f"Infected person {id} with variant {variant}")
-            # logging initial infections at the beginning of the simulation
             if simulator.enable_logging and simulator.logger:
                 simulator.logger.log_infection_event(person, None, person.household, variant, 0)
                         
-        # Set each person's intervention "threshold"
-        # Basically, if masking % or vaccination % is >= their threshold
-        # then they abide by that specific intervention
-        # this means that people who tend to mask will more consistently mask
-        # instead of randomizing it every timestep
         person.iv_threshold = random.choice(iv_threshold)
         iv_threshold.remove(person.iv_threshold)
         
         simulator.add_person(person)
         household.add_member(person)
-        people_added += 1
-
+        
         if simulator.enable_logging and simulator.logger: 
             simulator.logger.log_person_demographics(person, 0)
-    
-    print(f"Added {people_added} people")
-        
-    # Create infection manager with DMP API
+            
+    # Create infection manager
     infectionmgr = InfectionManager(infected_ids=[p.id for p in simulator.people.values() for d in variants if p.states.get(d, InfectionState.SUSCEPTIBLE) != InfectionState.SUSCEPTIBLE])
 
-    # Prepare simulation
-    last_timestep = 0
-    timestamps = sorted([int(k) for k in patterns.keys()])
-    print(f"=== SIMULATION PREPARATION ===")
-    print(f"Sorted timestamps: {timestamps[:10]}...")  # First 10
-    print(f"Starting timestep: {last_timestep}")
-    print(f"Total length: {len(timestamps)}")
-    print(f"Max length: {simdata['length']}")
+    # --- PHASE 2: Simulation Loop (Interleaved with Streaming) ---
     
-    result = {}
+    # Initialize JSON Writers
+    simdata_writer = None
+    patterns_writer = None
+    simdata_json = {} if not output_dir else None
+    patterns_json = {} if not output_dir else None
+
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        simdata_writer = IncrementalJSONWriter(os.path.join(output_dir, 'simdata.json'))
+        patterns_writer = IncrementalJSONWriter(os.path.join(output_dir, 'patterns.json'))
+
     variantInfected = {variant: {} for variant in variants}
     
-    movement_json = {}
-    infectivity_json = {}
-
-    # Main simulation loop
-    print("=== STARTING SIMULATION LOOP ===")
+    last_timestep = 0
     iteration = 0
-    while len(timestamps) > 0:
+    max_len = simdata['length']
+    
+    print("=== STARTING INTERLEAVED SIMULATION LOOP ===")
+
+    while last_timestep <= max_len:
         iteration += 1
+        current_ts_str = str(last_timestep)
         
-        if (last_timestep > simdata['length']):
-            print(f"Breaking: timestep {last_timestep} > max_length {simdata['length']}")
-            break
+        # Ensure we have movement data for this timestep
+        # If we don't have it in buffer, keep reading from stream until we find it or stream ends
+        while current_ts_str not in patterns_buffer:
+            try:
+                chunk = next(stream_iterator)
+                if "patterns" in chunk:
+                    patterns_buffer.update(chunk["patterns"])
+            except StopIteration:
+                # Stream finished
+                break
         
-        log_interval = SIMULATION["log_interval"]
-        if last_timestep % log_interval == 0:
-            print(f'Running movement simulator for timestep {last_timestep} (iteration {iteration})')
-        
-        # Process movement if we've reached the next timestamp
-        if len(timestamps) > 0 and last_timestep >= timestamps[0]:
-            current_timestamp = str(timestamps[0])
-            print(f"Processing timestamp {current_timestamp}")
+        if last_timestep % SIMULATION["log_interval"] == 0:
+            print(f"Processing timestep {last_timestep} (Buffered patterns: {len(patterns_buffer)})")
+
+        # Process movement
+        if current_ts_str in patterns_buffer:
+            data = patterns_buffer[current_ts_str]
             
-            interventions = simulator.get_interventions(current_timestamp)
+            interventions = simulator.get_interventions(current_ts_str)
             
-            # Set people's intervention states and update infection states
-            for (id, data) in simulator.people.items():
-                simulator.people[id].update_state(current_timestamp, variants)
+            # Apply interventions per person
+            for (id, person_data) in simulator.people.items():
+                simulator.people[id].update_state(current_ts_str, variants)
                 
-                if data.iv_threshold <= interventions['mask']:
+                if person_data.iv_threshold <= interventions['mask']:
                     if simulator.enable_logging and simulator.logger and not simulator.people[id].is_masked(): 
-                        simulator.logger.log_intervention_effect(simulator.people[id], 'mask', f'complied', current_timestamp)
+                        simulator.logger.log_intervention_effect(simulator.people[id], 'mask', f'complied', current_ts_str)
                     simulator.people[id].set_masked(True)
                 
-                if data.iv_threshold <= interventions['vaccine']:
+                if person_data.iv_threshold <= interventions['vaccine']:
                     min_doses = SIMULATION["vaccination_options"]["min_doses"]
                     max_doses = SIMULATION["vaccination_options"]["max_doses"]
                     doses = random.randint(min_doses, max_doses)
                     if simulator.enable_logging and simulator.logger and simulator.people[id].get_vaccinated() == VaccinationState.NONE: 
-                        simulator.logger.log_intervention_effect(simulator.people[id], 'vaccine', f'received_{doses}_doses', current_timestamp)
+                        simulator.logger.log_intervention_effect(simulator.people[id], 'vaccine', f'received_{doses}_doses', current_ts_str)
                     simulator.people[id].set_vaccinated(VaccinationState(doses))
-                    
-            print(f"Updated per-person interventions for #{current_timestamp}")
+
+            if isinstance(data, dict):
+                if 'homes' in data:
+                    move_people(simulator, data['homes'].items(), True, current_ts_str)
+                if 'places' in data:
+                    move_people(simulator, data['places'].items(), False, current_ts_str)
             
-            if current_timestamp in patterns:
-                data = patterns[current_timestamp]
-                print(f"  Pattern data type: {type(data)}")
-                
-                if isinstance(data, dict):
-                    if 'homes' in data:
-                        print(f"  Moving people to homes: {len(data['homes'])} locations")
-                        move_people(simulator, data['homes'].items(), True, current_timestamp)
-                    if 'places' in data:
-                        print(f"  Moving people to places: {len(data['places'])} locations")
-                        move_people(simulator, data['places'].items(), False, current_timestamp)
-                else:
-                    print(f"  ERROR: Pattern data is not a dict: {data}")
-            else:
-                print(f"  ERROR: Timestamp {current_timestamp} not found in patterns")
-            
-            timestamps.pop(0)
+            # Remove processed pattern to free memory
+            del patterns_buffer[current_ts_str]
 
-            if simulator.enable_logging and simulator.logger: 
-                for person in simulator.people.values(): 
-                    simulator.logger.log_person_demographics(person, last_timestep)
-                
-                for household in simulator.households.values(): 
-                    if len(household.population) > 0: 
-                        simulator.logger.log_location_state(household, last_timestep)
+        # Log demographics/contacts
+        if simulator.enable_logging and simulator.logger: 
+            for person in simulator.people.values(): 
+                simulator.logger.log_person_demographics(person, last_timestep)
+            for household in simulator.households.values(): 
+                if len(household.population) > 0: 
+                    simulator.logger.log_location_state(household, last_timestep)
+            for facility in simulator.facilities.values(): 
+                if len(facility.population) > 0: 
+                    simulator.logger.log_location_state(facility, last_timestep)
+                    population = list(facility.population)
+                    for i, person1 in enumerate(population): 
+                        for person2 in population[i+1:]: 
+                            simulator.logger.log_contact_event(person1, person2, facility, last_timestep)
 
-                for facility in simulator.facilities.values(): 
-                    if len(facility.population) > 0: 
-                        simulator.logger.log_location_state(facility, last_timestep)
-
-                        population = list(facility.population)
-                        for i, person1 in enumerate(population): 
-                            for person2 in population[i+1:]: 
-                                simulator.logger.log_contact_event(person1, person2, facility, last_timestep)
-
-            
-        
-        # Record movement
-        movement_json[last_timestep] = {
+        # Record movement snapshot
+        movement_step = {
             "homes": {str(h.id): [p.id for p in h.population] for h in simulator.households.values() if len(h.population) > 0},
             "places": {str(f.id): [p.id for p in f.population] for f in simulator.facilities.values() if len(f.population) > 0}
         }
         
-        # Track movement data
-        homes_with_people = len(movement_json[last_timestep]["homes"])
-        places_with_people = len(movement_json[last_timestep]["places"])
-        if homes_with_people > 0 or places_with_people > 0:
-            print(f"  Timestep {last_timestep}: {homes_with_people} homes, {places_with_people} places with people")
-        
+        if patterns_writer:
+            patterns_writer.add(current_ts_str, movement_step)
+        else:
+            patterns_json[current_ts_str] = movement_step
+
         # Run infection model
         newlyInfected = {}
         try:
             pre_infection_states = {}
             if simulator.enable_logging and simulator.logger: 
-                for person in simulator.people.values(): 
-                    # pre_infection_states[person.id] = {variant: person.states.get(variant, 0) for variant in variants}
+                 for person in simulator.people.values(): 
                     pre_infection_states[person.id] = {
                         variant: person.states.get(variant, InfectionState.SUSCEPTIBLE) 
                         for variant in variants
                     }
-                
-            infectionmgr.run_model(simulator, last_timestep, variantInfected, newlyInfected, None)
 
+            infectionmgr.run_model(simulator, last_timestep, variantInfected, newlyInfected, None)
+            
             if simulator.enable_logging and simulator.logger: 
                 for person in simulator.people.values(): 
                     for variant in variants: 
                         old_state = pre_infection_states[person.id][variant]
-                        new_state = person.states.get(variant, InfectionState.SUSCEPTIBLE)  # Use enum default
-                        
-                        # Ensure both states are InfectionState enums
-                        if not isinstance(old_state, InfectionState):
-                            old_state = InfectionState.SUSCEPTIBLE
-                        if not isinstance(new_state, InfectionState):
-                            new_state = InfectionState.SUSCEPTIBLE
-                            
+                        new_state = person.states.get(variant, InfectionState.SUSCEPTIBLE) 
+                        if not isinstance(old_state, InfectionState): old_state = InfectionState.SUSCEPTIBLE
+                        if not isinstance(new_state, InfectionState): new_state = InfectionState.SUSCEPTIBLE
                         if not (old_state & InfectionState.INFECTED) and (new_state & InfectionState.INFECTED):
-                            # Try to identify the infector (simplified - could be enhanced)
-                            infector = None
-                            location = person.location
-                            
-                            # Look for infectious people in the same location
-                            if location and hasattr(location, 'population'):
-                                for potential_infector in location.population:
-                                    infector_state = potential_infector.states.get(variant, InfectionState.SUSCEPTIBLE)
-                                    if not isinstance(infector_state, InfectionState):
-                                        infector_state = InfectionState.SUSCEPTIBLE
-                                        
-                                    if (potential_infector != person and 
-                                        infector_state & InfectionState.INFECTIOUS):
-                                        infector = potential_infector
-                                        break
-                            simulator.logger.log_infection_event(person, infector, location, variant, last_timestep)
+                            simulator.logger.log_infection_event(person, None, person.location, variant, last_timestep)
 
-                        
         except Exception as e:
             print(f"Error during infection modeling at timestep {last_timestep}: {e}")
             newlyInfected = {}
-                            
-        infectivity_json[last_timestep] = {i: j for i, j in newlyInfected.items()}
-        result[last_timestep] = {variant: dict(infected) for variant, infected in variantInfected.items()}
+
+        result_step = {variant: dict(infected) for variant, infected in variantInfected.items()}
         
+        if simdata_writer:
+            simdata_writer.add(current_ts_str, result_step)
+        else:
+            simdata_json[current_ts_str] = result_step
+
         last_timestep += simulator.timestep
-        
-        # Safety break
-        if iteration > 10000:
-            print("Breaking: too many iterations")
-            break
 
     print(f"=== SIMULATION COMPLETE ===")
-    print(f"Total iterations: {iteration}")
-    print(f"Final timestep: {last_timestep}")
-    print(f"Result timesteps: {len(result)}")
-    print(f"Movement timesteps: {len(movement_json)}")
-
+    
+    if simdata_writer: simdata_writer.close()
+    if patterns_writer: patterns_writer.close()
+    
     if simulator.enable_logging and simulator.logger: 
         print("=== EXPORTING LOGS ===")
         simulator.logger.export_logs_to_csv()
         simulator.logger.generate_summary_report()
+    
+    if output_dir:
+        return {
+            "simdata": os.path.join(output_dir, 'simdata.json'),
+            "patterns": os.path.join(output_dir, 'patterns.json')
+        }
+    else:
         print(f"Logs exported to {log_dir}/")
         print(f"Generated files:")
         print(f"  - person_logs.csv: {len(simulator.logger.person_logs)} records")
@@ -817,6 +763,7 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
         print(f"  - contact_logs.csv: {len(simulator.logger.contact_logs)} records")
         print(f"  - infection_chains.csv: Chain data for {len(simulator.logger.infection_chains)} infections")
         print(f"  - simulation_summary.txt: Summary report")
+        return {"movement": patterns_json, "result": simdata_json}
 
     
     # Debug final results

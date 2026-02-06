@@ -1,12 +1,13 @@
-from io import BytesIO
-import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
-from jsonschema import validate, ValidationError, SchemaError
+from jsonschema import validate
 from werkzeug.exceptions import BadRequest
 from simulator import simulate
 from simulator.config import DELINEO, DMP_API, SERVER
 import requests
+import tempfile
+import shutil
+import os
 
 app = Flask(__name__)
 
@@ -81,28 +82,49 @@ def run_simulation_endpoint():
     # Initialize DMP API before running simulation
     initialize_dmp_api()
 
-    try:
-        final_result = simulate.run_simulator(request.json, enable_logging=False)
-        
-        print('sending data...')
+    # Use a local temp directory for visibility/debugging
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    local_temp = os.path.join(base_dir, 'sim_temp')
+    os.makedirs(local_temp, exist_ok=True)
+    
+    temp_dir = tempfile.mkdtemp(dir=local_temp)
+    print(f'Created temp dir: {temp_dir}')
 
-        resp = requests.post(f'{DELINEO["DB_URL"]}simdata', data={
-            'czone_id': int(request.json['czone_id']),
-        }, files={
-            'simdata': ('simdata.json', BytesIO(json.dumps(final_result['result']).encode()), 'text/plain'),
-            'patterns': ('patterns.json', BytesIO(json.dumps(final_result['movement']).encode()), 'text/plain')
-        })
+    try:
+        # Pass output_dir to run_simulator so it writes files directly
+        file_paths = simulate.run_simulator(request.json, enable_logging=False, output_dir=temp_dir)
+        
+        print('Simulation complete. Streaming data...')
+        
+        if "error" in file_paths:
+             shutil.rmtree(temp_dir)
+             return jsonify({"error": file_paths["error"]}), 400
+
+        # Open files for streaming
+        # requests will stream the file content without loading it all into memory
+        with open(file_paths['simdata'], 'rb') as f_sim, open(file_paths['patterns'], 'rb') as f_pat:
+            resp = requests.post(f'{DELINEO["DB_URL"]}simdata', data={
+                'czone_id': int(request.json['czone_id']),
+            }, files={
+                'simdata': ('simdata.json', f_sim, 'application/json'),
+                'patterns': ('patterns.json', f_pat, 'application/json')
+            })
         
         if resp.ok:
-            print('sent!')
+            print('Sent successfully!')
         else:
-            print(f'error sending data... {resp.status_code}')
+            print(f'Error sending data... {resp.status_code}')
+            shutil.rmtree(temp_dir)
             return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
         
+        # Cleanup
+        shutil.rmtree(temp_dir)
         return jsonify({ "data": { 'id': resp.json()['data']['id'] } })
 
     except Exception as e:
         print("Simulation error:", repr(e))
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
         return jsonify({"error": str(e)}), 400
 
 
