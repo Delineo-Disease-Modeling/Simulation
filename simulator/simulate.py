@@ -486,7 +486,7 @@ def move_people(simulator, items, is_household, current_timestep):
             person.location = place
 
 
-def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "simulation_logs", output_dir=None):
+def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "simulation_logs", output_dir=None, progress_callback=None):
     print(f"=== SIMULATION DEBUG START ===")
     print(f"max_length: {simdata['length']}")
     
@@ -628,6 +628,9 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
     print("=== STARTING INTERLEAVED SIMULATION LOOP ===")
 
     while last_timestep <= max_len:
+        if progress_callback:
+            progress_callback(last_timestep, max_len)
+
         iteration += 1
         current_ts_str = str(last_timestep)
         

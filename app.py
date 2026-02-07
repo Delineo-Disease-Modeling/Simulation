@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS, cross_origin
 from jsonschema import validate
 from werkzeug.exceptions import BadRequest
@@ -8,6 +8,9 @@ import requests
 import tempfile
 import shutil
 import os
+import threading
+import queue
+import json
 
 app = Flask(__name__)
 
@@ -67,65 +70,90 @@ simulation_schema = {
 @cross_origin()
 def run_simulation_endpoint():
     try:
-        request.get_json(force=True)
+        # If content-type is not json, try force
+        data = request.get_json(force=True)
     except BadRequest:
         return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
 
-    if not request.json:
+    if not data:
         return jsonify({"error": SERVER["error_messages"]["no_data"]}), 400
     
     try:
-        validate(instance=request.json, schema=simulation_schema)
+        validate(instance=data, schema=simulation_schema)
     except:
         return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
         
     # Initialize DMP API before running simulation
     initialize_dmp_api()
 
-    # Use a local temp directory for visibility/debugging
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    local_temp = os.path.join(base_dir, 'sim_temp')
-    os.makedirs(local_temp, exist_ok=True)
-    
-    temp_dir = tempfile.mkdtemp(dir=local_temp)
-    print(f'Created temp dir: {temp_dir}')
+    # Create a queue for communication
+    msg_queue = queue.Queue()
 
-    try:
-        # Pass output_dir to run_simulator so it writes files directly
-        file_paths = simulate.run_simulator(request.json, enable_logging=False, output_dir=temp_dir)
+    def run_sim_thread(sim_data):
+        # Use a local temp directory for visibility/debugging
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        local_temp = os.path.join(base_dir, 'sim_temp')
+        os.makedirs(local_temp, exist_ok=True)
         
-        print('Simulation complete. Streaming data...')
-        
-        if "error" in file_paths:
-             shutil.rmtree(temp_dir)
-             return jsonify({"error": file_paths["error"]}), 400
+        temp_dir = tempfile.mkdtemp(dir=local_temp)
+        print(f'Created temp dir: {temp_dir}')
 
-        # Open files for streaming
-        # requests will stream the file content without loading it all into memory
-        with open(file_paths['simdata'], 'rb') as f_sim, open(file_paths['patterns'], 'rb') as f_pat:
-            resp = requests.post(f'{DELINEO["DB_URL"]}simdata', data={
-                'czone_id': int(request.json['czone_id']),
-            }, files={
-                'simdata': ('simdata.json.gz', f_sim, 'application/gzip'),
-                'patterns': ('patterns.json.gz', f_pat, 'application/gzip')
-            })
-        
-        if resp.ok:
-            print('Sent successfully!')
-        else:
-            print(f'Error sending data... {resp.status_code}')
+        def progress_callback(current_step, max_steps):
+            progress = int((current_step / max_steps) * 100)
+            msg_queue.put({"type": "progress", "value": progress})
+
+        try:
+            # Pass output_dir to run_simulator so it writes files directly
+            file_paths = simulate.run_simulator(sim_data, enable_logging=False, output_dir=temp_dir, progress_callback=progress_callback)
+            
+            print('Simulation complete. Streaming data...')
+            
+            if "error" in file_paths:
+                shutil.rmtree(temp_dir)
+                msg_queue.put({"type": "error", "message": file_paths["error"]})
+                return
+
+            # Open files for streaming
+            # requests will stream the file content without loading it all into memory
+            with open(file_paths['simdata'], 'rb') as f_sim, open(file_paths['patterns'], 'rb') as f_pat:
+                resp = requests.post(f'{DELINEO["DB_URL"]}simdata', data={
+                    'czone_id': int(sim_data['czone_id']),
+                    'length': int(sim_data['length'])
+                }, files={
+                    'simdata': ('simdata.json.gz', f_sim, 'application/gzip'),
+                    'patterns': ('patterns.json.gz', f_pat, 'application/gzip')
+                })
+            
+            if resp.ok:
+                print('Sent successfully!')
+                msg_queue.put({"type": "result", "data": { 'id': resp.json()['data']['id'] }})
+            else:
+                print(f'Error sending data... {resp.status_code}')
+                msg_queue.put({"type": "error", "message": f"Error sending data to storage: {resp.status_code}"})
+            
+            # Cleanup
             shutil.rmtree(temp_dir)
-            return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
-        
-        # Cleanup
-        shutil.rmtree(temp_dir)
-        return jsonify({ "data": { 'id': resp.json()['data']['id'] } })
 
-    except Exception as e:
-        print("Simulation error:", repr(e))
-        if os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir)
-        return jsonify({"error": str(e)}), 400
+        except Exception as e:
+            print("Simulation error:", repr(e))
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
+            msg_queue.put({"type": "error", "message": str(e)})
+        finally:
+            msg_queue.put(None) # Signal end
+
+    # Start the thread
+    thread = threading.Thread(target=run_sim_thread, args=(data,))
+    thread.start()
+
+    def generate():
+        while True:
+            msg = msg_queue.get()
+            if msg is None:
+                break
+            yield f"data: {json.dumps(msg)}\n\n"
+
+    return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
 
 @app.route("/", methods=['GET'])
@@ -144,4 +172,4 @@ def run_main():
 if __name__ == '__main__':
     # Initialize DMP API when the server starts
     initialize_dmp_api()
-    app.run(host=SERVER["host"], port=SERVER["port"])
+    app.run(host=SERVER["host"], port=SERVER["port"], threaded=True)
