@@ -50,28 +50,64 @@ class Maskingeffects:
 
 
 class SimulationLogger: 
-    """Logging system for simulation"""
+    """Logging system for simulation - streams directly to disk to minimize RAM usage"""
 
     def __init__ (self, log_dir = "simulation_logs", enable_file_logging = True): 
         self.log_dir = log_dir 
         self.enable_file_logging = enable_file_logging
+        
+        # Counters for summary (instead of storing all logs in memory)
+        self.person_log_count = 0
+        self.movement_log_count = 0
+        self.infection_log_count = 0
+        self.intervention_log_count = 0
+        self.location_log_count = 0
+        self.contact_log_count = 0
+        
+        # Only keep infection chains in memory (small relative to other logs)
+        self.infection_chains = {}
+        
+        # Track unique people seen (for summary)
+        self._unique_people = set()
+        
+        # CSV writers for streaming to disk
+        self._csv_files = {}
+        self._csv_writers = {}
+        self._headers_written = {}
 
         if self.enable_file_logging: 
             os.makedirs(log_dir, exist_ok=True)
-
-        self.person_logs = []
-        self.movement_logs = []
-        self.infection_logs = []
-        self.intervention_logs = []
-        self.location_logs = []
-        self.contact_logs = []
-        self.exposure_logs = []
-
-        self.person_states = {}
-        self.location_population = defaultdict(list)
-        self.infection_chains = {}
+            self._init_csv_writers()
 
         self.setup_logging()
+    
+    def _init_csv_writers(self):
+        """Initialize CSV file handles for streaming writes"""
+        log_types = ['person_logs', 'movement_logs', 'infection_logs', 
+                     'intervention_logs', 'location_logs', 'contact_logs']
+        for log_type in log_types:
+            filepath = f'{self.log_dir}/{log_type}.csv'
+            self._csv_files[log_type] = open(filepath, 'w', newline='', buffering=8192)
+            self._csv_writers[log_type] = None  # Will create on first write with headers
+            self._headers_written[log_type] = False
+    
+    def _write_log(self, log_type, log_dict):
+        """Write a single log entry to the appropriate CSV file"""
+        if not self.enable_file_logging:
+            return
+        
+        if self._csv_writers.get(log_type) is None:
+            # First write - create writer and write headers
+            self._csv_writers[log_type] = csv.DictWriter(
+                self._csv_files[log_type], 
+                fieldnames=list(log_dict.keys()),
+                extrasaction='ignore'
+            )
+            if not self._headers_written[log_type]:
+                self._csv_writers[log_type].writeheader()
+                self._headers_written[log_type] = True
+        
+        self._csv_writers[log_type].writerow(log_dict)
     
     def setup_logging(self):
         logging.basicConfig(
@@ -85,7 +121,7 @@ class SimulationLogger:
         self.logger = logging.getLogger('DiseaseSimulator')
 
     def log_person_demographics(self, person, timestep):
-        """Log person demographics and current state"""
+        """Log person demographics and current state - streams to disk"""
         vax_status = person.vaccination_state if person.vaccination_state else "Unvaccinated"        
         vax_doses = 0
         if hasattr(person, 'vaccination_state') and person.vaccination_state: 
@@ -111,33 +147,34 @@ class SimulationLogger:
             if state & InfectionState.SYMPTOMATIC:
                 symptomatic_variants.append(variant)
             
-            location_id = person.location.id if person.location else None 
-            location_type = "household" if isinstance(person.location, Household) else "facility" if isinstance(person.location, Facility) else "unknown"
-            location_capacity = getattr(person.location, 'capacity', -1) if person.location else -1
-            location_population = len(person.location.population) if person.location else 0 
+        location_id = person.location.id if person.location else None 
+        location_type = "household" if isinstance(person.location, Household) else "facility" if isinstance(person.location, Facility) else "unknown"
+        location_capacity = getattr(person.location, 'capacity', -1) if person.location else -1
+        location_population = len(person.location.population) if person.location else 0 
 
-            person_log = {
-                'timestep': timestep, 
-                'person_id': person.id,
-                'age': person.age,
-                'sex': person.sex, 
-                'household_id': person.household.id if person.household else None,
-                'current_location_id': location_id,
-                'current_location_type': location_type,
-                'location_capacity': location_capacity,
-                'location_occupancy': location_population, 
-                'location_utilization': location_population / location_capacity if location_capacity > 0 else 0,
-                'is_masked': getattr(person, 'masked', False), 
-                'vaccination_status': vax_status,
-                'vaccination_doses': vax_doses,
-                'infectious_variants': infectious_variants,
-                'symptomatic_variants': symptomatic_variants,
-                'total_variants_infected': len([v for v in infection_status.values() if v['infected']]),
-                'infection_status': infection_status
-            }
+        person_log = {
+            'timestep': timestep, 
+            'person_id': person.id,
+            'age': person.age,
+            'sex': person.sex, 
+            'household_id': person.household.id if person.household else None,
+            'current_location_id': location_id,
+            'current_location_type': location_type,
+            'location_capacity': location_capacity,
+            'location_occupancy': location_population, 
+            'location_utilization': (location_population / location_capacity) if location_capacity > 0 else 0,
+            'is_masked': getattr(person, 'masked', False), 
+            'vaccination_status': vax_status,
+            'vaccination_doses': vax_doses,
+            'infectious_variants': ','.join(infectious_variants),
+            'symptomatic_variants': ','.join(symptomatic_variants),
+            'total_variants_infected': len([v for v in infection_status.values() if v['infected']]),
+            'infection_status': str(infection_status)
+        }
 
-            self.person_logs.append(person_log)
-            self.person_states[person.id] = person_log.copy()
+        self._write_log('person_logs', person_log)
+        self.person_log_count += 1
+        self._unique_people.add(person.id)
 
     def log_movement(self, person, from_location, to_location, timestep, reason = "normal") :
         movement_log = {
@@ -158,10 +195,11 @@ class SimulationLogger:
             'to_capacity': getattr(to_location, 'capacity', -1) if to_location else -1
         }
 
-        self.movement_logs.append(movement_log)
+        self._write_log('movement_logs', movement_log)
+        self.movement_log_count += 1
 
     def log_infection_event(self, infected_person, infector_person, location, variant, timestep): 
-        """Log an infection event"""
+        """Log an infection event - streams to disk"""
         infection_log = {
             'timestep': timestep,
             'infected_person_id': infected_person.id,
@@ -181,9 +219,10 @@ class SimulationLogger:
             'variant': variant,
             'transmission_pair_age_diff': abs(infected_person.age - infector_person.age) if infector_person else None,
         }
-        self.infection_logs.append(infection_log)
+        self._write_log('infection_logs', infection_log)
+        self.infection_log_count += 1
 
-        # tracking infection chains 
+        # tracking infection chains (kept in memory - small data)
         if infector_person: 
             self.infection_chains[infected_person.id] = {
                 'infector_id': infector_person.id,
@@ -193,7 +232,7 @@ class SimulationLogger:
             }
     
     def log_intervention_effect(self, person, intervention_type, effect, timestep, location=None): 
-        """Log when interventions affect person behavior"""
+        """Log when interventions affect person behavior - streams to disk"""
         intervention_log = {
             'timestep': timestep,
             'person_id': person.id,
@@ -209,9 +248,11 @@ class SimulationLogger:
             'location_capacity': getattr(location, 'capacity', -1) if location else -1
         }
 
-        self.intervention_logs.append(intervention_log)
+        self._write_log('intervention_logs', intervention_log)
+        self.intervention_log_count += 1
 
     def log_location_state(self, location, timestep):
+        """Log location state - streams to disk"""
         population = location.population if hasattr(location, 'population') else []
         infectious_count = sum(1 for p in population if any(p.states[v] & InfectionState.INFECTIOUS for v in p.states.keys()))
         symptomatic_count = sum(1 for p in population if any(p.states[v] & InfectionState.SYMPTOMATIC for v in p.states.keys()))
@@ -221,13 +262,14 @@ class SimulationLogger:
         ages = [p.age for p in population]
         avg_age = sum(ages) / len(ages) if ages else 0
 
+        capacity = getattr(location, 'capacity', -1)
         location_log = {
             'timestep': timestep,
             'location_id': location.id,
             'location_type': "household" if isinstance(location, Household) else "facility" if isinstance(location, Facility) else None,
-            'capacity': getattr(location, 'capacity', -1),
+            'capacity': capacity,
             'occupancy': len(population),
-            'utilization_rate': len(population) / getattr(location, 'capacity', 1),  # Avoid division by zero
+            'utilization_rate': len(population) / capacity if capacity > 0 else 0,
             'infectious_count': infectious_count,
             'symptomatic_count': symptomatic_count,
             'masked_count': masked_count,
@@ -237,9 +279,11 @@ class SimulationLogger:
             'female_count': sum(1 for p in population if p.sex == '1')
         }
 
-        self.location_logs.append(location_log)
+        self._write_log('location_logs', location_log)
+        self.location_log_count += 1
 
     def log_contact_event(self, person1, person2, location, timestep, contact_duration = 1): 
+        """Log contact between two people - streams to disk"""
         contact_log = {
             'timestep': timestep,
             'person1_id': person1.id,
@@ -256,7 +300,8 @@ class SimulationLogger:
             'same_household': person1.household.id == person2.household.id if person1 and person2 else False,
         }
         
-        self.contact_logs.append(contact_log)
+        self._write_log('contact_logs', contact_log)
+        self.contact_log_count += 1
 
     def calculate_transmission_risk(self, infected_person, infector_person, location): 
         if not infector_person or not location: 
@@ -280,17 +325,21 @@ class SimulationLogger:
             return 0
 
         population = location.population
+        pop_count = len(population)
+        if pop_count == 0:
+            return 0
+            
         infectious_count = sum(1 for p in population if any(p.states[v] & InfectionState.INFECTIOUS for v in p.states.keys()))
 
         if infectious_count == 0:
             return 0
         
-        risk = infectious_count / len(population)  # Basic risk based on infectious individuals
+        risk = infectious_count / pop_count  # Basic risk based on infectious individuals
         if hasattr(location, 'capacity') and location.capacity > 0:
-            utilization = len(population) / location.capacity
+            utilization = pop_count / location.capacity
             risk *= (1 + utilization)
 
-        masked_rate = sum(1 for p in population if getattr(p, 'masked', False)) / len(population)
+        masked_rate = sum(1 for p in population if getattr(p, 'masked', False)) / pop_count
 
         risk *= (1-masked_rate * 0.3)  # Reduce risk based on masking rate
 
@@ -317,33 +366,16 @@ class SimulationLogger:
         return risk
     
     def export_logs_to_csv(self): 
+        """Close CSV file handles and write infection chains"""
         if not self.enable_file_logging: 
             return 
         
-        if self.person_logs: 
-            df = pd.DataFrame(self.person_logs)
-            df.to_csv(f'{self.log_dir}/person_logs.csv', index=False)
+        # Close all CSV file handles
+        for log_type, file_handle in self._csv_files.items():
+            if file_handle and not file_handle.closed:
+                file_handle.close()
 
-        if self.movement_logs:
-            df = pd.DataFrame(self.movement_logs)
-            df.to_csv(f'{self.log_dir}/movement_logs.csv', index=False)
-        
-        if self.infection_logs:
-            df = pd.DataFrame(self.infection_logs)
-            df.to_csv(f'{self.log_dir}/infection_logs.csv', index=False)
-
-        if self.intervention_logs:
-            df = pd.DataFrame(self.intervention_logs)
-            df.to_csv(f'{self.log_dir}/intervention_logs.csv', index=False)
-
-        if self.location_logs:
-            df = pd.DataFrame(self.location_logs)
-            df.to_csv(f'{self.log_dir}/location_logs.csv', index=False)
-        
-        if self.contact_logs:
-            df = pd.DataFrame(self.contact_logs)
-            df.to_csv(f'{self.log_dir}/contact_logs.csv', index=False)
-
+        # Write infection chains (only data kept in memory)
         if self.infection_chains: 
             chains_df = pd.DataFrame.from_dict(self.infection_chains, orient='index')
             chains_df.reset_index(inplace=True)
@@ -358,23 +390,21 @@ class SimulationLogger:
         report = []
         report.append("=== Simulation Summary Report ===\n")
 
-        total_people = len(set(log['person_id'] for log in self.person_logs))
-        total_infections = len(self.infection_logs)
-        total_movements = len(self.movement_logs)
-
-        report.append(f"Total people: {total_people}") 
-        report.append(f"Total infections: {total_infections}")
-        report.append(f"Total movements: {total_movements}")
-
-        if self.intervention_logs: 
-            interventions = pd.DataFrame(self.intervention_logs)
-            intervention_summary = interventions.groupby('intervention_type').size()
-            report.append("\nIntervention Events:") 
-            for intervention, count in intervention_summary.items():
-                report.append(f"  {intervention}: {count} events")
+        report.append(f"Total unique people tracked: {len(self._unique_people)}") 
+        report.append(f"Total infections logged: {self.infection_log_count}")
+        report.append(f"Total movements logged: {self.movement_log_count}")
+        report.append(f"Total person state logs: {self.person_log_count}")
+        report.append(f"Total location state logs: {self.location_log_count}")
+        report.append(f"Total contact logs: {self.contact_log_count}")
+        report.append(f"Total intervention logs: {self.intervention_log_count}")
+        report.append(f"Infection chains tracked: {len(self.infection_chains)}")
 
         with open(f'{self.log_dir}/summary_report.txt', 'w') as f:
             f.write("\n".join(report))
+    
+    def close(self):
+        """Ensure all file handles are closed"""
+        self.export_logs_to_csv()
             
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
@@ -426,7 +456,8 @@ def move_people(simulator, items, is_household, current_timestep):
             # If we hit capacity limit, then we are going to send the person home instead
             # Otherwise, if we are enforcing a lockdown, they may randomly decide to head home
             if not is_household:
-                at_capacity = place.total_count >= place.capacity * simulator.iv_weights['capacity'] if place.capacity != -1 else False
+                # Treat capacity 0 or -1 as unlimited
+                at_capacity = place.total_count >= place.capacity * simulator.iv_weights['capacity'] if place.capacity > 0 else False
                 hit_lockdown = place != person.location and random.random() < simulator.iv_weights['lockdown']
                 self_iso = person.get_state(InfectionState.SYMPTOMATIC) and random.random() < simulator.iv_weights['selfiso']
                 
@@ -457,13 +488,63 @@ def move_people(simulator, items, is_household, current_timestep):
 
             person.location = place
 
-def run_simulator(location=None, max_length=None, interventions=None, save_file=False, enable_logging = True, log_dir = "simulation_logs"):
+def run_simulator(
+    location=None,
+    max_length=None,
+    interventions=None,
+    save_file=False,
+    enable_logging=True,
+    log_dir="simulation_logs",
+    initial_infected_count=None,
+    initial_infected_ids=None,
+    czone_id=None,
+    report=None,  # Optional RunReport instance for structured logging
+    patterns_file=None,  # Optional specific patterns CSV file for multi-month simulation
+    restore_state_file=None,  # Optional state file to restore from (for multi-month continuity)
+    restore_time_offset=None,  # Optional time offset (minutes) between previous and current simulation start
+    patterns_data=None,  # Pre-generated patterns dict (from gen_patterns), takes priority over patterns_file
+    papdata=None,  # Pre-loaded papdata dict, avoids reloading for each month
+):
+    print(f"[RUN_SIMULATOR] RECEIVED max_length (before default): {max_length}")
     location = location or SIMULATION["default_location"]
     max_length = max_length or SIMULATION["default_max_length"]
+    print(f"[RUN_SIMULATOR] EFFECTIVE max_length (after default): {max_length}")
     
-    print(f"=== SIMULATION DEBUG START ===")
-    print(f"max_length: {max_length}")
-    print(f"save_file: {save_file}")
+    # Log patterns_file if provided (multi-month simulation)
+    if patterns_file:
+        print(f"[RUN_SIMULATOR] ========================================")
+        print(f"[RUN_SIMULATOR] patterns_file: {patterns_file}")
+        print(f"[RUN_SIMULATOR] restore_state_file: {restore_state_file}")
+        print(f"[RUN_SIMULATOR] ========================================")
+    
+    # Helper to log to both report and console
+    def log_info(msg):
+        print(msg)
+        if report:
+            report.info(msg)
+    
+    def log_warn(msg):
+        print(f"Warning: {msg}")
+        if report:
+            report.warn(msg)
+
+    def count_infected_people(people_dict):
+        count = 0
+        for person in people_dict.values():
+            for state in getattr(person, 'states', {}).values():
+                try:
+                    if state.value & 1:
+                        count += 1
+                        break
+                except AttributeError:
+                    if int(state) & 1:
+                        count += 1
+                        break
+        return count
+    
+    log_info(f"=== SIMULATION DEBUG START ===")
+    log_info(f"max_length: {max_length}")
+    log_info(f"save_file: {save_file}")
     
     # Merge provided interventions with defaults
     default_interventions = SIMULATION["default_interventions"].copy()
@@ -475,42 +556,139 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     if not interventions['randseed']:
         random.seed(0)
     
-    # Load people and places using the new streaming method
-    data_stream = StreamDataLoader.stream_data("https://db.delineo.me/patterns/1?stream=true")
-    
-    # Extract initial data from the stream
+    # Initialize data containers
     people_data = {}
     homes_data = {}
     places_data = {}
     patterns = {}
-    with open('simulator/barnsdall/patterns.json', 'r') as file:
-        patterns = json.load(file)
-        print(f"Loaded {len(patterns)} patterns from pattern_simple.json")
-    print("=== LOADING DATA FROM STREAM ===")
-    chunk_count = 0
-    for data in data_stream:
-        chunk_count += 1
-        print(f"Chunk {chunk_count} - Keys: {list(data.keys())}")
-        
-        # Merge data from each chunk
-        if "people" in data:
-            people_data.update(data["people"])
-            print(f"  People: {len(data['people'])} items")
-        if "homes" in data:
-            homes_data.update(data["homes"])
-            print(f"  Homes: {len(data['homes'])} items")
-        if "places" in data:
-            places_data.update(data["places"])
-            print(f"  Places: {len(data['places'])} items")
-        if "patterns" in data:
-            patterns.update(data["patterns"])
-            print(f"  Patterns: {len(data['patterns'])} items")
+    data_loaded = False
     
-    print(f"=== FINAL DATA LOADED ===")
-    print(f"Total people: {len(people_data)}")
-    print(f"Total homes: {len(homes_data)}")
-    print(f"Total places: {len(places_data)}")
-    print(f"Total patterns: {len(patterns)}")
+    # Strategy 0: Use pre-loaded papdata and patterns_data if provided (multi-month optimization)
+    if papdata and patterns_data:
+        log_info(f"Strategy 0: Using pre-loaded papdata and patterns_data")
+        people_data = papdata.get('people', {})
+        homes_data = papdata.get('homes', {})
+        places_data = papdata.get('places', {})
+        patterns = patterns_data
+        log_info(f"Pre-loaded: {len(people_data)} people, {len(homes_data)} homes, {len(places_data)} places, {len(patterns)} patterns")
+        data_loaded = True
+    
+    # Helper function to fetch from DB API
+    def fetch_from_db_api(cz_id):
+        """Fetch patterns and papdata from the DB API for a convenience zone."""
+        import requests
+        try:
+            # Fetch papdata (people, homes, places) from dedicated endpoint
+            papdata_response = requests.get(f'http://localhost:1890/papdata/{cz_id}', timeout=30)
+            if not papdata_response.ok:
+                print(f"Warning: Could not fetch papdata from DB API for CZ {cz_id}: {papdata_response.status_code}")
+                return None, None, None, None
+            
+            papdata = papdata_response.json().get('data', {})
+            ppl = papdata.get('people', {})
+            hms = papdata.get('homes', {})
+            plcs = papdata.get('places', {})
+            
+            # Fetch patterns from streaming endpoint
+            # The endpoint streams: papdata JSON (first line) then {"patterns": {timestep: data}} per line
+            patterns_response = requests.get(f'http://localhost:1890/patterns/{cz_id}', timeout=60, stream=True)
+            if not patterns_response.ok:
+                print(f"Warning: Could not fetch patterns from DB API for CZ {cz_id}: {patterns_response.status_code}")
+                return None, None, None, None
+            
+            ptns = {}
+            first_line = True
+            for line in patterns_response.iter_lines():
+                if line:
+                    line_str = line.decode('utf-8')
+                    if first_line:
+                        # First line is papdata, skip it (we already have it)
+                        first_line = False
+                        continue
+                    try:
+                        chunk = json.loads(line_str)
+                        if 'patterns' in chunk:
+                            ptns.update(chunk['patterns'])
+                    except json.JSONDecodeError:
+                        continue
+            
+            print(f"Loaded from DB API (CZ {cz_id}): {len(ppl)} people, {len(hms)} homes, {len(plcs)} places, {len(ptns)} patterns")
+            return ppl, hms, plcs, ptns
+        except Exception as e:
+            print(f"Warning: Error fetching from DB API for CZ {cz_id}: {e}")
+        return None, None, None, None
+    
+    # Helper function to lookup CZ by name/description
+    def lookup_czone_id(location_name):
+        """Look up convenience zone ID by name or description."""
+        import requests
+        try:
+            response = requests.get('http://localhost:1890/convenience-zones', timeout=10)
+            if response.ok:
+                czones = response.json().get('data', [])
+                for cz in czones:
+                    if cz.get('description', '').lower() == location_name.lower() or \
+                       cz.get('name', '').lower() == location_name.lower():
+                        print(f"Found CZ for '{location_name}': ID {cz['id']}")
+                        return cz['id']
+        except Exception as e:
+            print(f"Warning: Could not lookup CZ by name: {e}")
+        return None
+    
+    # Strategy 1: If czone_id is provided, fetch from DB API
+    if not data_loaded and czone_id:
+        log_info(f"Fetching data from DB API for czone_id={czone_id}")
+        people_data, homes_data, places_data, patterns = fetch_from_db_api(czone_id)
+        if people_data:
+            data_loaded = True
+    
+    # Strategy 2: Try to load from local files
+    if not data_loaded:
+        location_folder = f'simulator/{location}'
+        try:
+            with open(f'{location_folder}/patterns.json', 'r') as file:
+                patterns = json.load(file)
+                log_info(f"Loaded {len(patterns)} patterns from {location}/patterns.json")
+            with open(f'{location_folder}/papdata.json', 'r') as file:
+                local_papdata = json.load(file)
+                people_data = local_papdata.get('people', {})
+                homes_data = local_papdata.get('homes', {})
+                places_data = local_papdata.get('places', {})
+                log_info(f"Loaded papdata from {location}: {len(people_data)} people, {len(homes_data)} homes, {len(places_data)} places")
+            data_loaded = True
+        except FileNotFoundError as e:
+            log_warn(f"Could not load local data for location '{location}': {e}")
+    
+    # Strategy 3: Try to lookup CZ by location name and fetch from DB
+    if not data_loaded:
+        log_info(f"Strategy 3: Looking up CZ by location name '{location}'")
+        cz_id = lookup_czone_id(location)
+        if cz_id:
+            log_info(f"Found CZ ID {cz_id} for location '{location}', fetching data...")
+            people_data, homes_data, places_data, patterns = fetch_from_db_api(cz_id)
+            if people_data:
+                data_loaded = True
+        else:
+            log_warn(f"No CZ found for location '{location}'")
+    
+    # Strategy 4: Fall back to barnsdall as last resort
+    if not data_loaded:
+        log_warn("Falling back to barnsdall data")
+        with open('simulator/barnsdall/patterns.json', 'r') as file:
+            patterns = json.load(file)
+            log_info(f"Loaded {len(patterns)} patterns from barnsdall/patterns.json")
+        with open('simulator/barnsdall/papdata.json', 'r') as file:
+            papdata = json.load(file)
+            people_data = papdata.get('people', {})
+            homes_data = papdata.get('homes', {})
+            places_data = papdata.get('places', {})
+            log_info(f"Loaded papdata from barnsdall: {len(people_data)} people, {len(homes_data)} homes, {len(places_data)} places")
+    
+    log_info(f"=== DATA LOADED ===")
+    log_info(f"Total people: {len(people_data)}")
+    log_info(f"Total homes: {len(homes_data)}")
+    log_info(f"Total places: {len(places_data)}")
+    log_info(f"Total patterns: {len(patterns)}")
     
     # Debug patterns structure
     if patterns:
@@ -552,14 +730,29 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
             cbg = data[0] if len(data) > 0 else None
             label = data[1] if len(data) > 1 else None
             capacity = data[2] if len(data) > 2 else -1
+            latitude = 0
+            longitude = 0
+            top_category = 'Other'
+            placekey = ''
+            postal_code = 0
         elif isinstance(data, dict):
             cbg = data.get('cbg')
             label = data.get('label', f"Place_{id}")
             capacity = data.get('capacity', -1)
+            latitude = data.get('latitude', 0)
+            longitude = data.get('longitude', 0)
+            top_category = data.get('top_category', 'Other')
+            placekey = data.get('placekey', '')
+            postal_code = data.get('postal_code', 0)
         else:
             cbg = data
             label = f"Place_{id}"
             capacity = -1
+            latitude = 0
+            longitude = 0
+            top_category = 'Other'
+            placekey = ''
+            postal_code = 0
         
         if isinstance(capacity, str):
             try:
@@ -567,25 +760,65 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
             except ValueError:
                 capacity = -1
         
-        simulator.add_facility(Facility(id, cbg, label, capacity))
+        simulator.add_facility(Facility(id, cbg, label, capacity, latitude, longitude, top_category, placekey, postal_code))
     print(f"Added {len(simulator.facilities)} facilities")
 
     # Get default infected IDs and variants from config
-    default_infected = SIMULATION["default_infected_ids"]
-    variants = SIMULATION["variants"]
+    default_infected_pool = list(SIMULATION["default_infected_ids"])
+    variants = list(SIMULATION["variants"])
     
     print(f"=== INFECTION SETUP ===")
-    print(f"Default infected IDs: {default_infected}")
+    print(f"Default infected IDs: {default_infected_pool}")
     print(f"Variants: {variants}")
-    
-    # Ensure no more variants than infected individuals
-    if len(variants) > len(default_infected):
-        raise ValueError("Not enough infected IDs to assign each variant uniquely")
+    print(f"restore_state_file: {restore_state_file}")
 
-    # Randomly match infected IDs with variants
-    random.shuffle(default_infected)
-    variant_assignments = {id: variant for id, variant in zip(default_infected, variants)}
-    print(f"Variant assignments: {variant_assignments}")
+    # Determine which people start infected.
+    # - Default behavior (when unset) is 1 initial infection per variant.
+    # - If `initial_infected_ids` is provided, it wins.
+    # - If `initial_infected_count` is provided, infect that many people total.
+    # - If `restore_state_file` is provided, skip initial infections (we'll restore state later)
+    
+    if restore_state_file:
+        # Skip initial infection setup - we'll restore state from previous month
+        print(f"[INIT] Skipping initial infections - will restore from state file: {restore_state_file}")
+        variant_assignments = {}
+        infected_ids = []
+    elif initial_infected_ids is not None:
+        if not isinstance(initial_infected_ids, list):
+            raise ValueError("initial_infected_ids must be a JSON list")
+        requested_ids = [str(x) for x in initial_infected_ids]
+        infected_ids = [pid for pid in requested_ids if pid in people_data]
+    else:
+        if initial_infected_count is None:
+            initial_infected_count = len(variants)
+        try:
+            initial_infected_count = int(initial_infected_count)
+        except (TypeError, ValueError):
+            raise ValueError("initial_infected_count must be an integer")
+        if initial_infected_count < 0:
+            raise ValueError("initial_infected_count must be >= 0")
+
+        infected_pool = [pid for pid in default_infected_pool if pid in people_data]
+        random.shuffle(infected_pool)
+
+        # If caller asks for more than the default pool contains, extend with other people IDs.
+        if initial_infected_count > len(infected_pool):
+            extra_ids = [str(pid) for pid in people_data.keys() if str(pid) not in set(infected_pool)]
+            random.shuffle(extra_ids)
+            infected_pool.extend(extra_ids)
+
+        infected_ids = infected_pool[:initial_infected_count]
+
+    if not variants or not infected_ids:
+        variant_assignments = {}
+    else:
+        # Assign a variant to each infected person (cycle variants if count > variants).
+        variant_assignments = {
+            pid: variants[i % len(variants)] for i, pid in enumerate(infected_ids)
+        }
+
+    print(f"Initial infected count: {len(variant_assignments)}")
+    print(f"Variant assignments (sample): {dict(list(variant_assignments.items())[:10])}")
 
     # Build people
     print("=== BUILDING PEOPLE ===")
@@ -603,10 +836,12 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
             variant = variant_assignments[str(id)]
             person.states[variant] = InfectionState.INFECTED | InfectionState.INFECTIOUS
             initial_duration = INFECTION_MODEL["initial_timeline"]["duration"]
+            recovery_duration = INFECTION_MODEL["fallback_timeline"]["recovery_duration"]
             person.timeline = {
                 variant: {
                     InfectionState.INFECTED: InfectionTimeline(0, initial_duration),
-                    InfectionState.INFECTIOUS: InfectionTimeline(0, initial_duration)
+                    InfectionState.INFECTIOUS: InfectionTimeline(0, initial_duration),
+                    InfectionState.RECOVERED: InfectionTimeline(initial_duration, initial_duration + recovery_duration)
                 }
             }
             print(f"Infected person {id} with variant {variant}")
@@ -617,7 +852,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         # Assign masked state
         if random.random() < simulator.iv_weights['mask']:
             person.set_masked(True)
-            print(f"Person {person.id} assigned mask")
+            #print(f"Person {person.id} assigned mask")
             if simulator.enable_logging and simulator.logger: 
                 simulator.logger.log_intervention_effect(person, 'mask', 'complied', 0)
 
@@ -640,8 +875,70 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     
     print(f"Added {people_added} people")
     
+    # Restore state from previous simulation phase (for multi-month simulations)
+    if restore_state_file:
+        print(f"[STATE_RESTORE] ========================================")
+        print(f"[STATE_RESTORE] Restoring from: {restore_state_file}")
+        print(f"[STATE_RESTORE] File exists: {os.path.exists(restore_state_file) if 'os' in dir() else 'unknown'}")
+        print(f"[STATE_RESTORE] ========================================")
+        try:
+            from .state_manager import load_simulation_state, restore_people_state
+            saved_state = load_simulation_state(restore_state_file)
+            print(f"[STATE_RESTORE] Loaded state with {len(saved_state.get('people', {}))} people")
+            print(f"[STATE_RESTORE] State metadata: {saved_state.get('metadata', {})}")
+            
+            # Get the time offset (minutes) between previous and current simulation starts.
+            # Prefer explicit restore_time_offset (supports overlapping months), fall back to saved end_time.
+            time_offset = restore_time_offset
+            if time_offset is None:
+                meta = saved_state.get('metadata', {})
+                time_offset = meta.get('length_minutes')
+                if time_offset is None:
+                    time_offset = meta.get('end_time', 0)
+            try:
+                time_offset = int(time_offset) if time_offset is not None else 0
+            except (TypeError, ValueError):
+                time_offset = 0
+            print(f"[STATE_RESTORE] Time offset from previous sim: {time_offset}")
+            
+            restored_count = restore_people_state(simulator.people, saved_state.get('people', {}), time_offset=time_offset)
+            restored_infected = count_infected_people(simulator.people)
+            print(f"[STATE_RESTORE] Infected immediately after restore: {restored_infected}")
+            if report:
+                report.info(f"[STATE_RESTORE] Infected immediately after restore: {restored_infected}")
+            print(f"[STATE_RESTORE] Restored state for {restored_count} people")
+            if report:
+                report.info(f"Restored state for {restored_count} people from {restore_state_file}")
+            
+            # Clear initial infections since we're continuing from saved state
+            # (people who were infected will already have their states restored)
+            variant_assignments.clear()
+            print(f"[STATE_RESTORE] Cleared variant_assignments (continuing from saved state)")
+            
+        except Exception as e:
+            print(f"[STATE_RESTORE] ERROR: Could not restore state: {e}")
+            import traceback
+            traceback.print_exc()
+            if report:
+                report.warn(f"Could not restore state from {restore_state_file}: {e}")
+    
     # Create infection manager with DMP API
     infectionmgr = InfectionManager({}, people=simulator.people.values())
+    
+    # Debug: Log infection manager state
+    print(f"[INFMGR] InfectionManager created with {len(infectionmgr.infected)} infected people")
+    if restore_state_file:
+        # Count how many people have INFECTIOUS state
+        infectious_count = 0
+        for p in simulator.people.values():
+            for state in p.states.values():
+                if isinstance(state, InfectionState) and (state & InfectionState.INFECTIOUS):
+                    infectious_count += 1
+                    break
+        print(f"[INFMGR] Total people with INFECTIOUS state: {infectious_count}")
+        print(f"[INFMGR] InfectionManager.infected has: {len(infectionmgr.infected)} people")
+        if infectious_count > 0 and len(infectionmgr.infected) == 0:
+            print(f"[INFMGR] BUG DETECTED: People are infectious but not in infected list!")
     
     # Prepare simulation
     last_timestep = 0
@@ -654,12 +951,35 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     result = {}
     variantInfected = {variant: {} for variant in variants}
     
+    # Populate variantInfected with existing infection states from people
+    # This is needed both for state restoration AND for initial infections
+    print(f"[INIT] Populating variantInfected from people states...")
+    initial_infected_count_tracked = 0
+    for pid, person in simulator.people.items():
+        for variant in variants:
+            if variant in person.states:
+                state = person.states[variant]
+                if isinstance(state, InfectionState):
+                    state_value = state.value
+                else:
+                    state_value = int(state)
+                # If person has any infection-related state (not just susceptible)
+                if state_value != 0:
+                    variantInfected[variant][str(pid)] = state_value
+                    if state_value & 1:  # INFECTED bit
+                        initial_infected_count_tracked += 1
+    print(f"[INIT] Populated variantInfected: {initial_infected_count_tracked} currently infected")
+    for variant in variants:
+        print(f"[INIT]   {variant}: {len(variantInfected[variant])} people with states")
+    
     movement_json = {}
     infectivity_json = {}
 
     # Main simulation loop
     print("=== STARTING SIMULATION LOOP ===")
+    print(f"[LOOP-START] variantInfected totals: {[(v, len(d)) for v, d in variantInfected.items()]}")
     iteration = 0
+    first_result_logged = False
     while len(timestamps) > 0:
         iteration += 1
         
@@ -674,18 +994,17 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         # Process movement if we've reached the next timestamp
         if len(timestamps) > 0 and last_timestep >= timestamps[0]:
             current_timestamp = str(timestamps[0])
-            print(f"Processing timestamp {current_timestamp}")
+            # Only log every 10th pattern for performance
+            if int(current_timestamp) % 600 == 0:
+                print(f"Processing timestamp {current_timestamp}")
             
             if current_timestamp in patterns:
                 data = patterns[current_timestamp]
-                print(f"  Pattern data type: {type(data)}")
                 
                 if isinstance(data, dict):
                     if 'homes' in data:
-                        print(f"  Moving people to homes: {len(data['homes'])} locations")
                         move_people(simulator, data['homes'].items(), True, current_timestamp)
                     if 'places' in data:
-                        print(f"  Moving people to places: {len(data['places'])} locations")
                         move_people(simulator, data['places'].items(), False, current_timestamp)
                 else:
                     print(f"  ERROR: Pattern data is not a dict: {data}")
@@ -706,17 +1025,25 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
                     if len(facility.population) > 0: 
                         simulator.logger.log_location_state(facility, last_timestep)
 
+                        # Only log contacts for infectious situations to avoid O(n²) explosion
+                        # Skip contact logging if no one is infectious
                         population = list(facility.population)
-                        for i, person1 in enumerate(population): 
-                            for person2 in population[i+1:]: 
-                                simulator.logger.log_contact_event(person1, person2, facility, last_timestep)
+                        has_infectious = any(
+                            any(p.states[v] & InfectionState.INFECTIOUS for v in p.states.keys()) 
+                            for p in population
+                        )
+                        if has_infectious and len(population) <= 50:  # Only log if facility is small enough
+                            for i, person1 in enumerate(population): 
+                                for person2 in population[i+1:]: 
+                                    simulator.logger.log_contact_event(person1, person2, facility, last_timestep)
 
             
         
         # Record movement
+        # Note: Convert person IDs to strings to match the result data format (JSON serializes int keys as strings)
         movement_json[last_timestep] = {
-            "homes": {str(h.id): [p.id for p in h.population] for h in simulator.households.values() if len(h.population) > 0},
-            "places": {str(f.id): [p.id for p in f.population] for f in simulator.facilities.values() if len(f.population) > 0}
+            "homes": {str(h.id): [str(p.id) for p in h.population] for h in simulator.households.values() if len(h.population) > 0},
+            "places": {str(f.id): [str(p.id) for p in f.population] for f in simulator.facilities.values() if len(f.population) > 0}
         }
         
         # Track movement data
@@ -777,6 +1104,28 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         infectivity_json[last_timestep] = {i: j for i, j in newlyInfected.items()}
         result[last_timestep] = {variant: dict(infected) for variant, infected in variantInfected.items()}
         
+        # Debug: Log first few results
+        if not first_result_logged or last_timestep % 1000 == 0:
+            total_entries = sum(len(v) for v in result[last_timestep].values())
+            # Count how many have INFECTED bit set vs just RECOVERED
+            infected_bit_count = 0
+            recovered_only_count = 0
+            sample_states = []
+            for variant, people in result[last_timestep].items():
+                for pid, state in people.items():
+                    if state & 1:  # INFECTED bit
+                        infected_bit_count += 1
+                    elif state == 16 or state == 32:  # RECOVERED or REMOVED only
+                        recovered_only_count += 1
+                    if len(sample_states) < 5:
+                        sample_states.append((pid, variant, state))
+            print(f"[RESULT-DEBUG] ts={last_timestep}: {total_entries} total, {infected_bit_count} with INFECTED bit, {recovered_only_count} recovered/removed only")
+            print(f"[RESULT-DEBUG]   sample states: {sample_states}")
+            if total_entries == 0 and iteration > 1:
+                print(f"[RESULT-DEBUG]   WARNING: 0 entries at ts={last_timestep}!")
+                print(f"[RESULT-DEBUG]   variantInfected totals: {[(v, len(d)) for v, d in variantInfected.items()]}")
+            first_result_logged = True
+        
         last_timestep += simulator.timestep
         
         # Safety break
@@ -795,15 +1144,15 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         simulator.logger.export_logs_to_csv()
         simulator.logger.generate_summary_report()
         print(f"Logs exported to {log_dir}/")
-        print(f"Generated files:")
-        print(f"  - person_logs.csv: {len(simulator.logger.person_logs)} records")
-        print(f"  - movement_logs.csv: {len(simulator.logger.movement_logs)} records")
-        print(f"  - infection_logs.csv: {len(simulator.logger.infection_logs)} records")
-        print(f"  - intervention_logs.csv: {len(simulator.logger.intervention_logs)} records")
-        print(f"  - location_logs.csv: {len(simulator.logger.location_logs)} records")
-        print(f"  - contact_logs.csv: {len(simulator.logger.contact_logs)} records")
+        print(f"Generated files (streamed to disk):")
+        print(f"  - person_logs.csv: {simulator.logger.person_log_count} records")
+        print(f"  - movement_logs.csv: {simulator.logger.movement_log_count} records")
+        print(f"  - infection_logs.csv: {simulator.logger.infection_log_count} records")
+        print(f"  - intervention_logs.csv: {simulator.logger.intervention_log_count} records")
+        print(f"  - location_logs.csv: {simulator.logger.location_log_count} records")
+        print(f"  - contact_logs.csv: {simulator.logger.contact_log_count} records")
         print(f"  - infection_chains.csv: Chain data for {len(simulator.logger.infection_chains)} infections")
-        print(f"  - simulation_summary.txt: Summary report")
+        print(f"  - summary_report.txt: Summary report")
 
     
     # Debug final results
@@ -835,9 +1184,57 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
         with open('results_infections.json', 'w') as file:
             json.dump(infectivity_json, file, indent=4)
     else:
+        # Build papdata for frontend
+        papdata = {
+            'people': {str(p.id): {'sex': p.sex, 'age': p.age, 'home': str(p.household.id) if p.household else None} for p in simulator.people.values()},
+            'homes': {str(h.id): {'cbg': getattr(h, 'cbg', ''), 'members': len(h.population)} for h in simulator.households.values()},
+            'places': {str(f.id): {
+                'placekey': getattr(f, 'placekey', ''),
+                'label': getattr(f, 'label', f'Place {f.id}'),
+                'latitude': getattr(f, 'latitude', 0),
+                'longitude': getattr(f, 'longitude', 0),
+                'top_category': getattr(f, 'top_category', 'Other'),
+                'postal_code': getattr(f, 'postal_code', 0)
+            } for f in simulator.facilities.values()}
+        }
+        
+        # Build people state for multi-month simulation continuity
+        people_state = {}
+        non_zero_states_count = 0
+        sample_non_zero = []
+        for pid, person in simulator.people.items():
+            if hasattr(person, 'to_dict'):
+                people_state[str(pid)] = person.to_dict()
+            else:
+                # Fallback: just store basic state
+                people_state[str(pid)] = {
+                    'id': pid,
+                    'states': {k: v.value if hasattr(v, 'value') else int(v) for k, v in getattr(person, 'states', {}).items()},
+                    'masked': getattr(person, 'masked', False),
+                    'vaccination_state': getattr(person, 'vaccination_state', 0),
+                }
+            
+            # Debug: Count states being saved
+            for variant, state in getattr(person, 'states', {}).items():
+                state_val = state.value if hasattr(state, 'value') else int(state)
+                if state_val != 0:
+                    non_zero_states_count += 1
+                    if len(sample_non_zero) < 10:
+                        sample_non_zero.append((pid, variant, state_val, str(state)))
+        
+        print(f"[SIM_END] Non-zero states in people objects: {non_zero_states_count}")
+        print(f"[SIM_END] Sample non-zero states: {sample_non_zero}")
+        
+        end_infected = count_infected_people(simulator.people)
+        print(f"[SIM_END] Infected at end of simulation: {end_infected}")
+        if report:
+            report.info(f"[SIM_END] Infected at end of simulation: {end_infected}")
+
         final_result = {
             'result': {i: j for i, j in result.items() if i != 0},
-            'movement': {i: j for i, j in movement_json.items() if i != 0}
+            'movement': {i: j for i, j in movement_json.items() if i != 0},
+            'papdata': papdata,
+            'people_state': people_state,  # For multi-month simulation state persistence
         }
         print(f"Returning result with {len(final_result['result'])} result timesteps and {len(final_result['movement'])} movement timesteps")
         return final_result

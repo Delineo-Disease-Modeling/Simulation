@@ -11,9 +11,9 @@ DMP_API = {
         # "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/config_data/combined_matrices.csv",
         # "mapping_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/config_data/demographic_mapping.csv",
         # "states_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/config_data/custom_states.txt"
-        "matrices_path": "/Users/navyamehrotra/Documents/Projects/Delineo/Simulation/simulator/config_data/combined_matrices.csv",
-        "mapping_path": "/Users/navyamehrotra/Documents/Projects/Delineo/Simulation/simulator/config_data/demographic_mapping.csv",
-        "states_path": "/Users/navyamehrotra/Documents/Projects/Delineo/Simulation/simulator/config_data/custom_states.txt"
+        "matrices_path": "/Users/ryad/Code/delineo/Simulation/simulator/config_data/combined_matrices.csv",
+        "mapping_path": "/Users/ryad/Code/delineo/Simulation/simulator/config_data/demographic_mapping.csv",
+        "states_path": "/Users/ryad/Code/delineo/Simulation/simulator/config_data/custom_states.txt"
     },
     # Mapping from DMP API state names to internal infection states
     "state_mapping": {
@@ -25,7 +25,7 @@ DMP_API = {
         "Recovered": "RECOVERED",
         "Deceased": "REMOVED"
     },
-    # Time conversion factor from API time units to simulation time units
+    # Time conversion factor: multiply API time (hours) by this to get simulation time (minutes)
     "time_conversion_factor": 60
 }
 
@@ -39,13 +39,13 @@ INFECTION_MODEL = {
     "default_timestep": 15,
     # Fallback timeline values used only when DMP API fails to provide a timeline
     "fallback_timeline": {
-        "infected_duration": 1440,      # 24 hours in minutes (fallback value)
-        "infectious_delay": 240,        # 4 hours in minutes (fallback value)
-        "recovery_duration": 10080      # 7 days in minutes (fallback value)
+        "infected_duration": 20160,     # 14 days in minutes (how long someone stays infected)
+        "infectious_delay": 1440,       # 1 day in minutes (delay before becoming infectious)
+        "recovery_duration": 10080      # 7 days in minutes (recovery period after infection ends)
     },
     # Initial timeline values for newly infected people before DMP updates
     "initial_timeline": {
-        "duration": 10800  # 180 hours in minutes
+        "duration": 20160  # 14 days in minutes (how long initial infection lasts)
     }
 }
 
@@ -74,7 +74,7 @@ SIMULATION = {
 # Server configuration
 SERVER = {
     "host": "0.0.0.0",
-    "port": 1880,
+    "port": 1870,
     "error_messages": {
         "bad_request": "Bad Request",
         "no_data": "No data sent"

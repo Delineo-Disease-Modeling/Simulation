@@ -55,6 +55,86 @@ class Person:
         }
         self.vaccination_state = 0
     
+    def to_dict(self) -> dict:
+        """
+        Serialize person state to a dictionary for saving between simulation phases.
+        Used for multi-month simulations where state needs to persist.
+        """
+        # Serialize states (InfectionState flags to int)
+        states_serialized = {k: v.value if hasattr(v, 'value') else int(v) 
+                            for k, v in self.states.items()}
+        
+        # Serialize timeline
+        timeline_serialized = {}
+        for disease, state_timelines in self.timeline.items():
+            timeline_serialized[disease] = {}
+            for state, timeline in state_timelines.items():
+                state_key = state.value if hasattr(state, 'value') else int(state)
+                timeline_serialized[disease][state_key] = {
+                    'start': timeline.start,
+                    'end': timeline.end
+                }
+        
+        # Serialize vaccination state
+        vax_state = self.interventions.get('vaccine', VaccinationState.NONE)
+        vax_value = vax_state.value if hasattr(vax_state, 'value') else int(vax_state)
+        
+        # Get household/location IDs (they might be objects with .id or just strings)
+        household_id = self.household.id if hasattr(self.household, 'id') else str(self.household)
+        location_id = self.location.id if hasattr(self.location, 'id') else str(self.location)
+        
+        return {
+            'id': self.id,
+            'sex': self.sex,
+            'age': self.age,
+            'household_id': household_id,  # Store ID, not object
+            'location_id': location_id,    # Store ID, not object
+            'invisible': self.invisible,
+            'states': states_serialized,
+            'timeline': timeline_serialized,
+            'masked': self.masked,
+            'vaccination_state': vax_value,
+        }
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Person':
+        """
+        Deserialize person from a dictionary.
+        Used to restore state for multi-month simulations.
+        Note: household/location are stored as IDs and will be resolved later
+              by the state_manager when restoring the full population.
+        """
+        # For restoration, we just store the ID - the actual object will be set
+        # when loading into the full population context
+        household_id = data.get('household_id', data.get('household', '0'))
+        
+        person = cls(
+            id=data['id'],
+            sex=data['sex'],
+            age=data['age'],
+            household=household_id  # Temporarily store ID
+        )
+        person.location = data.get('location_id', data.get('location', household_id))
+        person.invisible = data.get('invisible', False)
+        person.masked = data.get('masked', False)
+        
+        # Restore states
+        person.states = {k: InfectionState(v) for k, v in data.get('states', {}).items()}
+        
+        # Restore timeline
+        person.timeline = {}
+        for disease, state_timelines in data.get('timeline', {}).items():
+            person.timeline[disease] = {}
+            for state_val, times in state_timelines.items():
+                state = InfectionState(int(state_val))
+                person.timeline[disease][state] = InfectionTimeline(times['start'], times['end'])
+        
+        # Restore vaccination state
+        vax_value = data.get('vaccination_state', 0)
+        person.interventions = {'vaccine': VaccinationState(vax_value)}
+        
+        return person
+    
     def set_masked(self, masked):
         self.masked = masked
     
@@ -109,17 +189,56 @@ class Person:
         '''
         self.invisible = False
         
-        for variant in variants: 
-            self.states[variant] = InfectionState.SUSCEPTIBLE
+        # Initialize states for variants that don't have a timeline yet
+        # (Don't overwrite states for variants that have active timelines - preserves restored state)
+        for variant in variants:
+            if variant not in self.timeline:
+                # Only set to SUSCEPTIBLE if no state exists yet
+                # This preserves restored states (e.g., RECOVERED) for diseases without active timelines
+                if variant not in self.states:
+                    self.states[variant] = InfectionState.SUSCEPTIBLE
 
+        # Update states based on timeline
         for disease, value in self.timeline.items():
+            # Only process if there are timeline entries
+            if not value:
+                continue
+            
+            # Track the final state (RECOVERED/REMOVED) to preserve immunity
+            # We look for any terminal state in the timeline, regardless of timing
+            final_state = InfectionState.SUSCEPTIBLE
+            max_end_time = 0
+            has_terminal_state = False
+            
+            # First pass: find max end time and check for terminal states
+            for state, timeline in value.items():
+                if timeline.end > max_end_time:
+                    max_end_time = timeline.end
+                # If this is a terminal state (RECOVERED, REMOVED), remember it
+                if state == InfectionState.RECOVERED or state == InfectionState.REMOVED:
+                    final_state = state
+                    has_terminal_state = True
+                        
+            # Start with SUSCEPTIBLE for this disease, then apply timeline
+            self.states[disease] = InfectionState.SUSCEPTIBLE
+            active_states_found = False
+            
             for state, timeline in value.items():
                 if timeline.end <= curtime:
-                    self.states[disease] = self.states[disease] & ~state
+                    # State has ended, don't add it
+                    pass
                 elif timeline.start <= curtime:
+                    # State is active, add it
+                    active_states_found = True
                     self.states[disease] = self.states[disease] | state
                     if state == InfectionState.REMOVED or state == InfectionState.RECOVERED or state == InfectionState.HOSPITALIZED:
                         self.invisible = True # means agent cannot get reinfected 
+            
+            # If no active states but we had a timeline with a terminal state, 
+            # person has completed their infection - preserve their immunity
+            if not active_states_found and max_end_time <= curtime and has_terminal_state:
+                self.states[disease] = final_state
+                self.invisible = True  # They can't be reinfected 
 
             
 
@@ -161,11 +280,16 @@ class Household(Population):
             self.id = id
 
 class Facility(Population):
-    def __init__(self, id, cbg, label, capacity=-1):
+    def __init__(self, id, cbg, label, capacity=-1, latitude=0, longitude=0, top_category='Other', placekey='', postal_code=0):
         super().__init__()
         self.cbg = cbg
         self.id = id
         self.label = label
+        self.latitude = latitude
+        self.longitude = longitude
+        self.top_category = top_category
+        self.placekey = placekey
+        self.postal_code = postal_code
         
         # maximum amount of people that can be in this population (-1 = no limit)
         self.capacity = capacity

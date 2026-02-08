@@ -1,0 +1,20 @@
+{
+  "description": "Multi-month test: Place A active in month 1, Place B active in month 2",
+  "cbg": "000000000001",
+  "places": {
+    "place_a": {
+      "placekey": "aaa-111@test-month-one",
+      "name": "Place A",
+      "active_month": "2019-01"
+    },
+    "place_b": {
+      "placekey": "bbb-222@test-month-two",
+      "name": "Place B",
+      "active_month": "2019-02"
+    }
+  },
+  "files": {
+    "month1": "/Users/ryad/Code/delineo/Simulation/simulator/test_playground/MULTIMONTH/2019-01-MULTIMONTH.csv",
+    "month2": "/Users/ryad/Code/delineo/Simulation/simulator/test_playground/MULTIMONTH/2019-02-MULTIMONTH.csv"
+  }
+}

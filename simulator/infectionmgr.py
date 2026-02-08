@@ -12,10 +12,18 @@ class InfectionManager:
         self.multidisease = INFECTION_MODEL["allow_multidisease"]
         self.infected = []
         
+        # Include anyone who has ANY non-susceptible state (INFECTED, INFECTIOUS, etc.)
+        # This ensures people who are still infectious after state restore are included
         for p in people:
             for v in p.states.values():
-                if InfectionState.INFECTED in v:
+                # Check for any non-zero state (SUSCEPTIBLE = 0)
+                if isinstance(v, InfectionState):
+                    if v.value != 0:  # Has some infection-related state
+                        self.infected.append(p)
+                        break
+                elif int(v) != 0:
                     self.infected.append(p)
+                    break
     
     # def run_model(self, num_timesteps=4, file=None, curtime=0, deltaInfected=[], omicronInfected=[]):
     #     if file != None:
@@ -154,8 +162,20 @@ class InfectionManager:
                     variantInfected[disease][i.id] = int(i.states[disease].value)
 
         # Update the state of each person based on the current time
+        # Debug: log a sample person's timeline before update_state
+        if curtime % 1000 == 0 and len(self.infected) > 0:
+            sample = self.infected[0]
+            print(f"[UPDATE-DEBUG] curtime={curtime}, sample person {sample.id}")
+            print(f"[UPDATE-DEBUG]   states BEFORE update_state: {sample.states}")
+            print(f"[UPDATE-DEBUG]   timeline: {[(d, [(s, t.start, t.end) for s, t in tl.items()]) for d, tl in sample.timeline.items()]}")
+        
         for i in self.infected:
             i.update_state(curtime, self.matrices_dict.keys())
+        
+        # Debug: log sample person after update_state
+        if curtime % 1000 == 0 and len(self.infected) > 0:
+            sample = self.infected[0]
+            print(f"[UPDATE-DEBUG]   states AFTER update_state: {sample.states}")
 
         # Evaluate the possibility of new infections
         for i in self.infected:
@@ -184,11 +204,11 @@ class InfectionManager:
                     
                     # Use base transmission probability without pre-applying mask effects
                     # Let CAT handle mask effects internally
-                    base_transmission_prob = 7e3
+                    base_transmission_prob = INFECTION_MODEL["transmission_rate"]
                     
                     # Call CAT with all required parameters
                     if CAT(p, True, num_timesteps, base_transmission_prob, infector_masked, susceptible_masked):
-                        print("New infection detected, infector_masked: {infector_masked}, susceptible_masked: {susceptible_masked}")
+                        # print("New infection detected, infector_masked: {infector_masked}, susceptible_masked: {susceptible_masked}")
                         new_infections.append(disease)
                         
                         # Track newly infected individuals
@@ -225,8 +245,12 @@ class InfectionManager:
         # Set up API connection
         BASE_URL = DMP_API["base_url"]
         
+        # Map disease variant to disease name for DMP API v2
+        disease_name = "COVID-19" if disease in ["Delta", "Omicron"] else disease
+        
         # Prepare the demographic payload for the API
         simulation_payload = {
+            "disease_name": disease_name,
             "demographics": {
                 "Age": str(person.age),
                 "Vaccination Status": "Vaccinated" if person.interventions["vaccine"] != VaccinationState.NONE else "Unvaccinated",
@@ -257,25 +281,32 @@ class InfectionManager:
             for status, time in timeline_data["timeline"]:
                 if status in str_to_state:
                     state = str_to_state[status]
-                    # Convert time from API units to simulation units
-                    adjusted_time = time / DMP_API["time_conversion_factor"]
+                    # Convert time from API units (hours) to simulation units (minutes)
+                    adjusted_time = time * DMP_API["time_conversion_factor"]
                     
                     if state in val[disease]:
                         # Update existing timeline entry
                         current_start = val[disease][state].start
                         val[disease][state] = InfectionTimeline(
                             min(current_start, curtime + adjusted_time), 
-                            curtime + max_time/DMP_API["time_conversion_factor"]
+                            curtime + max_time * DMP_API["time_conversion_factor"]
                         )
                     else:
                         # Create new timeline entry
                         val[disease][state] = InfectionTimeline(
                             curtime + adjusted_time, 
-                            curtime + max_time/DMP_API["time_conversion_factor"]
+                            curtime + max_time * DMP_API["time_conversion_factor"]
                         )
             
             # Set the person's timeline
             person.timeline = val
+            
+            # Ensure RECOVERED is in the timeline (in case DMP API didn't include it)
+            if disease in val and InfectionState.RECOVERED not in val[disease]:
+                # Add RECOVERED starting at max_time
+                max_adjusted = curtime + max_time * DMP_API["time_conversion_factor"]
+                recovery_duration = INFECTION_MODEL["fallback_timeline"]["recovery_duration"]
+                val[disease][InfectionState.RECOVERED] = InfectionTimeline(max_adjusted, max_adjusted + recovery_duration)
             
             # Set the person's initial state for this disease
             person.states[disease] = InfectionState.INFECTED
@@ -285,12 +316,15 @@ class InfectionManager:
             # Fallback to a simple timeline if API fails
             fallback_timeline = INFECTION_MODEL["fallback_timeline"]
             person.states[disease] = InfectionState.INFECTED
+            # RECOVERED should start when INFECTED ends and last indefinitely (or a long time)
+            # The recovery_duration is how long the recovery state persists
+            recovery_end = curtime + fallback_timeline["infected_duration"] + fallback_timeline["recovery_duration"]
             person.timeline = {
                 disease: {
                     InfectionState.INFECTED: InfectionTimeline(curtime, curtime + fallback_timeline["infected_duration"]),
                     InfectionState.INFECTIOUS: InfectionTimeline(curtime + fallback_timeline["infectious_delay"], 
                                                                curtime + fallback_timeline["infected_duration"]),
                     InfectionState.RECOVERED: InfectionTimeline(curtime + fallback_timeline["infected_duration"], 
-                                                              curtime + fallback_timeline["recovery_duration"])
+                                                              recovery_end)
                 }
             }

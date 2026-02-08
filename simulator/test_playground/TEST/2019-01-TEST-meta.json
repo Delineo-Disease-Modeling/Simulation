@@ -1,0 +1,45 @@
+{
+  "scenario_name": "neighborhood",
+  "num_places": 6,
+  "cbg": "000000000001",
+  "date_range_start": "2019-01-01T00:00:00-05:00",
+  "date_range_end": "2019-02-01T00:00:00-05:00",
+  "places": [
+    {
+      "placekey": "9b0-r7o@7f9-ogm-wbn",
+      "name": "Corner Store",
+      "type": "Grocery Store",
+      "cbg": "000000000001"
+    },
+    {
+      "placekey": "w6q-z7s@004-bg9-0j0",
+      "name": "Local Pharmacy",
+      "type": "Pharmacy",
+      "cbg": "000000000001"
+    },
+    {
+      "placekey": "6eu-r8n@qun-650-c9t",
+      "name": "Morning Cafe",
+      "type": "Coffee Shop",
+      "cbg": "000000000001"
+    },
+    {
+      "placekey": "7g8-iq6@msf-89g-ers",
+      "name": "Fitness Plus",
+      "type": "Fitness Center",
+      "cbg": "000000000002"
+    },
+    {
+      "placekey": "qk6-rd0@chc-w4w-i45",
+      "name": "Family Restaurant",
+      "type": "Restaurant",
+      "cbg": "000000000002"
+    },
+    {
+      "placekey": "rwo-7a9@z22-h3x-f5p",
+      "name": "Community Bank",
+      "type": "Bank",
+      "cbg": "000000000002"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "scenario_name": "office",
+  "num_people": 6,
+  "num_homes": 3,
+  "num_places": 2,
+  "num_movements": 12,
+  "initial_infected": [
+    "0"
+  ]
+}

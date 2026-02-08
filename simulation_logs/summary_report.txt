@@ -1,8 +1,10 @@
 === Simulation Summary Report ===
 
-Total people: 2
-Total infections: 2
-Total movements: 4224
-
-Intervention Events:
-  vaccine: 2928 events
+Total unique people tracked: 5973
+Total infections logged: 5973
+Total movements logged: 2150280
+Total person state logs: 2156253
+Total location state logs: 568662
+Total contact logs: 103373
+Total intervention logs: 0
+Infection chains tracked: 5972

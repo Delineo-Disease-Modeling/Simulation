@@ -83,6 +83,8 @@ def run_simulation_endpoint():
     initialize_dmp_api()
     length = request.json.get('length', SIMULATION["default_max_length"])
     location = request.json.get('location', SIMULATION["default_location"])
+    initial_infected_count = request.json.get('initial_infected_count', None)
+    initial_infected_ids = request.json.get('initial_infected_ids', None)
 
     interventions = {
         key: request.json.get(key, SIMULATION["default_interventions"][key])
@@ -90,7 +92,13 @@ def run_simulation_endpoint():
     }
 
     try:
-        return simulate.run_simulator(location, length, interventions)
+        return simulate.run_simulator(
+            location,
+            length,
+            interventions,
+            initial_infected_count=initial_infected_count,
+            initial_infected_ids=initial_infected_ids,
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
