@@ -72,7 +72,7 @@ SIMULATION = {
 }
 
 DELINEO = {
-    "DB_URL": "http://127.0.0.1:1890/"
+    "DB_URL": "http://localhost:3000/api/"
 }
 
 # Server configuration

@@ -16,7 +16,7 @@ app = Flask(__name__)
 
 # Enable CORS
 CORS(app,
-  origins=['http://localhost:5173', 'https://coviddev.isi.jhu.edu', 'http://coviddev.isi.jhu.edu', 'https://covidweb.isi.jhu.edu', 'http://covidweb.isi.jhu.edu'],
+  origins=['http://localhost:3000', 'http://localhost:5173', 'https://coviddev.isi.jhu.edu', 'http://coviddev.isi.jhu.edu', 'https://covidweb.isi.jhu.edu', 'http://covidweb.isi.jhu.edu', 'https://covidmod.isi.jhu.edu', 'http://covidweb.isi.jhu.edu'],
   methods=['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
   allow_headers=['Content-Type', 'Authorization'],
   expose_headers=['Set-Cookie'],
