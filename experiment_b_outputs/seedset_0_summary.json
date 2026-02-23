@@ -1,0 +1,46 @@
+{
+  "name": "seedset_0",
+  "seed_ids": [
+    "2619",
+    "456",
+    "102",
+    "3037",
+    "1126",
+    "1003",
+    "914",
+    "571",
+    "3016",
+    "419",
+    "2771",
+    "3033"
+  ],
+  "total_infections": 208,
+  "unique_infected": 208,
+  "top_5_locations": [
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 14,
+      "infections": 27
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 13,
+      "infections": 24
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 2,
+      "infections": 20
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 21,
+      "infections": 15
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 10,
+      "infections": 14
+    }
+  ]
+}

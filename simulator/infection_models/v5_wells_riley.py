@@ -160,7 +160,6 @@ def CAT(p, indoor, num_time_steps, transmission_prob, infector=None, infector_ma
     - Vaccination effects on transmission (infector)
     - Waning immunity over time
     """
-    random.seed(0)
     if transmission_prob <= 0:
         return False
 

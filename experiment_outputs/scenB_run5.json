@@ -1,0 +1,75 @@
+{
+  "log_dir": "scenB_run5_logs",
+  "unique_infected": 32,
+  "trajectory_tagged": 1.0,
+  "by_location": [
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 740,
+      "count": 4
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 1121,
+      "count": 4
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 1160,
+      "count": 4
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 1385,
+      "count": 4
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 728,
+      "count": 3
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 277,
+      "count": 2
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 284,
+      "count": 2
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 890,
+      "count": 2
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 1126,
+      "count": 2
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 1140,
+      "count": 2
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 1355,
+      "count": 2
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 351,
+      "count": 1
+    }
+  ],
+  "by_timestep": [
+    {
+      "timestep": 0,
+      "count": 32
+    }
+  ],
+  "run": 5,
+  "seed_ids": "1505,588,2767,746,1862,2342,2358,2446,1533,572,2849,2393"
+}

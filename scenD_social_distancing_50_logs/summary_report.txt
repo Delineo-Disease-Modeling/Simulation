@@ -1,0 +1,8 @@
+=== Simulation Summary Report ===
+
+Total people: 3478
+Total infections: 189
+Total movements: 5000
+
+Intervention Events:
+  capacity_limit: 3000 events

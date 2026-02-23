@@ -1,0 +1,136 @@
+{
+  "log_dir": "scenD_no_intervention_logs",
+  "unique_infected": 189,
+  "trajectory_tagged": 1.0,
+  "by_location": [
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 13,
+      "count": 26
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 14,
+      "count": 23
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 10,
+      "count": 22
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 2,
+      "count": 18
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 25,
+      "count": 8
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 20,
+      "count": 8
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 16,
+      "count": 7
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 37,
+      "count": 6
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 22,
+      "count": 5
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 4,
+      "count": 4
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 6,
+      "count": 4
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 10,
+      "count": 4
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 28,
+      "count": 3
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 21,
+      "count": 3
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 16,
+      "count": 3
+    }
+  ],
+  "by_timestep": [
+    {
+      "timestep": 0,
+      "count": 28
+    },
+    {
+      "timestep": 60,
+      "count": 46
+    },
+    {
+      "timestep": 120,
+      "count": 43
+    },
+    {
+      "timestep": 180,
+      "count": 23
+    },
+    {
+      "timestep": 240,
+      "count": 20
+    },
+    {
+      "timestep": 300,
+      "count": 8
+    },
+    {
+      "timestep": 360,
+      "count": 10
+    },
+    {
+      "timestep": 420,
+      "count": 3
+    },
+    {
+      "timestep": 480,
+      "count": 2
+    },
+    {
+      "timestep": 540,
+      "count": 1
+    },
+    {
+      "timestep": 660,
+      "count": 2
+    },
+    {
+      "timestep": 720,
+      "count": 1
+    },
+    {
+      "timestep": 780,
+      "count": 2
+    }
+  ]
+}

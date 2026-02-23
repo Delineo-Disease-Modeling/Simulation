@@ -1,0 +1,9 @@
+=== Simulation Summary Report ===
+
+Total people: 3478
+Total infections: 189
+Total movements: 5000
+
+Intervention Events:
+  mask: 1490 events
+  vaccine: 1510 events

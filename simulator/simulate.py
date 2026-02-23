@@ -135,7 +135,10 @@ class SimulationLogger:
             
         # Use cached values where possible
         person_id = person.id
-        if person_id in self.person_states and timestep - self.person_states[person_id].get('last_logged', 0) < 5:
+        last_logged = None
+        if person_id in self.person_states:
+            last_logged = self.person_states[person_id].get('last_logged')
+        if last_logged is not None and (timestep - last_logged) < 5:
             return  # Skip if recently logged
             
         vax_status = person.vaccination_state if person.vaccination_state else "Unvaccinated"        
@@ -572,47 +575,70 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     if interventions:
         default_interventions.update(interventions)
     interventions = default_interventions
+
+    # Optional seeding controls (not part of intervention weights)
+    seed_ids = interventions.pop('seed_ids', None)
+    seed_count = interventions.pop('seed_count', None)
+    seed_variants = interventions.pop('seed_variants', None)
     
     # Set random seed if user specifies
     if not interventions['randseed']:
         random.seed(0)
     
     # Load people and places using the new streaming method
-    data_stream = StreamDataLoader.stream_data("https://covidweb.isi.jhu.edu/api/db/patterns/1?stream=true")
-    
-    # Extract initial data from the stream
+    # NOTE: For Barnsdall runs, use the local integration bundle so that IDs in
+    # papdata.json match the IDs referenced in patterns.json.
     people_data = {}
     homes_data = {}
     places_data = {}
     patterns = {}
-    with open('simulator/barnsdall/patterns.json', 'r') as file:
-        patterns = json.load(file)
-        print(f"Loaded {len(patterns)} patterns from pattern_simple.json")
-    print("=== LOADING DATA FROM STREAM ===")
-    chunk_count = 0
-    for data in data_stream:
-        chunk_count += 1
-        print(f"Chunk {chunk_count} - Keys: {list(data.keys())}")
-        
-        # Merge data from each chunk
-        if "people" in data:
-            people_data.update(data["people"])
-            print(f"  People: {len(data['people'])} items")
-        if "homes" in data:
-            homes_data.update(data["homes"])
-            print(f"  Homes: {len(data['homes'])} items")
-        if "places" in data:
-            places_data.update(data["places"])
-            print(f"  Places: {len(data['places'])} items")
-        if "patterns" in data:
-            patterns.update(data["patterns"])
-            print(f"  Patterns: {len(data['patterns'])} items")
-    
-    print(f"=== FINAL DATA LOADED ===")
-    print(f"Total people: {len(people_data)}")
-    print(f"Total homes: {len(homes_data)}")
-    print(f"Total places: {len(places_data)}")
-    print(f"Total patterns: {len(patterns)}")
+
+    papdata_path = os.path.join(curdir, location, 'papdata.json')
+    patterns_path = os.path.join(curdir, location, 'patterns.json')
+
+    if os.path.exists(papdata_path) and os.path.exists(patterns_path):
+        with open(papdata_path, 'r') as f:
+            pap = json.load(f)
+        people_data = pap.get('people', {}) or {}
+        homes_data = pap.get('homes', {}) or {}
+        places_data = pap.get('places', {}) or {}
+        print(f"Loaded local papdata from {papdata_path}: people={len(people_data)} homes={len(homes_data)} places={len(places_data)}")
+
+        with open(patterns_path, 'r') as f:
+            patterns = json.load(f)
+        print(f"Loaded {len(patterns)} patterns from {patterns_path}")
+    else:
+        # Fallback to remote streaming loader
+        data_stream = StreamDataLoader.stream_data("https://covidweb.isi.jhu.edu/api/db/patterns/1?stream=true")
+        with open(os.path.join(curdir, 'barnsdall', 'patterns.json'), 'r') as file:
+            patterns = json.load(file)
+            print(f"Loaded {len(patterns)} patterns from pattern_simple.json")
+
+        print("=== LOADING DATA FROM STREAM ===")
+        chunk_count = 0
+        for data in data_stream:
+            chunk_count += 1
+            print(f"Chunk {chunk_count} - Keys: {list(data.keys())}")
+
+            # Merge data from each chunk
+            if "people" in data:
+                people_data.update(data["people"])
+                print(f"  People: {len(data['people'])} items")
+            if "homes" in data:
+                homes_data.update(data["homes"])
+                print(f"  Homes: {len(data['homes'])} items")
+            if "places" in data:
+                places_data.update(data["places"])
+                print(f"  Places: {len(data['places'])} items")
+            if "patterns" in data:
+                patterns.update(data["patterns"])
+                print(f"  Patterns: {len(data['patterns'])} items")
+
+        print(f"=== FINAL DATA LOADED ===")
+        print(f"Total people: {len(people_data)}")
+        print(f"Total homes: {len(homes_data)}")
+        print(f"Total places: {len(places_data)}")
+        print(f"Total patterns: {len(patterns)}")
     
     # Debug patterns structure
     if patterns:
@@ -690,20 +716,46 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
     print(f"Added {len(simulator.facilities)} facilities")
 
     # Get default infected IDs and variants from config
-    default_infected = SIMULATION["default_infected_ids"]
-    variants = SIMULATION["variants"]
+    default_infected = list(SIMULATION["default_infected_ids"])
+    variants = list(SIMULATION["variants"])
     
     print(f"=== INFECTION SETUP ===")
     print(f"Default infected IDs: {default_infected}")
     print(f"Variants: {variants}")
-    
-    # Ensure no more variants than infected individuals
-    if len(variants) > len(default_infected):
-        raise ValueError("Not enough infected IDs to assign each variant uniquely")
 
-    # Randomly match infected IDs with variants
-    random.shuffle(default_infected)
-    variant_assignments = {id: variant for id, variant in zip(default_infected, variants)}
+    # Determine seeded infectious people
+    if seed_ids is not None:
+        if isinstance(seed_ids, str):
+            seed_ids = [s.strip() for s in seed_ids.split(',') if s.strip()]
+        seeded_ids = [str(x) for x in seed_ids]
+    else:
+        if seed_count is None:
+            seed_count = len(default_infected)
+        try:
+            seed_count = int(seed_count)
+        except Exception:
+            seed_count = len(default_infected)
+        random.shuffle(default_infected)
+        seeded_ids = [str(x) for x in default_infected[:max(0, seed_count)]]
+
+    # Assign a variant to each seeded ID (repeat variants as needed)
+    if seed_variants is not None:
+        if isinstance(seed_variants, str):
+            seed_variants = [s.strip() for s in seed_variants.split(',') if s.strip()]
+        assigned_variants = list(seed_variants)
+        if not assigned_variants:
+            assigned_variants = variants
+    else:
+        assigned_variants = variants
+
+    if not assigned_variants:
+        raise ValueError("No variants configured for simulation seeding")
+
+    variant_assignments = {
+        str(pid): assigned_variants[idx % len(assigned_variants)]
+        for idx, pid in enumerate(seeded_ids)
+    }
+    print(f"Seeded infectious IDs ({len(seeded_ids)}): {seeded_ids}")
     print(f"Variant assignments: {variant_assignments}")
 
     # Cache intervention probabilities for faster access
@@ -879,7 +931,7 @@ def run_simulator(location=None, max_length=None, interventions=None, save_file=
             
             # Process any pending timeline requests at the end of each timestep
             if hasattr(infectionmgr, '_pending_timeline_requests') and infectionmgr._pending_timeline_requests:
-                infectionmgr._process_timeline_batch()
+                infectionmgr._process_timeline_batch_concurrent()
 
             # Optimized infection logging
             if simulator.enable_logging and simulator.logger and pre_infection_states: 

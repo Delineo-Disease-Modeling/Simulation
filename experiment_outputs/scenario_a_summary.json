@@ -1,0 +1,571 @@
+{
+  "description": "Same 12 seed IDs, randseed=True for 5 independent runs",
+  "seed_ids": "160,43,47,4,36,9,14,19,27,22,3,5",
+  "runs": [
+    {
+      "label": "scenA_run1",
+      "unique_infected": 189,
+      "by_location": [
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 13,
+          "count": 26
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 14,
+          "count": 23
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 10,
+          "count": 22
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 2,
+          "count": 18
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 25,
+          "count": 8
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 20,
+          "count": 8
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 16,
+          "count": 7
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 37,
+          "count": 6
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 22,
+          "count": 5
+        },
+        {
+          "infection_location_type": "household",
+          "infection_location_id": 4,
+          "count": 4
+        }
+      ],
+      "by_timestep": [
+        {
+          "timestep": 0,
+          "count": 28
+        },
+        {
+          "timestep": 60,
+          "count": 46
+        },
+        {
+          "timestep": 120,
+          "count": 43
+        },
+        {
+          "timestep": 180,
+          "count": 23
+        },
+        {
+          "timestep": 240,
+          "count": 20
+        },
+        {
+          "timestep": 300,
+          "count": 8
+        },
+        {
+          "timestep": 360,
+          "count": 10
+        },
+        {
+          "timestep": 420,
+          "count": 3
+        },
+        {
+          "timestep": 480,
+          "count": 2
+        },
+        {
+          "timestep": 540,
+          "count": 1
+        },
+        {
+          "timestep": 660,
+          "count": 2
+        },
+        {
+          "timestep": 720,
+          "count": 1
+        },
+        {
+          "timestep": 780,
+          "count": 2
+        }
+      ],
+      "trajectory_tagged": 1.0
+    },
+    {
+      "label": "scenA_run2",
+      "unique_infected": 189,
+      "by_location": [
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 13,
+          "count": 26
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 14,
+          "count": 23
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 10,
+          "count": 22
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 2,
+          "count": 18
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 25,
+          "count": 8
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 20,
+          "count": 8
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 16,
+          "count": 7
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 37,
+          "count": 6
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 22,
+          "count": 5
+        },
+        {
+          "infection_location_type": "household",
+          "infection_location_id": 4,
+          "count": 4
+        }
+      ],
+      "by_timestep": [
+        {
+          "timestep": 0,
+          "count": 28
+        },
+        {
+          "timestep": 60,
+          "count": 46
+        },
+        {
+          "timestep": 120,
+          "count": 43
+        },
+        {
+          "timestep": 180,
+          "count": 23
+        },
+        {
+          "timestep": 240,
+          "count": 20
+        },
+        {
+          "timestep": 300,
+          "count": 8
+        },
+        {
+          "timestep": 360,
+          "count": 10
+        },
+        {
+          "timestep": 420,
+          "count": 3
+        },
+        {
+          "timestep": 480,
+          "count": 2
+        },
+        {
+          "timestep": 540,
+          "count": 1
+        },
+        {
+          "timestep": 660,
+          "count": 2
+        },
+        {
+          "timestep": 720,
+          "count": 1
+        },
+        {
+          "timestep": 780,
+          "count": 2
+        }
+      ],
+      "trajectory_tagged": 1.0
+    },
+    {
+      "label": "scenA_run3",
+      "unique_infected": 189,
+      "by_location": [
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 13,
+          "count": 26
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 14,
+          "count": 23
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 10,
+          "count": 22
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 2,
+          "count": 18
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 25,
+          "count": 8
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 20,
+          "count": 8
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 16,
+          "count": 7
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 37,
+          "count": 6
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 22,
+          "count": 5
+        },
+        {
+          "infection_location_type": "household",
+          "infection_location_id": 4,
+          "count": 4
+        }
+      ],
+      "by_timestep": [
+        {
+          "timestep": 0,
+          "count": 28
+        },
+        {
+          "timestep": 60,
+          "count": 46
+        },
+        {
+          "timestep": 120,
+          "count": 43
+        },
+        {
+          "timestep": 180,
+          "count": 23
+        },
+        {
+          "timestep": 240,
+          "count": 20
+        },
+        {
+          "timestep": 300,
+          "count": 8
+        },
+        {
+          "timestep": 360,
+          "count": 10
+        },
+        {
+          "timestep": 420,
+          "count": 3
+        },
+        {
+          "timestep": 480,
+          "count": 2
+        },
+        {
+          "timestep": 540,
+          "count": 1
+        },
+        {
+          "timestep": 660,
+          "count": 2
+        },
+        {
+          "timestep": 720,
+          "count": 1
+        },
+        {
+          "timestep": 780,
+          "count": 2
+        }
+      ],
+      "trajectory_tagged": 1.0
+    },
+    {
+      "label": "scenA_run4",
+      "unique_infected": 189,
+      "by_location": [
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 13,
+          "count": 26
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 14,
+          "count": 23
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 10,
+          "count": 22
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 2,
+          "count": 18
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 25,
+          "count": 8
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 20,
+          "count": 8
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 16,
+          "count": 7
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 37,
+          "count": 6
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 22,
+          "count": 5
+        },
+        {
+          "infection_location_type": "household",
+          "infection_location_id": 4,
+          "count": 4
+        }
+      ],
+      "by_timestep": [
+        {
+          "timestep": 0,
+          "count": 28
+        },
+        {
+          "timestep": 60,
+          "count": 46
+        },
+        {
+          "timestep": 120,
+          "count": 43
+        },
+        {
+          "timestep": 180,
+          "count": 23
+        },
+        {
+          "timestep": 240,
+          "count": 20
+        },
+        {
+          "timestep": 300,
+          "count": 8
+        },
+        {
+          "timestep": 360,
+          "count": 10
+        },
+        {
+          "timestep": 420,
+          "count": 3
+        },
+        {
+          "timestep": 480,
+          "count": 2
+        },
+        {
+          "timestep": 540,
+          "count": 1
+        },
+        {
+          "timestep": 660,
+          "count": 2
+        },
+        {
+          "timestep": 720,
+          "count": 1
+        },
+        {
+          "timestep": 780,
+          "count": 2
+        }
+      ],
+      "trajectory_tagged": 1.0
+    },
+    {
+      "label": "scenA_run5",
+      "unique_infected": 189,
+      "by_location": [
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 13,
+          "count": 26
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 14,
+          "count": 23
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 10,
+          "count": 22
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 2,
+          "count": 18
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 25,
+          "count": 8
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 20,
+          "count": 8
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 16,
+          "count": 7
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 37,
+          "count": 6
+        },
+        {
+          "infection_location_type": "facility",
+          "infection_location_id": 22,
+          "count": 5
+        },
+        {
+          "infection_location_type": "household",
+          "infection_location_id": 4,
+          "count": 4
+        }
+      ],
+      "by_timestep": [
+        {
+          "timestep": 0,
+          "count": 28
+        },
+        {
+          "timestep": 60,
+          "count": 46
+        },
+        {
+          "timestep": 120,
+          "count": 43
+        },
+        {
+          "timestep": 180,
+          "count": 23
+        },
+        {
+          "timestep": 240,
+          "count": 20
+        },
+        {
+          "timestep": 300,
+          "count": 8
+        },
+        {
+          "timestep": 360,
+          "count": 10
+        },
+        {
+          "timestep": 420,
+          "count": 3
+        },
+        {
+          "timestep": 480,
+          "count": 2
+        },
+        {
+          "timestep": 540,
+          "count": 1
+        },
+        {
+          "timestep": 660,
+          "count": 2
+        },
+        {
+          "timestep": 720,
+          "count": 1
+        },
+        {
+          "timestep": 780,
+          "count": 2
+        }
+      ],
+      "trajectory_tagged": 1.0
+    }
+  ],
+  "infections_per_run": [
+    189,
+    189,
+    189,
+    189,
+    189
+  ],
+  "mean": 189.0,
+  "min": 189,
+  "max": 189
+}

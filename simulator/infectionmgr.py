@@ -115,7 +115,15 @@ class InfectionManager:
                     susceptible_masked = p.is_masked()
                     
                     # Call CAT with optimized parameters
-                    if CAT(p, True, num_timesteps, 7e3, infector_masked, susceptible_masked):
+                    if CAT(
+                        p,
+                        True,
+                        num_timesteps,
+                        INFECTION_MODEL["transmission_rate"],
+                        infector=i,
+                        infector_masked=infector_masked,
+                        susceptible_masked=susceptible_masked,
+                    ):
                         new_infections.append(disease)
                         
                         # Track newly infected individuals efficiently
@@ -169,8 +177,9 @@ class InfectionManager:
                     # Add to pending requests
                     self._pending_timeline_requests.extend([(p, d, c, cache_key) for p, d, c in group])
         
-        # Process pending requests if we have enough
-        if len(self._pending_timeline_requests) >= 5:  # Lower threshold for faster processing
+        # Process all pending requests immediately so every new infection
+        # gets its disease timeline applied in the same timestep it occurs.
+        if self._pending_timeline_requests:
             self._process_timeline_batch_concurrent()
     
     def create_timeline_cached(self, person, disease, curtime):

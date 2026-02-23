@@ -1,0 +1,11 @@
+rank,facility_id,facility_name,type,infections
+1,13,Barnsdall JHS,facility,26
+2,14,Main St Oil Well,facility,23
+3,10,Barnsdall ES,facility,22
+4,2,Andys Hamburgers,facility,18
+5,25,Lighthouse Church,facility,8
+6,20,Dollar General,facility,8
+7,16,Nursing Home,facility,7
+8,37,Uptown Pizza,facility,6
+9,22,Garretts Country Store,facility,5
+10,4,Household 4,household,4

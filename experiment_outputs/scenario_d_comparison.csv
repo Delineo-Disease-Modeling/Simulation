@@ -1,0 +1,9 @@
+intervention,label,unique_infected,reduction_pct
+no_intervention,No Intervention,189,0.0
+masking_50pct,Masking 50%,189,0.0
+masking_80pct,Masking 80%,189,0.0
+vaccine_50pct,Vaccine 50%,189,0.0
+vaccine_80pct,Vaccine 80%,189,0.0
+social_distancing_50,Social Distancing 50%,189,0.0
+combined_mask_vaccine,Mask+Vaccine 50%,189,0.0
+selfiso_50pct,Self-Isolation 50%,189,0.0

@@ -1,0 +1,158 @@
+{
+  "log_dir": "scenB_run3_logs",
+  "unique_infected": 222,
+  "trajectory_tagged": 1.0,
+  "by_location": [
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 13,
+      "count": 32
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 10,
+      "count": 30
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 2,
+      "count": 21
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 14,
+      "count": 19
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 16,
+      "count": 14
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 4,
+      "count": 13
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 30,
+      "count": 9
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 11,
+      "count": 6
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 1498,
+      "count": 6
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 21,
+      "count": 6
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 312,
+      "count": 6
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 12,
+      "count": 5
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 1495,
+      "count": 4
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 1663,
+      "count": 4
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 25,
+      "count": 4
+    }
+  ],
+  "by_timestep": [
+    {
+      "timestep": 0,
+      "count": 36
+    },
+    {
+      "timestep": 60,
+      "count": 3
+    },
+    {
+      "timestep": 120,
+      "count": 6
+    },
+    {
+      "timestep": 180,
+      "count": 17
+    },
+    {
+      "timestep": 240,
+      "count": 7
+    },
+    {
+      "timestep": 300,
+      "count": 43
+    },
+    {
+      "timestep": 360,
+      "count": 13
+    },
+    {
+      "timestep": 420,
+      "count": 50
+    },
+    {
+      "timestep": 480,
+      "count": 16
+    },
+    {
+      "timestep": 540,
+      "count": 9
+    },
+    {
+      "timestep": 600,
+      "count": 5
+    },
+    {
+      "timestep": 660,
+      "count": 9
+    },
+    {
+      "timestep": 720,
+      "count": 2
+    },
+    {
+      "timestep": 780,
+      "count": 2
+    },
+    {
+      "timestep": 900,
+      "count": 1
+    },
+    {
+      "timestep": 960,
+      "count": 1
+    },
+    {
+      "timestep": 1440,
+      "count": 1
+    },
+    {
+      "timestep": 1560,
+      "count": 1
+    }
+  ],
+  "run": 3,
+  "seed_ids": "2749,2644,1794,2442,3410,3052,666,3039,227,167,610,150"
+}

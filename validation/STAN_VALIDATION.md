@@ -2,7 +2,7 @@
 
 ## Overview
 
-This validation framework uses **Stan**, a probabilistic programming language, to provide rigorous Bayesian validation of the Delineo ABM simulator. It implements a three-phase approach that combines mechanistic disease modeling with uncertainty quantification.
+This validation framework uses **Stan**, a probabilistic programming language, to provide rigorous Bayesian validation of the Delineo  simulator. It implements a three-phase approach that combines mechanistic disease modeling with uncertainty quantification.
 
 ## Why Stan?
 

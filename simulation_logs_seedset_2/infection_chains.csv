@@ -1,0 +1,14 @@
+infected_person_id,infector_id,location_id,variant,timestep
+815,814,392,Omicron,0
+903,902,438,Omicron,0
+1719,1718,837,Delta,0
+1840,1839,881,Delta,0
+2231,2232,1079,Omicron,0
+2299,2298,1104,Delta,0
+2300,2298,1104,Delta,0
+2414,2413,1149,Omicron,0
+2662,2661,1295,Omicron,0
+2663,2661,1295,Omicron,0
+2873,2872,1395,Delta,0
+2933,2932,1421,Delta,0
+3314,3315,1626,Omicron,0

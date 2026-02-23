@@ -1,0 +1,14 @@
+{
+  "target_infections": 250,
+  "network_ceiling": 189,
+  "calibrated_rate": 7000,
+  "infectious_duration_min": 1440,
+  "explanation": "Only 177/3478 people are in the mobility network. Disease saturates this sub-network immediately. True 250-infection target requires the new Dewey data with 5000+ person convenience zone.",
+  "dmp_parameters": {
+    "transmission_rate": 7000,
+    "fallback_infected_duration_min": 1440,
+    "fallback_infectious_delay_min": 240,
+    "fallback_recovery_duration_min": 10080,
+    "initial_timeline_duration_min": 10800
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "target": 250,
+  "results": [
+    {
+      "rate": 6500,
+      "total_infections": 189
+    },
+    {
+      "rate": 6000,
+      "total_infections": 189
+    },
+    {
+      "rate": 5500,
+      "total_infections": 189
+    },
+    {
+      "rate": 5000,
+      "total_infections": 189
+    },
+    {
+      "rate": 4500,
+      "total_infections": 189
+    },
+    {
+      "rate": 4000,
+      "total_infections": 189
+    }
+  ],
+  "best": {
+    "rate": 6500,
+    "total_infections": 189
+  }
+}

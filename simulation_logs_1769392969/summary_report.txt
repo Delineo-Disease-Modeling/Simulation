@@ -1,0 +1,5 @@
+=== Simulation Summary Report ===
+
+Total people: 0
+Total infections: 0
+Total movements: 0

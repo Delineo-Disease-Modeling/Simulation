@@ -1,0 +1,46 @@
+{
+  "name": "seedset_2",
+  "seed_ids": [
+    "2298",
+    "814",
+    "2932",
+    "2661",
+    "2872",
+    "2232",
+    "1718",
+    "902",
+    "1839",
+    "2413",
+    "1139",
+    "3315"
+  ],
+  "total_infections": 25,
+  "unique_infected": 25,
+  "top_5_locations": [
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 1104,
+      "infections": 3
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 1295,
+      "infections": 3
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 392,
+      "infections": 2
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 438,
+      "infections": 2
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 837,
+      "infections": 2
+    }
+  ]
+}

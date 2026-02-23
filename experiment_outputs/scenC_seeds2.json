@@ -1,0 +1,152 @@
+{
+  "log_dir": "scenC_seeds2_logs",
+  "unique_infected": 189,
+  "trajectory_tagged": 1.0,
+  "by_location": [
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 13,
+      "count": 32
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 2,
+      "count": 24
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 10,
+      "count": 21
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 14,
+      "count": 21
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 12,
+      "count": 14
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 21,
+      "count": 8
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 4,
+      "count": 7
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 11,
+      "count": 5
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 37,
+      "count": 5
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 30,
+      "count": 4
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 3,
+      "count": 4
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 25,
+      "count": 4
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 33,
+      "count": 3
+    },
+    {
+      "infection_location_type": "household",
+      "infection_location_id": 16,
+      "count": 3
+    },
+    {
+      "infection_location_type": "facility",
+      "infection_location_id": 18,
+      "count": 3
+    }
+  ],
+  "by_timestep": [
+    {
+      "timestep": 0,
+      "count": 5
+    },
+    {
+      "timestep": 60,
+      "count": 6
+    },
+    {
+      "timestep": 120,
+      "count": 1
+    },
+    {
+      "timestep": 180,
+      "count": 17
+    },
+    {
+      "timestep": 240,
+      "count": 12
+    },
+    {
+      "timestep": 300,
+      "count": 58
+    },
+    {
+      "timestep": 360,
+      "count": 26
+    },
+    {
+      "timestep": 420,
+      "count": 27
+    },
+    {
+      "timestep": 480,
+      "count": 14
+    },
+    {
+      "timestep": 540,
+      "count": 10
+    },
+    {
+      "timestep": 600,
+      "count": 2
+    },
+    {
+      "timestep": 660,
+      "count": 3
+    },
+    {
+      "timestep": 720,
+      "count": 2
+    },
+    {
+      "timestep": 780,
+      "count": 2
+    },
+    {
+      "timestep": 900,
+      "count": 2
+    },
+    {
+      "timestep": 960,
+      "count": 1
+    },
+    {
+      "timestep": 1440,
+      "count": 1
+    }
+  ]
+}
