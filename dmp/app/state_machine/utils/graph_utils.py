@@ -16,7 +16,6 @@ behavior and reduce code duplication.
 
 import numpy as np
 import pandas as pd
-import streamlit as st
 
 def convert_graph_to_matrices(states, edges):
     """Convert graph representation to six matrices."""
@@ -66,6 +65,7 @@ def convert_graph_to_matrices(states, edges):
 
 def display_matrices(matrices, states):
     """Display the six matrices in a grid layout."""
+    import streamlit as st
     st.subheader("Matrix Representation")
     
     # Create a 2x3 grid for the matrices

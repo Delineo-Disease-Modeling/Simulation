@@ -14,22 +14,21 @@ app = Flask(__name__)
 # Enable CORS
 CORS(app)
 
-# Initialize DMP API when the server starts
+# Initialize DMP - now uses direct database access via DMPLocal (no HTTP server needed)
 def initialize_dmp_api():
-    BASE_URL = DMP_API["base_url"]
-    init_payload = {
-        "matrices_path": DMP_API["paths"]["matrices_path"],
-        "mapping_path": DMP_API["paths"]["mapping_path"],
-        "states_path": DMP_API["paths"]["states_path"]
-    }
-    
     try:
-        init_response = requests.post(f"{BASE_URL}/initialize", json=init_payload)
-        init_response.raise_for_status()
-        print("DMP API successfully initialized!")
+        import sys as _sys
+        import os as _os
+        _dmp_dir = _os.path.join(_os.path.dirname(__file__), 'dmp')
+        if _dmp_dir not in _sys.path:
+            _sys.path.insert(0, _dmp_dir)
+        from core.dmp_local import DMPLocal
+        dmp = DMPLocal()
+        diseases = dmp.get_available_diseases()
+        print(f"DMP initialized via direct database access. Available diseases: {diseases}")
         return True
-    except requests.exceptions.RequestException as e:
-        print(f"Failed to initialize DMP API: {e}")
+    except Exception as e:
+        print(f"Failed to initialize DMP: {e}")
         return False
 
 @app.route("/simulation/legacy", methods=['POST', 'GET'])
@@ -206,20 +205,70 @@ def run_multi_month_simulation():
     # Base data folder (relative to Simulation/)
     ALGORITHMS_DATA_FOLDER = os.path.join(os.path.dirname(__file__), '../Algorithms/server/data')
     
-    try:
-        request.get_json(force=True)
-    except BadRequest as e:
+    def _coerce_optional_int(value):
+        if value is None or isinstance(value, bool):
+            return None
+        try:
+            value_str = str(value).strip()
+            if not value_str:
+                return None
+            return int(value_str)
+        except (TypeError, ValueError):
+            return None
+
+    payload = request.get_json(silent=True)
+    if payload is None:
+        raw_body = request.get_data(as_text=True)[:500]
+        report = RunReport(
+            run_type="simulation",
+            name="Simulation: invalid JSON payload",
+            parameters={"raw_body": raw_body},
+        )
+        report.fail(SERVER["error_messages"]["bad_request"])
+        print("[SIMULATION] Bad request JSON on /simulation/")
         return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
 
-    if not request.json:
+    if not isinstance(payload, dict) or not payload:
+        report = RunReport(
+            run_type="simulation",
+            name="Simulation: empty request payload",
+            parameters={"payload_type": type(payload).__name__},
+        )
+        report.fail(SERVER["error_messages"]["no_data"])
+        print("[SIMULATION] No JSON payload provided on /simulation/")
         return jsonify({"error": SERVER["error_messages"]["no_data"]}), 400
 
+    print(f"[SIMULATION] Incoming request payload keys: {sorted(payload.keys())}")
+
     # Required parameters - accept either date format or month format
-    start_date_str = request.json.get('start_date')
-    end_date_str = request.json.get('end_date')
-    start_month = request.json.get('start_month')  # Legacy support
-    end_month = request.json.get('end_month')      # Legacy support
-    
+    start_date_str = payload.get('start_date')
+    end_date_str = payload.get('end_date')
+    start_month = payload.get('start_month')  # Legacy support
+    end_month = payload.get('end_month')      # Legacy support
+    state_filter = payload.get('state')
+
+    # Optional parameters
+    location = payload.get('location', SIMULATION["default_location"])
+    initial_infected_count = payload.get('initial_infected_count', 5)
+    czone_id_raw = payload.get('czone_id')
+    czone_id = _coerce_optional_int(czone_id_raw)
+
+    # Create a report before validation so failed requests still show up in logs.
+    report = RunReport(
+        run_type="simulation",
+        name=f"Simulation: {start_date_str or start_month or 'unknown'} to {end_date_str or end_month or 'unknown'}"
+        + (f" ({state_filter})" if state_filter else ""),
+        parameters={
+            'location': location,
+            'start_date': start_date_str or start_month,
+            'end_date': end_date_str or end_month,
+            'state': state_filter,
+            'initial_infected_count': initial_infected_count,
+            'czone_id_raw': czone_id_raw,
+        },
+        czone_id=czone_id,
+    )
+
     # Parse dates
     if start_date_str and end_date_str:
         try:
@@ -228,31 +277,43 @@ def run_multi_month_simulation():
             start_month = date_to_month_key(start_date)
             end_month = date_to_month_key(end_date)
         except ValueError as e:
+            error_msg = f"Invalid date format on /simulation/: start_date={start_date_str}, end_date={end_date_str}, error={e}"
+            report.fail(error_msg)
+            print(f"[SIMULATION] {error_msg}")
             return jsonify({"error": f"Invalid date format. Use YYYY-MM-DD: {e}"}), 400
     elif start_month and end_month:
-        # Legacy month-based format - use full month boundaries
-        start_year, start_m = parse_month_key(start_month)
-        end_year, end_m = parse_month_key(end_month)
-        start_date, _ = get_month_boundaries(start_year, start_m)
-        _, end_date = get_month_boundaries(end_year, end_m)
+        try:
+            # Legacy month-based format - use full month boundaries
+            start_year, start_m = parse_month_key(start_month)
+            end_year, end_m = parse_month_key(end_month)
+            start_date, _ = get_month_boundaries(start_year, start_m)
+            _, end_date = get_month_boundaries(end_year, end_m)
+        except ValueError as e:
+            error_msg = f"Invalid month format on /simulation/: start_month={start_month}, end_month={end_month}, error={e}"
+            report.fail(error_msg)
+            print(f"[SIMULATION] {error_msg}")
+            return jsonify({"error": f"Invalid month format. Use YYYY-MM: {e}"}), 400
     else:
+        error_msg = (
+            f"Missing required date params on /simulation/: start_date={start_date_str}, "
+            f"end_date={end_date_str}, start_month={start_month}, end_month={end_month}"
+        )
+        report.fail(error_msg)
+        print(f"[SIMULATION] {error_msg}")
         return jsonify({
             "error": "Missing required parameters: start_date and end_date (YYYY-MM-DD format)"
         }), 400
-    
+
     # State is required when using date-based simulation
-    state_filter = request.json.get('state')
     if not state_filter:
+        error_msg = "Missing required state parameter on /simulation/"
+        report.fail(error_msg)
+        print(f"[SIMULATION] {error_msg}")
         return jsonify({"error": "Missing required parameter: state (e.g., 'OK')"}), 400
-    
-    # Optional parameters
-    location = request.json.get('location', SIMULATION["default_location"])
-    initial_infected_count = request.json.get('initial_infected_count', 5)
-    czone_id = request.json.get('czone_id')
     
     # Determine patterns_folder with smart defaults
     # Priority: explicit patterns_folder > data/{state}/ > data/
-    patterns_folder = request.json.get('patterns_folder')
+    patterns_folder = payload.get('patterns_folder')
     if not patterns_folder:
         if state_filter:
             # Try state-based subfolder first (e.g., data/OK/)
@@ -269,28 +330,12 @@ def run_multi_month_simulation():
     default_state_folder = './simulation_states'
     if state_filter:
         default_state_folder = f'./simulation_states/{state_filter}'
-    state_save_folder = request.json.get('state_save_folder', default_state_folder)
+    state_save_folder = payload.get('state_save_folder', default_state_folder)
     
     # Build interventions
     interventions = {}
     for key in SIMULATION["default_interventions"]:
-        interventions[key] = request.json.get(key, SIMULATION["default_interventions"][key])
-    
-    # Create report
-    report = RunReport(
-        run_type="simulation",
-        name=f"Simulation: {start_date_str or start_month} to {end_date_str or end_month}" + (f" ({state_filter})" if state_filter else ""),
-        parameters={
-            'location': location,
-            'patterns_folder': patterns_folder,
-            'start_date': start_date_str or start_month,
-            'end_date': end_date_str or end_month,
-            'state': state_filter,
-            'interventions': interventions,
-            'initial_infected_count': initial_infected_count,
-        },
-        czone_id=czone_id,
-    )
+        interventions[key] = payload.get(key, SIMULATION["default_interventions"][key])
     
     try:
         # Initialize patterns manager

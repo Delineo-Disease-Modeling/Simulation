@@ -1,4 +1,3 @@
-import streamlit as st
 import json
 import os
 import pandas as pd
@@ -456,6 +455,7 @@ def get_available_diseases():
 
 def display_disease_configurations():
     """Display disease configurations interface"""
+    import streamlit as st
     st.header("Disease Configurations")
     st.write("View disease-specific parameters, states, and model structure.")
     st.info("Note: Model structure can be configured in the disease_configurations.py file.")

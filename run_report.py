@@ -39,6 +39,27 @@ import sys
 DB_API_URL = "http://localhost:1890"
 
 
+def _coerce_optional_int(value):
+    """Convert int-like values safely for report payload fields."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        text = str(value).strip()
+        if text == "":
+            return None
+        return int(text)
+    except (TypeError, ValueError):
+        return None
+
+
+def _coerce_optional_str(value):
+    """Convert optional values to a non-empty string or None."""
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
 class RunReport:
     """Captures logs and metadata for a run, sends to DB API."""
     
@@ -55,9 +76,9 @@ class RunReport:
         self.run_type = run_type
         self.name = name
         self.parameters = parameters or {}
-        self.czone_id = czone_id
-        self.sim_id = sim_id
-        self.user_id = user_id
+        self.czone_id = _coerce_optional_int(czone_id)
+        self.sim_id = _coerce_optional_int(sim_id)
+        self.user_id = _coerce_optional_str(user_id)
         self.auto_print = auto_print
         
         self.started_at = datetime.utcnow()
@@ -71,22 +92,32 @@ class RunReport:
     def _create_report(self):
         """Create the report in the DB API."""
         try:
-            resp = requests.post(f"{DB_API_URL}/reports", json={
+            payload = {
                 "run_type": self.run_type,
                 "name": self.name,
                 "started_at": self.started_at.isoformat() + "Z",
-                "czone_id": self.czone_id,
-                "sim_id": self.sim_id,
-                "user_id": self.user_id,
                 "parameters": self.parameters,
-            }, timeout=5)
+            }
+            if self.czone_id is not None:
+                payload["czone_id"] = self.czone_id
+            if self.sim_id is not None:
+                payload["sim_id"] = self.sim_id
+            if self.user_id is not None:
+                payload["user_id"] = self.user_id
+
+            resp = requests.post(f"{DB_API_URL}/reports", json=payload, timeout=5)
             
             if resp.ok:
                 data = resp.json().get("data", {})
                 self.report_id = data.get("id")
                 self.info(f"Run report started (ID: {self.report_id})")
             else:
-                print(f"[RunReport] Warning: Could not create report: {resp.status_code}")
+                detail = ""
+                try:
+                    detail = resp.text[:500]
+                except Exception:
+                    detail = ""
+                print(f"[RunReport] Warning: Could not create report: {resp.status_code} {detail}")
         except Exception as e:
             print(f"[RunReport] Warning: Could not connect to DB API: {e}")
     
@@ -151,13 +182,15 @@ class RunReport:
             return
         
         try:
-            requests.patch(f"{DB_API_URL}/reports/{self.report_id}", json={
+            payload = {
                 "status": "completed",
                 "completed_at": completed_at.isoformat() + "Z",
                 "duration_ms": duration_ms,
-                "summary": summary,
                 "logs": self.logs,  # Send all logs on complete
-            }, timeout=5)
+            }
+            if summary is not None:
+                payload["summary"] = summary
+            requests.patch(f"{DB_API_URL}/reports/{self.report_id}", json=payload, timeout=5)
         except Exception as e:
             print(f"[RunReport] Warning: Could not update report: {e}")
     

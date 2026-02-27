@@ -3,7 +3,22 @@ from .infection_models.v5_wells_riley import CAT
 from .config import DMP_API, INFECTION_MODEL
 import pandas as pd
 from io import StringIO
-import requests
+import os
+import sys
+
+# Add dmp directory to path for direct database access (bypasses HTTP API)
+_dmp_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'dmp'))
+if _dmp_dir not in sys.path:
+    sys.path.insert(0, _dmp_dir)
+
+# Try to initialize DMPLocal for direct database access (no HTTP server needed)
+_dmp_local = None
+try:
+    from core.dmp_local import DMPLocal
+    _dmp_local = DMPLocal()
+    print("DMPLocal initialized successfully - using direct database access")
+except Exception as e:
+    print(f"Warning: Could not initialize DMPLocal ({e}), will use fallback timelines")
 
 class InfectionManager:
     def __init__(self, matrices_dict, timestep=None, people=[]):
@@ -240,91 +255,87 @@ class InfectionManager:
     
 
     def create_timeline(self, person, disease, curtime):
-        """Create a disease timeline for a newly infected person using the DMP API"""
-        
-        # Set up API connection
-        BASE_URL = DMP_API["base_url"]
-        
-        # Map disease variant to disease name for DMP API v2
+        """Create a disease timeline for a newly infected person using DMPLocal (direct DB access)"""
+
+        # Map disease variant to disease name for DMP
         disease_name = "COVID-19" if disease in ["Delta", "Omicron"] else disease
-        
-        # Prepare the demographic payload for the API
-        simulation_payload = {
-            "disease_name": disease_name,
-            "demographics": {
-                "Age": str(person.age),
-                "Vaccination Status": "Vaccinated" if person.interventions["vaccine"] != VaccinationState.NONE else "Unvaccinated",
-                "Sex": "F" if person.sex == 1 else "M",
-                "Variant": disease 
+
+        # Prepare demographics
+        demographics = {
+            "Age": str(person.age),
+            "Vaccination Status": "Vaccinated" if person.interventions["vaccine"] != VaccinationState.NONE else "Unvaccinated",
+            "Sex": "F" if person.sex == 1 else "M",
+            "Variant": disease
+        }
+
+        # Try direct database access via DMPLocal (no HTTP server needed)
+        if _dmp_local is not None:
+            try:
+                result = _dmp_local.run_simulation(
+                    disease_name=disease_name,
+                    demographics=demographics,
+                )
+
+                if result and result.get("success") and result.get("timeline"):
+                    timeline_data = result["timeline"]
+
+                    # Map DMP states to our infection states using config
+                    str_to_state = {k: getattr(InfectionState, v) for k, v in DMP_API["state_mapping"].items()}
+
+                    # Initialize the timeline for this disease
+                    val = {}
+                    val[disease] = {}
+
+                    # Get the maximum time in the timeline for end time calculation
+                    max_time = max([time for _, time in timeline_data])
+
+                    # Process each state transition in the timeline
+                    for status, time in timeline_data:
+                        if status in str_to_state:
+                            state = str_to_state[status]
+                            # Convert time from hours to simulation units (minutes)
+                            adjusted_time = time * DMP_API["time_conversion_factor"]
+
+                            if state in val[disease]:
+                                # Update existing timeline entry
+                                current_start = val[disease][state].start
+                                val[disease][state] = InfectionTimeline(
+                                    min(current_start, curtime + adjusted_time),
+                                    curtime + max_time * DMP_API["time_conversion_factor"]
+                                )
+                            else:
+                                # Create new timeline entry
+                                val[disease][state] = InfectionTimeline(
+                                    curtime + adjusted_time,
+                                    curtime + max_time * DMP_API["time_conversion_factor"]
+                                )
+
+                    # Set the person's timeline
+                    person.timeline = val
+
+                    # Ensure RECOVERED is in the timeline
+                    if disease in val and InfectionState.RECOVERED not in val[disease]:
+                        max_adjusted = curtime + max_time * DMP_API["time_conversion_factor"]
+                        recovery_duration = INFECTION_MODEL["fallback_timeline"]["recovery_duration"]
+                        val[disease][InfectionState.RECOVERED] = InfectionTimeline(max_adjusted, max_adjusted + recovery_duration)
+
+                    # Set the person's initial state for this disease
+                    person.states[disease] = InfectionState.INFECTED
+                    return
+
+            except Exception as e:
+                print(f"DMPLocal simulation failed: {e}")
+
+        # Fallback to a simple timeline if DMPLocal is unavailable or fails
+        fallback_timeline = INFECTION_MODEL["fallback_timeline"]
+        person.states[disease] = InfectionState.INFECTED
+        recovery_end = curtime + fallback_timeline["infected_duration"] + fallback_timeline["recovery_duration"]
+        person.timeline = {
+            disease: {
+                InfectionState.INFECTED: InfectionTimeline(curtime, curtime + fallback_timeline["infected_duration"]),
+                InfectionState.INFECTIOUS: InfectionTimeline(curtime + fallback_timeline["infectious_delay"],
+                                                           curtime + fallback_timeline["infected_duration"]),
+                InfectionState.RECOVERED: InfectionTimeline(curtime + fallback_timeline["infected_duration"],
+                                                          recovery_end)
             }
         }
-        
-        # Send request to DMP API
-        try:
-            simulation_response = requests.post(f"{BASE_URL}/simulate", json=simulation_payload)
-            simulation_response.raise_for_status()
-            
-            # Process the timeline returned from the API
-            timeline_data = simulation_response.json()
-            
-            # Map DMP states to our infection states using config
-            str_to_state = {k: getattr(InfectionState, v) for k, v in DMP_API["state_mapping"].items()}
-            
-            # Initialize the timeline for this disease
-            val = {}
-            val[disease] = {}
-            
-            # Get the maximum time in the timeline for end time calculation
-            max_time = max([time for _, time in timeline_data["timeline"]])
-            
-            # Process each state transition in the timeline
-            for status, time in timeline_data["timeline"]:
-                if status in str_to_state:
-                    state = str_to_state[status]
-                    # Convert time from API units (hours) to simulation units (minutes)
-                    adjusted_time = time * DMP_API["time_conversion_factor"]
-                    
-                    if state in val[disease]:
-                        # Update existing timeline entry
-                        current_start = val[disease][state].start
-                        val[disease][state] = InfectionTimeline(
-                            min(current_start, curtime + adjusted_time), 
-                            curtime + max_time * DMP_API["time_conversion_factor"]
-                        )
-                    else:
-                        # Create new timeline entry
-                        val[disease][state] = InfectionTimeline(
-                            curtime + adjusted_time, 
-                            curtime + max_time * DMP_API["time_conversion_factor"]
-                        )
-            
-            # Set the person's timeline
-            person.timeline = val
-            
-            # Ensure RECOVERED is in the timeline (in case DMP API didn't include it)
-            if disease in val and InfectionState.RECOVERED not in val[disease]:
-                # Add RECOVERED starting at max_time
-                max_adjusted = curtime + max_time * DMP_API["time_conversion_factor"]
-                recovery_duration = INFECTION_MODEL["fallback_timeline"]["recovery_duration"]
-                val[disease][InfectionState.RECOVERED] = InfectionTimeline(max_adjusted, max_adjusted + recovery_duration)
-            
-            # Set the person's initial state for this disease
-            person.states[disease] = InfectionState.INFECTED
-            
-        except requests.exceptions.RequestException as e:
-            print(f"Error communicating with DMP API: {e}")
-            # Fallback to a simple timeline if API fails
-            fallback_timeline = INFECTION_MODEL["fallback_timeline"]
-            person.states[disease] = InfectionState.INFECTED
-            # RECOVERED should start when INFECTED ends and last indefinitely (or a long time)
-            # The recovery_duration is how long the recovery state persists
-            recovery_end = curtime + fallback_timeline["infected_duration"] + fallback_timeline["recovery_duration"]
-            person.timeline = {
-                disease: {
-                    InfectionState.INFECTED: InfectionTimeline(curtime, curtime + fallback_timeline["infected_duration"]),
-                    InfectionState.INFECTIOUS: InfectionTimeline(curtime + fallback_timeline["infectious_delay"], 
-                                                               curtime + fallback_timeline["infected_duration"]),
-                    InfectionState.RECOVERED: InfectionTimeline(curtime + fallback_timeline["infected_duration"], 
-                                                              recovery_end)
-                }
-            }

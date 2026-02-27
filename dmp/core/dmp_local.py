@@ -13,10 +13,12 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
-# Add the parent directory to the Python path
+# Add the parent directory (dmp/) to the FRONT of Python path so that
+# 'app.state_machine...' resolves to dmp/app/ and not Simulation/app.py
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
-sys.path.append(parent_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 # Import the state machine database and simulation functions
 from app.state_machine.state_machine_db import StateMachineDB
