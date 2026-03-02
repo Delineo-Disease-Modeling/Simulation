@@ -10,6 +10,7 @@ import random
 import logging 
 from collections import defaultdict
 from math import ceil
+import agentstats as ast
 
 curdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -393,6 +394,27 @@ class SimulationLogger:
 
         with open(f'{self.log_dir}/summary_report.txt', 'w') as f:
             f.write("\n".join(report))
+    
+    def graphic_analysis(self):
+        if not self.enable_file_logging or not self.infection_logs:
+            return 0
+        
+        #construct graph
+        start = ast.Node(-1,-1,None)
+        ast.build_agent_graph_nodupes(start, f'{self.log_dir}/infection_logs.csv')
+
+        #run analysis
+        report = []
+        ast.calculate_all_harmonic(start)
+        ast.check_sse(start, report)
+        ast.location_impact(start, report)
+        ast.time_gates(start, report)
+        ast.time_impact(start, report)
+
+        with open(f'{self.log_dir}/graph_report.txt', 'w') as f:
+            f.write("\n".join(report))
+
+        return 1
             
 # Putting it all together, simulates each timestep
 # We can choose to only simulate areas with infected people
@@ -751,6 +773,7 @@ def run_simulator(simdata, save_file=False, enable_logging = True, log_dir = "si
         print("=== EXPORTING LOGS ===")
         simulator.logger.export_logs_to_csv()
         simulator.logger.generate_summary_report()
+        simulator.logger.graphic_analysis()
     
     if output_dir:
         return {
