@@ -10,6 +10,7 @@ import sys
 import os
 import argparse
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
@@ -24,6 +25,8 @@ if parent_dir not in sys.path:
 from app.state_machine.state_machine_db import StateMachineDB
 from core.simulation_functions import run_simulation
 from app.state_machine.utils.graph_utils import convert_graph_to_matrices
+
+logger = logging.getLogger(__name__)
 
 class DMPLocal:
     """Local access to the Disease Modeling Platform database."""
@@ -43,7 +46,7 @@ class DMPLocal:
                     diseases.add(machine[2])
             return sorted(list(diseases))
         except Exception as e:
-            print(f"Error getting diseases: {e}")
+            logger.exception("Error getting diseases: %s", e)
             return []
     
     def get_variants_for_disease(self, disease_name: str) -> List[str]:
@@ -56,7 +59,7 @@ class DMPLocal:
                     variants.add(machine[3])
             return sorted(list(variants))
         except Exception as e:
-            print(f"Error getting variants for {disease_name}: {e}")
+            logger.exception("Error getting variants for %s: %s", disease_name, e)
             return []
     
     def find_matching_state_machine(self, disease_name: str, demographics: Dict[str, str], 
@@ -92,7 +95,7 @@ class DMPLocal:
             if default_path and default_path not in search_paths:
                 search_paths.append(default_path)
             
-            print(f"Search paths (in order): {search_paths}")
+            logger.debug("DMP search paths (in order): %s", search_paths)
             
             # Search for matching state machines using simple rules
             for search_path in search_paths:
@@ -148,16 +151,25 @@ class DMPLocal:
                     )
                     
                     matching_machine = compatible_machines[0]
-                    print(f"Found matching machine: {matching_machine['name']} with path: {search_path}")
-                    print(f"Demographics: {matching_machine['demographics']}")
+                    logger.debug(
+                        "Found matching machine: %s with path: %s | demographics: %s",
+                        matching_machine.get('name'),
+                        search_path,
+                        matching_machine.get('demographics'),
+                    )
                     return matching_machine
             
             # No matching machine found
-            print(f"No matching state machine found for {disease_name} with demographics {demographics}")
+            logger.warning(
+                "No matching state machine found for disease=%s demographics=%s model_path=%s",
+                disease_name,
+                demographics,
+                model_path,
+            )
             return None
             
         except Exception as e:
-            print(f"Error finding matching state machine: {e}")
+            logger.exception("Error finding matching state machine: %s", e)
             return None
     
     def _age_in_range(self, age_value: str, age_range: str) -> bool:
@@ -199,7 +211,12 @@ class DMPLocal:
             )
             
             if not state_machine:
-                print(f"No matching state machine found for {disease_name} with demographics {demographics}")
+                logger.warning(
+                    "Cannot run simulation; no matching state machine for disease=%s demographics=%s model_path=%s",
+                    disease_name,
+                    demographics,
+                    model_path,
+                )
                 return None
             
             # Get states and edges
@@ -244,7 +261,7 @@ class DMPLocal:
             }
             
         except Exception as e:
-            print(f"Error running simulation: {e}")
+            logger.exception("Error running simulation: %s", e)
             return None
     
     def list_state_machines(self, disease_name: Optional[str] = None) -> List[Dict]:
@@ -276,7 +293,7 @@ class DMPLocal:
             return machines
         
         except Exception as e:
-            print(f"Error listing state machines: {e}")
+            logger.exception("Error listing state machines: %s", e)
             return []
 
 def main():
@@ -351,4 +368,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

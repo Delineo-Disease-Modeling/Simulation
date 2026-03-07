@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 import json
 import time
+import logging
 
 # Add the parent directory to the Python path for imports
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,6 +25,7 @@ app = FastAPI(
 
 # Initialize database connection
 db = StateMachineDB()
+logger = logging.getLogger(__name__)
 
 def _age_in_range(age_value: str, age_range: str) -> bool:
     """Check if a single age value falls within an age range"""
@@ -198,9 +200,12 @@ async def get_state_machine(machine_id: int):
 async def run_dmp_simulation(request: SimulationRequest):
     """Run simulation with provided demographics and disease parameters"""
     try:
-        print(f"Running simulation for disease: {request.disease_name}")
-        print(f"Demographics: {request.demographics}")
-        print(f"Model path: {request.model_path}")
+        logger.debug(
+            "Running simulation request disease=%s demographics=%s model_path=%s",
+            request.disease_name,
+            request.demographics,
+            request.model_path,
+        )
         
         # Import the disease configuration functions
         from app.state_machine.disease_configurations import (
@@ -234,7 +239,7 @@ async def run_dmp_simulation(request: SimulationRequest):
         if default_path and default_path not in search_paths:
             search_paths.append(default_path)
         
-        print(f"Search paths (in order): {search_paths}")
+        logger.debug("Search paths (in order): %s", search_paths)
         
         # Search for matching state machines using simple rules
         for search_path in search_paths:
@@ -290,8 +295,12 @@ async def run_dmp_simulation(request: SimulationRequest):
                 )
                 
                 matching_machine = compatible_machines[0]
-                print(f"Found matching machine: {matching_machine['name']} with path: {search_path}")
-                print(f"Demographics: {matching_machine['demographics']}")
+                logger.debug(
+                    "Found matching machine: %s with path: %s | demographics: %s",
+                    matching_machine.get('name'),
+                    search_path,
+                    matching_machine.get('demographics'),
+                )
                 break
         
         if not matching_machine:
@@ -365,5 +374,5 @@ async def run_dmp_simulation(request: SimulationRequest):
 # Add error handlers
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
-    print(f"Unhandled error: {str(exc)}")
+    logger.exception("Unhandled error: %s", str(exc))
     return {"detail": str(exc)} 
