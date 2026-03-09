@@ -12,6 +12,7 @@ import logging
 from datetime import datetime, timedelta 
 from collections import defaultdict
 import csv 
+from . import agentstats as ast
 
 
 curdir = os.path.dirname(os.path.abspath(__file__))
@@ -382,6 +383,26 @@ class SimulationLogger:
             chains_df.rename(columns={'index': 'infected_person_id'}, inplace=True)
             chains_df.to_csv(f'{self.log_dir}/infection_chains.csv', index=False)
 
+    def graphic_analysis(self):
+        if not self.enable_file_logging:
+            return 0
+
+        #construct graph
+        start = ast.Node(-1,-1,None)
+        ast.build_agent_graph_nodupes(start, f'{self.log_dir}/infection_logs.csv')
+
+        #run analysis
+        report = []
+        ast.calculate_all_harmonic(start)
+        ast.check_sse(start, report)
+        ast.location_impact(start, report)
+        ast.time_gates(start, report)
+        ast.time_impact(start, report)
+            
+        with open(f'{self.log_dir}/graph_report.txt', 'w') as f:
+            f.write("\n".join(report))
+        
+        return 1
 
     def generate_summary_report(self):
         if not self.enable_file_logging:
@@ -1143,6 +1164,7 @@ def run_simulator(
         print("=== EXPORTING LOGS ===")
         simulator.logger.export_logs_to_csv()
         simulator.logger.generate_summary_report()
+        simulator.logger.graphic_analysis()
         print(f"Logs exported to {log_dir}/")
         print(f"Generated files (streamed to disk):")
         print(f"  - person_logs.csv: {simulator.logger.person_log_count} records")

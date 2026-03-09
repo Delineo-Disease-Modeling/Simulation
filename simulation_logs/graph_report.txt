@@ -1,0 +1,24 @@
+Superspreader event detected! Potential superspreaders are: 
+5 
+1902 
+
+
+Top 5 locations by relative weight: 
+37 
+136 
+341 
+335 
+390 
+
+
+50%% of the infection damage was done by time 1860
+
+80%% of the infection damage was done by time 2460
+
+Top 5 times by relative weight: 
+1860 
+2460 
+720 
+1200 
+2280 
+

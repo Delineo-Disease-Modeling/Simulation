@@ -142,3 +142,16 @@
 2026-02-08 16:48:18,379 - werkzeug - INFO - 127.0.0.1 - - [08/Feb/2026 16:48:18] "OPTIONS /simulation/ HTTP/1.1" 200 -
 2026-02-08 16:48:54,868 - werkzeug - INFO - 127.0.0.1 - - [08/Feb/2026 16:48:54] "POST /simulation/ HTTP/1.1" 200 -
 2026-02-13 09:06:30,712 - werkzeug - INFO - 127.0.0.1 - - [13/Feb/2026 09:06:30] "POST /simulation/ HTTP/1.1" 200 -
+2026-03-09 10:50:17,246 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 10:50:17] "OPTIONS /simulation/ HTTP/1.1" 200 -
+2026-03-09 11:15:24,845 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 11:15:24] "OPTIONS /simulation/ HTTP/1.1" 200 -
+2026-03-09 11:15:40,227 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 11:15:40] "POST /simulation/ HTTP/1.1" 200 -
+2026-03-09 11:18:31,656 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 11:18:31] "POST /simulation/ HTTP/1.1" 200 -
+2026-03-09 11:21:00,369 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 11:21:00] "POST /simulation/ HTTP/1.1" 200 -
+2026-03-09 13:00:16,305 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 13:00:16] "[31m[1mPOST /simulation/ HTTP/1.1[0m" 400 -
+2026-03-09 13:02:25,573 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 13:02:25] "POST /simulation/ HTTP/1.1" 200 -
+2026-03-09 13:04:32,175 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 13:04:32] "OPTIONS /simulation/ HTTP/1.1" 200 -
+2026-03-09 13:04:41,217 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 13:04:41] "POST /simulation/ HTTP/1.1" 200 -
+2026-03-09 13:06:08,425 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 13:06:08] "POST /simulation/ HTTP/1.1" 200 -
+2026-03-09 13:08:14,728 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 13:08:14] "OPTIONS /simulation/ HTTP/1.1" 200 -
+2026-03-09 13:08:24,073 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 13:08:24] "POST /simulation/ HTTP/1.1" 200 -
+2026-03-09 13:09:45,322 - werkzeug - INFO - 127.0.0.1 - - [09/Mar/2026 13:09:45] "POST /simulation/ HTTP/1.1" 200 -
