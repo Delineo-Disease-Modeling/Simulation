@@ -10,7 +10,7 @@ import random
 import logging 
 from collections import defaultdict
 from math import ceil
-import agentstats as ast
+from . import agentstats as ast
 
 curdir = os.path.dirname(os.path.abspath(__file__))
 

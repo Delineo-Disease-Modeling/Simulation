@@ -5,7 +5,7 @@ import os
 import csv
 import math
 import scipy.stats as st
-import agent_tracker as agt
+from . import agent_tracker as agt
 
 #Definition of Node class / linked list internal operations
 
