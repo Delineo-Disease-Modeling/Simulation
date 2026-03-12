@@ -1,305 +1,183 @@
-import numpy as np
-import pandas as pd
-import yaml
-import json
-
-import random
-# random.seed(2)
+from __future__ import annotations
 
 from enum import Flag, Enum
+from typing import Optional
 
-'''
-    GLOBAL VARIABLES
-'''
+# Enums & small data classes
 
-'''
-    Class Definitions to use in pop_mov_sim
-'''
-
-# Use bitwise operators
 class InfectionState(Flag):
-    SUSCEPTIBLE = 0 # Default value for all diseases
+    SUSCEPTIBLE = 0
     INFECTED = 1
     INFECTIOUS = 2
     SYMPTOMATIC = 4
     HOSPITALIZED = 8
     RECOVERED = 16
     REMOVED = 32
-    
+
+
 class VaccinationState(Enum):
-    NONE = 0 
-    PARTIAL = 1 # Not yet up-to-date on boosters?
+    NONE = 0
+    PARTIAL = 1
     IMMUNIZED = 2
 
+
 class InfectionTimeline:
-    def __init__(self, start, end):
+    __slots__ = ("start", "end")
+
+    def __init__(self, start: int, end: int) -> None:
         self.start = int(start)
         self.end = int(end)
 
+    def __repr__(self) -> str:
+        return f"InfectionTimeline({self.start}, {self.end})"
+
+    def contains(self, time: int) -> bool:
+        return self.start <= int(time) <= self.end
+
+
+# Locations
+
+class Location:
+    """Unified base for any place a person can be (households & facilities).
+
+    Every location has an *id*, a *cbg* (census block group), an optional
+    *label*, a *capacity* (-1 = unlimited), and a *location_type* string
+    """
+
+    def __init__(
+        self,
+        id: str,
+        cbg: Optional[str] = None,
+        label: Optional[str] = None,
+        capacity: int = -1,
+        location_type: str = "unknown",
+    ) -> None:
+        self.id: str = str(id)
+        self.cbg: Optional[str] = cbg
+        self.label: Optional[str] = label
+        self.capacity: int = capacity        # -1 = unlimited
+        self.location_type: str = location_type
+        self.population: list[Person] = []
+        self.total_count: int = 0
+
+    # population management
+
+    def add_member(self, person: Person) -> None:
+        self.population.append(person)
+        self.total_count = len(self.population)
+
+    def remove_member(self, person_id: str) -> None:
+        self.population = [p for p in self.population if p.id != person_id]
+        self.total_count = len(self.population)
+
+    # convenience queries
+
+    @property
+    def is_household(self) -> bool:
+        return self.location_type == "household"
+
+    @property
+    def is_facility(self) -> bool:
+        return self.location_type == "facility"
+
+    def __repr__(self) -> str:
+        return f"Location(id={self.id!r}, type={self.location_type!r}, pop={self.total_count})"
+
+
+class Household(Location):
+    """A residential location (no capacity limit by default)."""
+
+    count: int = 0  # class-level auto-incrementing ID
+
+    def __init__(self, cbg: Optional[str] = None, id: Optional[str] = None) -> None:
+        if id is None:
+            id = str(Household.count)
+            Household.count += 1
+        super().__init__(id=id, cbg=cbg, location_type="household")
+
+
+class Facility(Location):
+    """A non-residential location (store, workplace, school, …)."""
+
+    def __init__(
+        self,
+        id: str,
+        cbg: Optional[str] = None,
+        label: Optional[str] = None,
+        capacity: int = -1,
+    ) -> None:
+        super().__init__(id=id, cbg=cbg, label=label, capacity=capacity, location_type="facility")
+
+
+# Person
+
 class Person:
-    '''
-    Class for each individual
-    '''
-    def __init__(self, id, sex, age, household):
-        self.id = id
-        self.sex = sex # male 0 female 1
-        self.age = age
-        self.household = household
-        self.location = household
-        self.invisible = False
-        self.states = {}
-        self.timeline = {}
-        self.masked = False
-        self.interventions = {
-            'vaccine': VaccinationState.NONE
-        }
-        self.vaccination_state = 0
-        self.iv_threshold = 0.0
-    
-    def set_masked(self, masked):
-        self.masked = masked
-    
-    def get_masked(self):
-        return getattr(self, 'masked', False)
-    
-    def is_masked(self):
-        """Check if this person is wearing a mask"""
-        return getattr(self, 'masked', False)
-    
-    def toggle_mask(self):
-        """Toggle the masking status"""
-        self.masked = not getattr(self, 'masked', False)
+    """Represents a single individual in the simulation."""
+
+    def __init__(self, id: str, sex: int, age: int, household: Household) -> None:
+        self.id: str = id
+        self.sex: int = sex         # 0 = male, 1 = female
+        self.age: int = age
+        self.household: Household = household
+        self.location: Location = household
+        self.invisible: bool = False
+
+        # Disease state per variant, e.g. {"Delta": InfectionState.INFECTED | InfectionState.INFECTIOUS}
+        self.states: dict[str, InfectionState] = {}
+        # Timeline per variant per state, e.g. {"Delta": {InfectionState.INFECTED: InfectionTimeline(...)}}
+        self.timeline: dict[str, dict[InfectionState, InfectionTimeline]] = {}
+
+        self.masked: bool = False
+        self.vaccination_state: VaccinationState = VaccinationState.NONE
+        self.iv_threshold: float = 0.0
+
+    # interventions
+
+    def is_masked(self) -> bool:
         return self.masked
-    
-    def set_vaccinated(self, state):
-        self.interventions['vaccine'] = state
-        
-    def get_vaccinated(self):
-        return self.interventions['vaccine']
-    
-    # Returns whether user has a state on ANY disease
-    def get_state(self, state):
+
+    def set_masked(self, masked: bool) -> None:
+        self.masked = masked
+
+    def set_vaccinated(self, state: VaccinationState) -> None:
+        self.vaccination_state = state
+
+    def get_vaccinated(self) -> VaccinationState:
+        return self.vaccination_state
+
+    # infection queries
+
+    def has_state(self, state: InfectionState) -> bool:
+        """Return True if *any* variant has the given flag set."""
         for val in self.states.values():
             if state in val:
                 return True
-        
         return False
-    
-    def update_mask_compliance(self, location_mask_policy=False, compliance_rate=1.0):
-        """
-        Update mask wearing based on location policy and personal compliance
-        
-        Args:
-            location_mask_policy: Whether the current location requires masks
-            compliance_rate: Probability of complying with mask policies (0.0-1.0)
-        """
-        if location_mask_policy:
-            # If location requires masks, comply based on compliance rate
-            import random
-            self.masked = random.random() < compliance_rate
-        else:
-            # If no policy, maintain current status or use personal preference
-            # Could extend this to include personal mask preference
-            pass
-    
-    def update_state(self, curtime, variants):
-        '''
-        Updates the InfectionState of this Person based on the current time
-        self.timeline is a dict where the keys are the InfectionStates and values are
-            the times at which this person will become that state
-        '''
+
+    def is_infectious(self) -> bool:
+        return self.has_state(InfectionState.INFECTIOUS)
+
+    def is_symptomatic(self) -> bool:
+        return self.has_state(InfectionState.SYMPTOMATIC)
+
+    # state progression
+
+    def update_state(self, curtime: str | int, variants: list[str]) -> None:
+        """Advance this person's infection state based on *curtime* and their timeline."""
         self.invisible = False
-        
-        for variant in variants: 
+        time = int(curtime)
+
+        for variant in variants:
             self.states[variant] = InfectionState.SUSCEPTIBLE
 
         for disease, value in self.timeline.items():
-            for state, timeline in value.items():
-                if timeline.end >= int(curtime):
+            for state, tl in value.items():
+                if tl.end >= time:
                     self.states[disease] = self.states[disease] & ~state
-                elif timeline.start <= int(curtime):
+                elif tl.start <= time:
                     self.states[disease] = self.states[disease] | state
-                    if state == InfectionState.REMOVED or state == InfectionState.RECOVERED or state == InfectionState.HOSPITALIZED:
-                        self.invisible = True # means agent cannot get reinfected 
+                    if state in (InfectionState.REMOVED, InfectionState.RECOVERED, InfectionState.HOSPITALIZED):
+                        self.invisible = True
 
-            
-
-class Population:
-    '''
-    Class for storing population
-    '''
-    def __init__(self):
-        #total population
-        self.total_count = 0
-        #container for persons in the population
-        self.population = []
-    
-    def add_member(self, person):
-        '''
-        Adds member to the household, with sanity rules applied
-        @param person = person to be added to household
-        '''
-        self.population.append(person)
-        self.total_count = len(self.population)
-    
-    def remove_member(self, person_id):
-        self.population = [x for x in self.population if x.id != person_id]
-        self.total_count = len(self.population)
-        
-class Household(Population):
-    ''' 
-    Household class, inheriting Population since its a small population
-    '''
-    count = 0
-    
-    def __init__(self, cbg, id=None):
-        super().__init__()
-        self.cbg = cbg
-        if id is None:
-            self.id = str(Household.count)
-            Household.count += 1
-        else:
-            self.id = id
-
-class Facility(Population):
-    def __init__(self, id, cbg, label, capacity=-1):
-        super().__init__()
-        self.cbg = cbg
-        self.id = id
-        self.label = label
-        
-        # maximum amount of people that can be in this population (-1 = no limit)
-        self.capacity = capacity
-
-
-    
-'''
-    if ran(not imported), yields household assignment values
-'''
-if __name__== '__main__':
-    def create_households(pop_data, households, cbg):
-        result = []
-        '''
-            FOR INFORMATION: family_percents = [married, opposite_sex, same_sex, female_single, male_single, other]
-        '''
-        family_types = ['married', 'opposite_sex', 'same_sex', 'female_single', 'male_single', 'other']
-        
-        for i in range(len(family_types)):
-            for _ in range(int(households * pop_data['family_percents'][i])):
-                result.append(create_household(pop_data, cbg, family_types[i]))
-
-        return result
-    
-    def create_household(pop_data, cbg, type):
-        household = Household(cbg)
-        
-        age_percent = 0.0
-        age_group = 0
-        
-        if type == 'married':
-            age_percent = pop_data['age_percent_married']
-            age_group = random.choices(pop_data['age_groups_married'], age_percent)[0]
-        else:
-            age_percent = pop_data['age_percent']
-            age_group = random.choices(pop_data['age_groups'], age_percent)[0]
-        
-        if type == 'married' or type == 'same_sex' or type == 'opposite_sex':
-            ages = random.choices(range(age_group, age_group + 10), k=2)
-            sexes = [ 0, 1 ]
-            
-            # Ensure same sex relationship for this household type
-            if type == 'samesex':
-                samesex = random.choices([0, 1], [pop_data['male_percent'], pop_data['female_percent']])
-                sexes = [ samesex[0], samesex[0] ]
-
-            household.add_member(Person(pop_data['count'], sexes[0], ages[0], household))
-            household.add_member(Person(pop_data['count'] + 1, sexes[1], ages[1], household))
-            pop_data['count'] += 2
-
-            # TODO: 2 Main issues:
-            # For now, married families are the only family types that can have kids
-            # Additionally, it's assumed that they are an opposite-sex relationship
-            if type == 'married':
-                handle_children_hh(pop_data, cbg, household)
-                
-        else: # single/other household
-            age = random.choice(range(age_group, age_group + 10))
-            sex = 1 if type == 'female_single' else 0
-            
-            if type == 'other':
-                sex = random.choices([0, 1], [pop_data['male_percent'], pop_data['female_percent']])[0]
-
-            household.add_member(Person(pop_data['count'], sex, age, household))
-            pop_data['count'] += 1
-            
-        return household
-    
-    def handle_children_hh(pop_data, cbg, household):
-        child_chance = pop_data['children_true_percent']
-        has_children = random.choices([True, False], [child_chance, 1.0 - child_chance])[0]
-
-        if has_children:
-            num_children = random.choices(pop_data['children_groups'], pop_data['children_percent'])[0]
-            ages = random.choices(range(1, 19), k=num_children)
-            sexes = random.choices([0, 1], [pop_data['male_percent'], pop_data['female_percent']], k=num_children)
-            for i in range(num_children):
-                household.add_member(Person(pop_data['count'], sexes[i], ages[i], household))
-                pop_data['count'] += 1
-
-    def create_pop_from_cluster(cluster, census_df):
-        populations = 0
-        households = 0
-        for i in cluster:
-            populations += int(census_df[census_df.census_block_group == int(i)].values[0][1])
-            households += int(census_df[census_df.census_block_group == int(i)].values[0][2])
-
-        return populations, households
-
-    # reading population information from yaml file
-    pop_data = {}
-
-    with open('population_info.yaml', mode="r", encoding="utf-8") as file:
-        pop_data = yaml.full_load(file)
-
-    # Reading Census Information
-    census_df = pd.read_csv('cbg_populations.csv')
-
-    # read clusters into string array in order to easier census search
-    cluster_df = pd.read_csv('clusters.csv')
-    clusters = [str(i) for i in list(cluster_df['cbgs'])]
-
-    household_list = []
-
-    # get number of households
-    for cbg in clusters:
-        _, household = create_pop_from_cluster([cbg], census_df)
-        household_list.append(create_households(pop_data, household, cbg))
-    
-    # Flatten list
-    household_list = [item for sublist in household_list for item in sublist]
-    
-    # Dump people and house data into new papdata.json file
-    with open('papdata.json', 'w', encoding='utf-8') as f:
-        data = {'people': {}, 'homes': {}, 'places': {}}
-        
-        for house in household_list:
-            data['homes'][house.id] = { 'cbg': house.cbg, 'members': house.total_count }
-            
-            for person in house.population:
-                data['people'][person.id] = { 'sex': person.sex, 'age': person.age, 'home': house.id }
-        
-        json.dump(data, f, ensure_ascii=False, indent=4)
-
-    with open('facility_data.json', 'r', encoding='utf-8') as f:
-        facility_data = json.load(f)
-
-    data['places'] = facility_data['places']
-
-    with open('papdata.json', 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
-    
-    print("Successfully Created PAP Data")
-
-    # Dump household list data into households.yaml file
-    #with open('households.yaml', mode="wt", encoding="utf-8") as outstream:
-    #    yaml.dump(household_list, outstream)
+    def __repr__(self) -> str:
+        return f"Person(id={self.id!r}, age={self.age})"

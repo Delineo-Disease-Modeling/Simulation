@@ -3,7 +3,7 @@ from flask_cors import CORS, cross_origin
 from jsonschema import validate
 from werkzeug.exceptions import BadRequest
 from simulator import simulate
-from simulator.config import DELINEO, DMP_API, SERVER
+from simulator.config import DELINEO, SERVER
 import requests
 import tempfile
 import shutil
@@ -23,24 +23,6 @@ CORS(app,
   supports_credentials=True
 )
 
-# Initialize DMP API when the server starts
-def initialize_dmp_api():
-    BASE_URL = DMP_API["base_url"]
-    init_payload = {
-        "matrices_path": DMP_API["paths"]["matrices_path"],
-        "mapping_path": DMP_API["paths"]["mapping_path"],
-        "states_path": DMP_API["paths"]["states_path"]
-    }
-    
-    try:
-        init_response = requests.post(f"{BASE_URL}/initialize", json=init_payload)
-        init_response.raise_for_status()
-        print("DMP API successfully initialized!")
-        return True
-    except requests.exceptions.RequestException as e:
-        print(f"Failed to initialize DMP API: {e}")
-        return False
-    
 simulation_schema = {
     "type": "object",
     "properties": {
@@ -83,9 +65,6 @@ def run_simulation_endpoint():
     except:
         return jsonify({"error": SERVER["error_messages"]["bad_request"]}), 400
         
-    # Initialize DMP API before running simulation
-    initialize_dmp_api()
-
     # Create a queue for communication
     msg_queue = queue.Queue()
 
@@ -98,9 +77,12 @@ def run_simulation_endpoint():
         temp_dir = tempfile.mkdtemp(dir=local_temp)
         print(f'Created temp dir: {temp_dir}')
 
+        last_progress = [-1]
         def progress_callback(current_step, max_steps):
             progress = int((current_step / max_steps) * 100)
-            msg_queue.put({"type": "progress", "value": progress})
+            if progress != last_progress[0]:
+                last_progress[0] = progress
+                msg_queue.put({"type": "progress", "value": progress})
 
         try:
             # Pass output_dir to run_simulator so it writes files directly
@@ -162,14 +144,9 @@ def run_main():
     """
     Basic simulation endpoint for testing.
     """
-    # Initialize DMP API before running simulation
-    initialize_dmp_api()
-    
     # Use default values from config
     return simulate.run_simulator()
 
 
 if __name__ == '__main__':
-    # Initialize DMP API when the server starts
-    initialize_dmp_api()
     app.run(host=SERVER["host"], port=SERVER["port"], threaded=True)

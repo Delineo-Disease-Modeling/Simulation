@@ -1,151 +1,162 @@
+from __future__ import annotations
+
 import random
-from .pap import InfectionState, InfectionTimeline, VaccinationState
-from .infection_models.v5_wells_riley import CAT
-from .config import DMP_API, INFECTION_MODEL
-import pandas as pd
+import logging
 import requests
+from typing import Optional, TextIO
+
+from .pap import Person, InfectionState, InfectionTimeline, VaccinationState
+from .masking import Maskingeffects
+from .config import DMP_API, INFECTION_MODEL
+
+logger = logging.getLogger(__name__)
 
 class InfectionManager:
-    def __init__(self, infected_ids: list[str]):
-        self.multidisease = INFECTION_MODEL["allow_multidisease"]
-        self.infected = [ *infected_ids ]
-        
-    def run_model(self, simulator, curtime, variantInfected, newlyInfected, file=None):
+    """Manages infection spread logic and DMP API timeline creation."""
+
+    def __init__(self, infected_ids: list[str]) -> None:
+        self.multidisease: bool = INFECTION_MODEL["allow_multidisease"]
+        self.infected: list[str] = list(infected_ids)
+
+    def run_model(
+        self,
+        simulator,
+        curtime: int,
+        variant_infected: dict[str, dict[str, int]],
+        newly_infected: dict[str, dict[str, list[str]]],
+        file: Optional[TextIO] = None,
+    ) -> None:
+        """Run one timestep of infection spread across all locations with infected people."""
         if file is not None:
-            file.write(f'====== TIMESTEP {curtime} ======\n')
-            for variant in variantInfected.keys():
-                infected_ids = [i.id for i in self.infected if variant in i.states and i.states[variant] != InfectionState.SUSCEPTIBLE]
-                file.write(f'{variant}: {infected_ids}\n')
-                file.write(f"{variant} count: {len(infected_ids)}\n")
-        
-        # Update variantInfected
-        for id in self.infected:
-            for disease in variantInfected.keys():
-                state = simulator.people[id].states.get(disease, InfectionState.SUSCEPTIBLE)
-                if state != InfectionState.SUSCEPTIBLE:
-                    variantInfected[disease][id] = int(state.value)
-                        
-        infected = [ simulator.people[id] for id in self.infected ]
-        
-        for i in infected:
-            if i.invisible:
+            self._write_timestep_header(file, curtime, variant_infected)
+
+        # Update variant tracking
+        for person_id in self.infected:
+            person = simulator.people.get(person_id)
+            if person is None:
                 continue
-                
-            for p in i.location.population:
-                if i.id == p.id:
+            for disease in variant_infected:
+                state = person.states.get(disease, InfectionState.SUSCEPTIBLE)
+                if state != InfectionState.SUSCEPTIBLE:
+                    variant_infected[disease][person_id] = int(state.value)
+
+        # Attempt transmission from each infected person to co-located susceptibles
+        for person_id in self.infected:
+            infector = simulator.people.get(person_id)
+            if infector is None or infector.invisible:
+                continue
+
+            for target in infector.location.population:
+                if infector.id == target.id:
                     continue
-                
-                for disease, state in i.states.items():
+
+                for disease, state in infector.states.items():
                     if InfectionState.INFECTIOUS not in state:
                         continue
-                                        
-                    # Check if the susceptible person is already infected with this disease
-                    if p.states.get(disease, InfectionState.SUSCEPTIBLE) != InfectionState.SUSCEPTIBLE:
+
+                    if target.states.get(disease, InfectionState.SUSCEPTIBLE) != InfectionState.SUSCEPTIBLE:
                         continue
-                                        
-                    # Get mask status for both people
-                    # infector_masked = getattr(i, 'masked', False)
-                    infector_masked = i.is_masked()
-                    susceptible_masked = p.is_masked()
-                    
-                    # Use base transmission probability without pre-applying mask effects
-                    # Let CAT handle mask effects internally
-                    base_transmission_prob = 7e12
-                    
-                    # Call CAT with all required parameters
-                    if random.random() < 0.0005: #CAT(p, True, 1, base_transmission_prob, None, infector_masked, susceptible_masked):
-                        print(f"New infection detected, ({i.id} -> {p.id}) infector_masked: {infector_masked}, susceptible_masked: {susceptible_masked}")
-                        
-                        if p.id not in self.infected:
-                            self.infected.append(p.id)
-                        elif self.multidisease == False:
-                            continue
-                        
-                        timeline = self.create_timeline(p, disease, curtime)
-                        simulator.people[p.id].timeline = timeline
-                        
-                        if file is not None:
-                            file.write(f'{i.id} infected {p.id} @ location {p.location.id} w/ {disease}\n')
 
-                        # Track newly infected individuals
-                        if disease not in newlyInfected:
-                            newlyInfected[disease] = {}
-                        if str(i.id) not in newlyInfected[disease]:
-                            newlyInfected[disease][str(i.id)] = []
+                    if not self.multidisease and any(
+                        s != InfectionState.SUSCEPTIBLE for s in target.states.values()
+                    ):
+                        continue
 
-                        newlyInfected[disease][str(i.id)].append(str(p.id))
-    
-    def calculate_mask_transmission_modifier(self, infector, susceptible):
-        from .simulate import Maskingeffects 
-        return Maskingeffects.calculate_mask_transmission_modifier(infector, susceptible)
-    
-    def create_timeline(self, person, disease, curtime):
-        """Create a disease timeline for a newly infected person using the DMP API"""
-        
-        # Set up API connection
-        BASE_URL = DMP_API["base_url"]
-        
-        # Prepare the demographic payload for the API
-        simulation_payload = {
+                    # Mask-adjusted transmission check
+                    mask_modifier = Maskingeffects.calculate_mask_transmission_modifier(infector, target)
+                    transmission_prob = 0.0005 * mask_modifier
+
+                    if random.random() >= transmission_prob:
+                        continue
+
+                    logger.info(
+                        "Infection: %s -> %s (masked: %s/%s)",
+                        infector.id, target.id, infector.is_masked(), target.is_masked(),
+                    )
+
+                    if target.id not in self.infected:
+                        self.infected.append(target.id)
+                    elif not self.multidisease:
+                        continue
+
+                    timeline = self.create_timeline(target, disease, curtime)
+                    simulator.people[target.id].timeline = timeline
+
+                    if file is not None:
+                        file.write(f'{infector.id} infected {target.id} @ location {target.location.id} w/ {disease}\n')
+
+                    # Track newly infected
+                    newly_infected.setdefault(disease, {})
+                    newly_infected[disease].setdefault(str(infector.id), []).append(str(target.id))
+
+    def create_timeline(self, person: Person, disease: str, curtime: int) -> dict[str, dict[InfectionState, InfectionTimeline]]:
+        """Create a disease timeline for a newly infected person using the DMP API.
+        Falls back to a config-driven default timeline if the API is unreachable.
+        """
+
+        base_url = DMP_API["base_url"]
+        time_factor = DMP_API["time_conversion_factor"]
+
+        payload = {
             "disease_name": "COVID-19",
             "model_path": None,
             "demographics": {
                 "Age": str(person.age),
-                "Vaccination Status": "Vaccinated" if person.interventions["vaccine"] != VaccinationState.NONE else "Unvaccinated",
+                "Vaccination Status": "Vaccinated" if person.vaccination_state != VaccinationState.NONE else "Unvaccinated",
                 "Sex": "F" if person.sex == 1 else "M",
-                "Variant": disease 
-            }
+                "Variant": disease,
+            },
         }
-        
-        # Send request to DMP API
+
         try:
-            simulation_response = requests.post(f"{BASE_URL}/simulate", json=simulation_payload)
-            simulation_response.raise_for_status()
-            
-            # Process the timeline returned from the API
-            timeline_data = simulation_response.json()
-            
-            # Map DMP states to our infection states using config
-            str_to_state = {k: getattr(InfectionState, v) for k, v in DMP_API["state_mapping"].items()}
-            
-            # Initialize the timeline for this disease
-            val = { disease: {} }
-            
-            # Get the maximum time in the timeline for end time calculation
-            max_time = max([time for _, time in timeline_data["timeline"]])
-            
-            # Process each state transition in the timeline
+            resp = requests.post(f"{base_url}/simulate", json=payload)
+            resp.raise_for_status()
+            timeline_data = resp.json()
+
+            state_map = {k: getattr(InfectionState, v) for k, v in DMP_API["state_mapping"].items()}
+            max_time = max(time for _, time in timeline_data["timeline"])
+            end_ts = curtime + max_time / time_factor
+
+            result: dict[InfectionState, InfectionTimeline] = {}
             for status, time in timeline_data["timeline"]:
-                if status in str_to_state:
-                    state = str_to_state[status]
-                    # Convert time from API units to simulation units
-                    adjusted_time = time / DMP_API["time_conversion_factor"]
-                    
-                    if state in val[disease]:
-                        # Update existing timeline entry
-                        current_start = val[disease][state].start
-                        val[disease][state] = InfectionTimeline(
-                            min(current_start, curtime + adjusted_time), 
-                            curtime + max_time/DMP_API["time_conversion_factor"]
-                        )
-                    else:
-                        # Create new timeline entry
-                        val[disease][state] = InfectionTimeline(
-                            curtime + adjusted_time, 
-                            curtime + max_time/DMP_API["time_conversion_factor"]
-                        )
-            return val
+                if status not in state_map:
+                    continue
+                inf_state = state_map[status]
+                start_ts = curtime + time / time_factor
+
+                if inf_state in result:
+                    result[inf_state] = InfectionTimeline(
+                        min(result[inf_state].start, start_ts), end_ts
+                    )
+                else:
+                    result[inf_state] = InfectionTimeline(start_ts, end_ts)
+
+            return {disease: result}
 
         except requests.exceptions.RequestException as e:
-            print(f"Error communicating with DMP API: {e}")
-            # Fallback to a simple timeline if API fails
-            fallback_timeline = INFECTION_MODEL["fallback_timeline"]
+            logger.warning("DMP API error, using fallback timeline: %s", e)
+            fb = INFECTION_MODEL["fallback_timeline"]
             return {
                 disease: {
-                    InfectionState.INFECTED: InfectionTimeline(curtime, curtime + fallback_timeline["infected_duration"]),
-                    InfectionState.INFECTIOUS: InfectionTimeline(curtime + fallback_timeline["infectious_delay"], 
-                                                               curtime + fallback_timeline["infected_duration"]),
-                    InfectionState.RECOVERED: InfectionTimeline(curtime + fallback_timeline["infected_duration"], 
-                                                              curtime + fallback_timeline["recovery_duration"])
+                    InfectionState.INFECTED: InfectionTimeline(
+                        curtime, curtime + fb["infected_duration"]
+                    ),
+                    InfectionState.INFECTIOUS: InfectionTimeline(
+                        curtime + fb["infectious_delay"], curtime + fb["infected_duration"]
+                    ),
+                    InfectionState.RECOVERED: InfectionTimeline(
+                        curtime + fb["infected_duration"], curtime + fb["recovery_duration"]
+                    ),
                 }
             }
+
+    # Private helpers
+
+    def _write_timestep_header(
+        self, file: TextIO, curtime: int, variant_infected: dict[str, dict]
+    ) -> None:
+        file.write(f'====== TIMESTEP {curtime} ======\n')
+        for variant in variant_infected:
+            ids = [pid for pid, val in variant_infected[variant].items() if val != 0]
+            file.write(f'{variant}: {ids}\n')
+            file.write(f"{variant} count: {len(ids)}\n")
