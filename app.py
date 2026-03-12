@@ -4,6 +4,7 @@ from werkzeug.exceptions import BadRequest
 from simulator import simulate
 from simulator.config import DMP_API, SERVER, SIMULATION
 from datetime import datetime, timedelta
+import os
 import requests
 import traceback
 from run_report import RunReport
@@ -30,6 +31,84 @@ def initialize_dmp_api():
     except Exception as e:
         print(f"Failed to initialize DMP: {e}")
         return False
+
+
+def get_algorithms_data_folder():
+    return os.path.join(os.path.dirname(__file__), '../Algorithms/server/data')
+
+
+def resolve_patterns_folder(state_filter=None, explicit_patterns_folder=None):
+    if explicit_patterns_folder:
+        return explicit_patterns_folder
+
+    algorithms_data_folder = get_algorithms_data_folder()
+    if state_filter:
+        state_folder = os.path.join(algorithms_data_folder, state_filter)
+        if os.path.isdir(state_folder):
+            return state_folder
+
+    return algorithms_data_folder
+
+
+def get_pattern_availability(state_filter, start_date=None, end_date=None, patterns_folder=None):
+    from monthly_patterns import MonthlyPatternsManager, get_months_in_range
+
+    folder_path = resolve_patterns_folder(state_filter, patterns_folder)
+    manager = MonthlyPatternsManager(folder_path, state_filter)
+    available_months = manager.available_months
+    required_months = []
+
+    if start_date and end_date:
+        required_months = get_months_in_range(start_date, end_date)
+
+    missing_months = [month for month in required_months if month not in manager.files]
+
+    return {
+        'state': state_filter,
+        'patterns_folder': folder_path,
+        'available_months': available_months,
+        'required_months': required_months,
+        'missing_months': missing_months,
+        'has_any_data': len(available_months) > 0,
+        'has_coverage': len(available_months) > 0 and len(missing_months) == 0,
+    }
+
+
+@app.route("/simulation/pattern-availability", methods=['GET'])
+@cross_origin()
+def get_simulation_pattern_availability():
+    from monthly_patterns import parse_date
+
+    state_filter = request.args.get('state')
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+    patterns_folder = request.args.get('patterns_folder') or None
+
+    if not state_filter:
+        return jsonify({"error": "Missing required parameter: state (e.g., 'OK')"}), 400
+
+    if bool(start_date_str) != bool(end_date_str):
+        return jsonify({"error": "Provide both start_date and end_date together"}), 400
+
+    start_date = None
+    end_date = None
+    if start_date_str and end_date_str:
+        try:
+            start_date = parse_date(start_date_str)
+            end_date = parse_date(end_date_str)
+        except ValueError as e:
+            return jsonify({"error": f"Invalid date format. Use YYYY-MM-DD: {e}"}), 400
+
+        if end_date < start_date:
+            return jsonify({"error": "end_date must be on or after start_date"}), 400
+
+    availability = get_pattern_availability(
+        state_filter,
+        start_date=start_date,
+        end_date=end_date,
+        patterns_folder=patterns_folder,
+    )
+    return jsonify({'data': availability})
 
 @app.route("/simulation/legacy", methods=['POST', 'GET'])
 @cross_origin()
@@ -187,7 +266,6 @@ def run_multi_month_simulation():
     If patterns_folder is not provided, it defaults to:
         ../Algorithms/server/data/{state}/
     """
-    import os
     import sys
     import json
     from simulator.state_manager import save_simulation_state, load_simulation_state, restore_people_state
@@ -201,9 +279,6 @@ def run_multi_month_simulation():
     if ALGORITHMS_SERVER_PATH not in sys.path:
         sys.path.insert(0, ALGORITHMS_SERVER_PATH)
     from patterns import gen_patterns
-    
-    # Base data folder (relative to Simulation/)
-    ALGORITHMS_DATA_FOLDER = os.path.join(os.path.dirname(__file__), '../Algorithms/server/data')
     
     def _coerce_optional_int(value):
         if value is None or isinstance(value, bool):
@@ -311,20 +386,7 @@ def run_multi_month_simulation():
         print(f"[SIMULATION] {error_msg}")
         return jsonify({"error": "Missing required parameter: state (e.g., 'OK')"}), 400
     
-    # Determine patterns_folder with smart defaults
-    # Priority: explicit patterns_folder > data/{state}/ > data/
-    patterns_folder = payload.get('patterns_folder')
-    if not patterns_folder:
-        if state_filter:
-            # Try state-based subfolder first (e.g., data/OK/)
-            state_folder = os.path.join(ALGORITHMS_DATA_FOLDER, state_filter)
-            if os.path.isdir(state_folder):
-                patterns_folder = state_folder
-            else:
-                # Fallback to main data folder
-                patterns_folder = ALGORITHMS_DATA_FOLDER
-        else:
-            patterns_folder = ALGORITHMS_DATA_FOLDER
+    patterns_folder = resolve_patterns_folder(state_filter, payload.get('patterns_folder'))
     
     # State save folder - organized by location/state
     default_state_folder = './simulation_states'
