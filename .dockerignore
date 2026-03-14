@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+results.json
+results_infections.json
+results_movement.json
+sim_temp/
+dmp/core/simulation_results.json
+dmp/core/bulk_simulation_results.json
