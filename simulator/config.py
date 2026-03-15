@@ -2,6 +2,7 @@
 Configuration settings for the Delineo simulation system.
 This centralizes hardcoded values that were previously scattered across files.
 """
+import os
 
 # DMP API settings
 DMP_API = {
@@ -72,7 +73,7 @@ SIMULATION = {
 }
 
 DELINEO = {
-    "DB_URL": "http://localhost:3000/api/"
+    "DB_URL": os.environ.get("DELINEO_DB_URL", "http://localhost:3000/api/")
 }
 
 # Server configuration
