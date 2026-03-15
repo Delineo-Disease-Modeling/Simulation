@@ -11,7 +11,7 @@ from .pap import Person, Household, Facility, InfectionState, InfectionTimeline,
 from .infectionmgr import InfectionManager
 from .config import DELINEO, SIMULATION, INFECTION_MODEL
 from .data_interface import StreamDataLoader
-from .masking import Maskingeffects
+from .infection_models.v6_wells_riley import CAT
 from .logger import SimulationLogger
 from .io import IncrementalJSONWriter
 
@@ -530,8 +530,14 @@ def _run_infection_at_poi(
                 ):
                     continue
 
-                mask_mod = Maskingeffects.calculate_mask_transmission_modifier(infector, target)
-                if random.random() >= 0.0005 * mask_mod:
+                if not CAT(
+                    target,
+                    indoor=not is_hh,
+                    num_time_steps=1,
+                    infector=infector,
+                    infector_masked=infector.is_masked(),
+                    susceptible_masked=target.is_masked(),
+                ):
                     continue
 
                 logger.info("[Infection] %s -> %s @ %s (t=%d, variant=%s)", infector.id, target.id, poi_id, ts, variant)

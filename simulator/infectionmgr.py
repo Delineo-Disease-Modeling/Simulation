@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import random
 import logging
 import requests
 from typing import Optional, TextIO
 
 from .pap import Person, InfectionState, InfectionTimeline, VaccinationState
-from .masking import Maskingeffects
+from .infection_models.v6_wells_riley import CAT
 from .config import DMP_API, INFECTION_MODEL
 
 logger = logging.getLogger(__name__)
@@ -62,11 +61,15 @@ class InfectionManager:
                     ):
                         continue
 
-                    # Mask-adjusted transmission check
-                    mask_modifier = Maskingeffects.calculate_mask_transmission_modifier(infector, target)
-                    transmission_prob = 0.0005 * mask_modifier
-
-                    if random.random() >= transmission_prob:
+                    # Wells-Riley transmission check
+                    if not CAT(
+                        target,
+                        indoor=True,
+                        num_time_steps=1,
+                        infector=infector,
+                        infector_masked=infector.is_masked(),
+                        susceptible_masked=target.is_masked(),
+                    ):
                         continue
 
                     logger.info(

@@ -172,12 +172,12 @@ class Person:
 
         for disease, value in self.timeline.items():
             for state, tl in value.items():
-                if tl.end >= time:
-                    self.states[disease] = self.states[disease] & ~state
-                elif tl.start <= time:
+                if tl.start <= time <= tl.end:
                     self.states[disease] = self.states[disease] | state
                     if state in (InfectionState.REMOVED, InfectionState.RECOVERED, InfectionState.HOSPITALIZED):
                         self.invisible = True
+                else:
+                    self.states[disease] = self.states[disease] & ~state
 
     def __repr__(self) -> str:
         return f"Person(id={self.id!r}, age={self.age})"
