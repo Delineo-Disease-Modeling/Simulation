@@ -82,12 +82,12 @@ def CAT(p, indoor, num_time_steps, infector=None, infector_masked=False, suscept
         bool: True if transmission occurs
     """
     # Wells-Riley parameters
-    quanta_rate = 48.0        # quanta/hr — COVID-like, upper moderate
-    breathing_rate = 0.5      # m³/hr — sedentary breathing
-    ventilation_rate = 150.0  # m³/hr — moderate indoor ventilation
+    quanta_rate = 20.0        # quanta/hr
+    breathing_rate = 0.5      # m³/hr
+    ventilation_rate = 150.0  # m³/hr
 
     if not indoor:
-        # Outdoor: massive dilution effectively prevents aerosol transmission
+        # Outdoor
         ventilation_rate *= 20.0
 
     # Exposure time in hours
@@ -99,13 +99,13 @@ def CAT(p, indoor, num_time_steps, infector=None, infector_masked=False, suscept
     # Mask modifiers reduce quanta reaching susceptible
     mask_factor = 1.0
     if infector_masked and susceptible_masked:
-        mask_factor *= (1 - 0.85)   # 85% combined reduction
+        mask_factor *= (1 - 0.85)
     elif infector_masked:
-        mask_factor *= (1 - 0.7)    # 70% source control
+        mask_factor *= (1 - 0.7)
     elif susceptible_masked:
-        mask_factor *= (1 - 0.5)    # 50% wearer protection
+        mask_factor *= (1 - 0.5)
 
-    # Vaccination effects on transmission (infector source control)
+    # Vaccination effects on transmission
     if infector is not None:
         transmission_reduction = get_vaccination_protection(infector, 'transmission')
         mask_factor *= (1 - transmission_reduction)
