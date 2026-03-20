@@ -273,14 +273,19 @@ def run_simulator(
     simdata: dict,
     enable_logging: bool = True,
     output_dir: Optional[str] = None,
-    progress_callback: Optional[Callable[[int, int], None]] = None,
+    progress_callback: Optional[Callable] = None,
 ) -> dict:
     logger.info("QUEUE-BASED SIMULATION START (max_length=%s)", simdata["length"])
+
+    def _progress(current_step, max_steps, message=None):
+        if progress_callback:
+            progress_callback(current_step, max_steps, message)
 
     if not simdata["randseed"]:
         random.seed(0)
 
     # Step 1: Load Static Data
+    _progress(0, 1, "Loading population data from server...")
     url = f"{DELINEO['DB_URL']}patterns/{simdata['czone_id']}?length={simdata['length']}"
     stream_iterator = iter(StreamDataLoader.stream_data(url, timeout=360))
 
@@ -299,6 +304,7 @@ def run_simulator(
     logger.info("Loaded: %d people, %d homes, %d places", len(people_data), len(homes_data), len(places_data))
 
     # Initialize simulator
+    _progress(0, 1, f"Building world: {len(homes_data)} homes, {len(places_data)} places...")
     simulator = DiseaseSimulator(
         timestep=60,
         enable_logging=enable_logging,
@@ -318,6 +324,7 @@ def run_simulator(
         eq._ingest_patterns(first_chunk["patterns"])
 
     # Build people & seed infections
+    _progress(0, 1, f"Initializing {len(people_data)} people & seeding infections...")
     variants = SIMULATION["variants"]
     seed_ids = random.sample(list(people_data.keys()), min(len(people_data), len(variants)))
     variant_assignments = dict(zip(seed_ids, variants))
@@ -359,6 +366,7 @@ def run_simulator(
     )
 
     # Buffer all remaining stream data to populate the queue
+    _progress(0, 1, "Buffering movement stream data...")
     eq.drain_stream()
 
     # Step 2: Queue-Based Simulation Loop
@@ -377,6 +385,7 @@ def run_simulator(
     processed_count = 0
     last_movement_ts = -simulator.timestep
 
+    _progress(0, max_len, "Running simulation...")
     logger.info("Starting queue-based simulation (queue size: %d)", len(eq))
 
     def write_snapshot(ts_str: str) -> None:
@@ -421,8 +430,7 @@ def run_simulator(
 
         ts = last_movement_ts + simulator.timestep
         while ts <= target_ts:
-            if progress_callback:
-                progress_callback(ts, max_len)
+            _progress(ts, max_len)
             ts_str = str(ts)
             processed_count += 1
             eq.buffer_until(ts)
@@ -481,6 +489,7 @@ def run_simulator(
     # Fill remaining timesteps for complete output
     process_movement_up_to(max_len)
 
+    _progress(max_len, max_len, "Simulation complete, writing output...")
     logger.info("SIMULATION COMPLETE (%d timesteps processed)", processed_count)
 
     if simdata_writer:
@@ -520,6 +529,8 @@ def _run_infection_at_poi(
     if not infectious:
         return
 
+    exposure_hours = simulator.timestep / 60.0
+
     for infector in infectious:
         for variant, state in infector.states.items():
             if not (state & InfectionState.INFECTIOUS):
@@ -538,7 +549,7 @@ def _run_infection_at_poi(
                 if not CAT(
                     target,
                     indoor=not is_hh,
-                    num_time_steps=1,
+                    exposure_hours=exposure_hours,
                     infector=infector,
                     infector_masked=infector.is_masked(),
                     susceptible_masked=target.is_masked(),

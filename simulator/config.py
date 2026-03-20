@@ -36,8 +36,6 @@ INFECTION_MODEL = {
     "transmission_rate": 7e3,
     # Whether multiple diseases can infect the same person simultaneously
     "allow_multidisease": True,
-    # Default timestep for infection manager (minutes)
-    "default_timestep": 15,
     # Fallback timeline values used only when DMP API fails to provide a timeline
     "fallback_timeline": {
         "infected_duration": 1440,      # 24 hours in minutes (fallback value)

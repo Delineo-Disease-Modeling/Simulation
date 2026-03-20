@@ -78,18 +78,23 @@ def run_simulation_endpoint():
         print(f'Created temp dir: {temp_dir}')
 
         last_progress = [-1]
-        def progress_callback(current_step, max_steps):
+        last_message = [None]
+        def progress_callback(current_step, max_steps, message=None):
             progress = int((current_step / max_steps) * 100)
-            if progress != last_progress[0]:
+            msg_changed = message is not None and message != last_message[0]
+            progress_changed = progress != last_progress[0]
+            if msg_changed or progress_changed:
                 last_progress[0] = progress
-                msg_queue.put({"type": "progress", "value": progress})
+                if message is not None:
+                    last_message[0] = message
+                msg_queue.put({"type": "progress", "value": progress, "message": last_message[0]})
 
         try:
             # Pass output_dir to run_simulator so it writes files directly
             file_paths = simulate.run_simulator(sim_data, enable_logging=False, output_dir=temp_dir, progress_callback=progress_callback)
             
-            print('Simulation complete. Streaming data...')
-            
+            msg_queue.put({"type": "progress", "value": 100, "message": "Uploading results..."})
+
             if "error" in file_paths:
                 shutil.rmtree(temp_dir)
                 msg_queue.put({"type": "error", "message": file_paths["error"]})

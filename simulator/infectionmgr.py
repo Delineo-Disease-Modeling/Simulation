@@ -45,6 +45,8 @@ class InfectionManager:
                     variant_infected[disease][person_id] = int(state.value)
 
         # Attempt transmission from each infected person to co-located susceptibles
+        exposure_hours = simulator.timestep / 60.0
+
         for person_id in self.infected:
             infector = simulator.people.get(person_id)
             if infector is None or infector.invisible:
@@ -70,7 +72,7 @@ class InfectionManager:
                     if not CAT(
                         target,
                         indoor=True,
-                        num_time_steps=1,
+                        exposure_hours=exposure_hours,
                         infector=infector,
                         infector_masked=infector.is_masked(),
                         susceptible_masked=target.is_masked(),

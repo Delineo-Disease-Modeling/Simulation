@@ -56,7 +56,7 @@ def calculate_waning_immunity(days_since_vaccination):
         return max(0.5, 0.7 - 0.2 * (days_since_vaccination - 180) / 180)
 
 
-def CAT(p, indoor, num_time_steps, infector=None, infector_masked=False, susceptible_masked=False):
+def CAT(p, indoor, exposure_hours, infector=None, infector_masked=False, susceptible_masked=False):
     """
     Calculate transmission probability using the Wells-Riley equation
     with vaccination effects:
@@ -73,7 +73,7 @@ def CAT(p, indoor, num_time_steps, infector=None, infector_masked=False, suscept
     Args:
         p: susceptible Person object
         indoor: whether the location is indoors
-        num_time_steps: number of timesteps of co-location (each = 1 hour)
+        exposure_hours: duration of co-location in hours (derived from simulation timestep)
         infector: infector Person object (for vaccination checks)
         infector_masked: whether the infector is wearing a mask
         susceptible_masked: whether the susceptible is wearing a mask
@@ -91,7 +91,7 @@ def CAT(p, indoor, num_time_steps, infector=None, infector_masked=False, suscept
         ventilation_rate *= 20.0
 
     # Exposure time in hours
-    t = num_time_steps
+    t = exposure_hours
 
     # Wells-Riley: mean inhaled quanta = I * q * p * t / Q
     mean_quanta = (quanta_rate * breathing_rate * t) / ventilation_rate
