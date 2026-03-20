@@ -95,15 +95,19 @@ class StreamDataLoader:
         }
         with requests.get(url, stream=True, headers=headers, timeout=timeout) as response:
             response.raise_for_status()
-            lines = response.iter_lines()
-            # First line: papdata
-            first_line = next(lines)
-            papdata = json.loads(first_line.decode('utf-8'))
-            # Remaining bytes: raw patterns JSON
-            chunks = []
-            for line in lines:
-                if line:
-                    chunks.append(line)
+            it = response.iter_content(chunk_size=1024 * 1024)
+            buf = b''
+            # Read chunks until we find the first newline (end of papdata)
+            for chunk in it:
+                buf += chunk
+                newline_pos = buf.find(b'\n')
+                if newline_pos != -1:
+                    break
+            papdata = json.loads(buf[:newline_pos].decode('utf-8'))
+            # Collect the rest as patterns JSON
+            chunks = [buf[newline_pos + 1:]]
+            for chunk in it:
+                chunks.append(chunk)
             patterns = json.loads(b''.join(chunks).decode('utf-8'))
             return papdata, patterns
 
