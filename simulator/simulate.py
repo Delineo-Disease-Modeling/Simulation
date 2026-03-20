@@ -515,7 +515,12 @@ def _run_infection_at_poi(
     """Run targeted infection checks at a single POI for one timestep."""
     snapshot = list(place.population)
 
-    for infector in snapshot:
+    # Pre-filter: only people who are actually infectious for at least one variant
+    infectious = [p for p in snapshot if p.is_infectious()]
+    if not infectious:
+        return
+
+    for infector in infectious:
         for variant, state in infector.states.items():
             if not (state & InfectionState.INFECTIOUS):
                 continue
@@ -543,7 +548,7 @@ def _run_infection_at_poi(
                 logger.info("[Infection] %s -> %s @ %s (t=%d, variant=%s)", infector.id, target.id, poi_id, ts, variant)
 
                 if target.id not in infectionmgr.infected:
-                    infectionmgr.infected.append(target.id)
+                    infectionmgr.infected.add(target.id)
 
                 timeline = infectionmgr.create_timeline(target, variant, ts)
                 simulator.people[target.id].timeline = timeline

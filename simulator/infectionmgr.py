@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
-import requests
 from typing import Optional, TextIO
+
+import requests
 
 from .pap import Person, InfectionState, InfectionTimeline, VaccinationState
 from .infection_models.v6_wells_riley import CAT
@@ -10,12 +11,16 @@ from .config import DMP_API, INFECTION_MODEL
 
 logger = logging.getLogger(__name__)
 
+# Module-level session for HTTP connection reuse (keep-alive).
+# Avoids TCP handshake + TLS negotiation on every DMP API call.
+_dmp_session = requests.Session()
+
 class InfectionManager:
     """Manages infection spread logic and DMP API timeline creation."""
 
     def __init__(self, infected_ids: list[str]) -> None:
         self.multidisease: bool = INFECTION_MODEL["allow_multidisease"]
-        self.infected: list[str] = list(infected_ids)
+        self.infected: set[str] = set(infected_ids)
 
     def run_model(
         self,
@@ -78,7 +83,7 @@ class InfectionManager:
                     )
 
                     if target.id not in self.infected:
-                        self.infected.append(target.id)
+                        self.infected.add(target.id)
                     elif not self.multidisease:
                         continue
 
@@ -96,10 +101,7 @@ class InfectionManager:
         """Create a disease timeline for a newly infected person using the DMP API.
         Falls back to a config-driven default timeline if the API is unreachable.
         """
-
         base_url = DMP_API["base_url"]
-        time_factor = DMP_API["time_conversion_factor"]
-
         payload = {
             "disease_name": "COVID-19",
             "model_path": None,
@@ -112,46 +114,56 @@ class InfectionManager:
         }
 
         try:
-            resp = requests.post(f"{base_url}/simulate", json=payload)
+            resp = _dmp_session.post(f"{base_url}/simulate", json=payload, timeout=30)
             resp.raise_for_status()
-            timeline_data = resp.json()
-
-            state_map = {k: getattr(InfectionState, v) for k, v in DMP_API["state_mapping"].items()}
-            max_time = max(time for _, time in timeline_data["timeline"])
-            end_ts = curtime + max_time / time_factor
-
-            result: dict[InfectionState, InfectionTimeline] = {}
-            for status, time in timeline_data["timeline"]:
-                if status not in state_map:
-                    continue
-                inf_state = state_map[status]
-                start_ts = curtime + time / time_factor
-
-                if inf_state in result:
-                    result[inf_state] = InfectionTimeline(
-                        min(result[inf_state].start, start_ts), end_ts
-                    )
-                else:
-                    result[inf_state] = InfectionTimeline(start_ts, end_ts)
-
-            return {disease: result}
-
+            return self._build_timeline_from_response(resp.json(), disease, curtime)
         except requests.exceptions.RequestException as e:
             logger.warning("DMP API error, using fallback timeline: %s", e)
-            fb = INFECTION_MODEL["fallback_timeline"]
-            return {
-                disease: {
-                    InfectionState.INFECTED: InfectionTimeline(
-                        curtime, curtime + fb["infected_duration"]
-                    ),
-                    InfectionState.INFECTIOUS: InfectionTimeline(
-                        curtime + fb["infectious_delay"], curtime + fb["infected_duration"]
-                    ),
-                    InfectionState.RECOVERED: InfectionTimeline(
-                        curtime + fb["infected_duration"], curtime + fb["recovery_duration"]
-                    ),
-                }
+            return self._fallback_timeline(disease, curtime)
+
+    @staticmethod
+    def _build_timeline_from_response(
+        timeline_data: dict, disease: str, curtime: int
+    ) -> dict[str, dict[InfectionState, InfectionTimeline]]:
+        """Convert a cached DMP API response into an absolute-time timeline."""
+        time_factor = DMP_API["time_conversion_factor"]
+        state_map = {k: getattr(InfectionState, v) for k, v in DMP_API["state_mapping"].items()}
+        max_time = max(time for _, time in timeline_data["timeline"])
+        end_ts = curtime + max_time / time_factor
+
+        result: dict[InfectionState, InfectionTimeline] = {}
+        for status, time in timeline_data["timeline"]:
+            if status not in state_map:
+                continue
+            inf_state = state_map[status]
+            start_ts = curtime + time / time_factor
+
+            if inf_state in result:
+                result[inf_state] = InfectionTimeline(
+                    min(result[inf_state].start, start_ts), end_ts
+                )
+            else:
+                result[inf_state] = InfectionTimeline(start_ts, end_ts)
+
+        return {disease: result}
+
+    @staticmethod
+    def _fallback_timeline(disease: str, curtime: int) -> dict[str, dict[InfectionState, InfectionTimeline]]:
+        """Config-driven default timeline when the DMP API is unavailable."""
+        fb = INFECTION_MODEL["fallback_timeline"]
+        return {
+            disease: {
+                InfectionState.INFECTED: InfectionTimeline(
+                    curtime, curtime + fb["infected_duration"]
+                ),
+                InfectionState.INFECTIOUS: InfectionTimeline(
+                    curtime + fb["infectious_delay"], curtime + fb["infected_duration"]
+                ),
+                InfectionState.RECOVERED: InfectionTimeline(
+                    curtime + fb["infected_duration"], curtime + fb["recovery_duration"]
+                ),
             }
+        }
 
     # Private helpers
 
