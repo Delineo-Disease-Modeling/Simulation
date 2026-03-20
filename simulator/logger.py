@@ -164,7 +164,7 @@ class SimulationLogger:
         self.intervention_logs.append(intervention_log.copy())
 
     def log_location_state(self, location: Location, timestep):
-        population = location.population
+        population = list(location.population.values())
         infectious_count = sum(1 for p in population if p.is_infectious())
         symptomatic_count = sum(1 for p in population if p.is_symptomatic())
         masked_count = sum(1 for p in population if p.is_masked())
@@ -231,7 +231,7 @@ class SimulationLogger:
         if not location.population:
             return 0
 
-        infectious_count = sum(1 for p in location.population if p.is_infectious())
+        infectious_count = sum(1 for p in location.population.values() if p.is_infectious())
         if infectious_count == 0:
             return 0
 
@@ -239,7 +239,7 @@ class SimulationLogger:
         if location.capacity > 0:
             risk *= (1 + location.total_count / location.capacity)
 
-        masked_rate = sum(1 for p in location.population if p.is_masked()) / location.total_count
+        masked_rate = sum(1 for p in location.population.values() if p.is_masked()) / location.total_count
         risk *= (1 - masked_rate * 0.3)
 
         return risk

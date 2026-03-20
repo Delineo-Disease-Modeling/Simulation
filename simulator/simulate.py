@@ -4,6 +4,7 @@ import logging
 import os
 import random
 import heapq
+from bisect import bisect_right
 from math import ceil
 from typing import Optional, Callable
 
@@ -32,6 +33,9 @@ class DiseaseSimulator:
     ) -> None:
         self.timestep = timestep
         self.iv_weights = intervention_weights or []
+        # Pre-sort by time for bisect lookup
+        self.iv_weights.sort(key=lambda w: w["time"])
+        self._iv_times = [w["time"] * 60 for w in self.iv_weights]
         self.people: dict[str, Person] = {}
         self.households: dict[str, Household] = {}
         self.facilities: dict[str, Facility] = {}
@@ -41,13 +45,9 @@ class DiseaseSimulator:
         )
 
     def get_interventions(self, curtime: int) -> dict:
-        best_time = 0
-        weights = self.iv_weights[0]
-        for w in self.iv_weights:
-            if w["time"] * 60 < int(curtime) and best_time < w["time"]:
-                best_time = w["time"]
-                weights = w
-        return weights
+        t = int(curtime)
+        idx = bisect_right(self._iv_times, t) - 1
+        return self.iv_weights[max(idx, 0)]
 
     def add_person(self, person: Person) -> None:
         self.people[str(person.id)] = person
@@ -77,13 +77,20 @@ class DiseaseSimulator:
 
 
 class EventQueue:
-    """Manages the priority queue, infectious registry, and stream buffering."""
+    """Manages the priority queue, infectious registry, and stream buffering.
+
+    Uses a reverse person index (person_id → [(ts, poi_id, is_hh)]) built at
+    ingest time so that both ``register_infectious`` and ``_ingest_patterns``
+    are O(1) per person instead of scanning every POI.
+    """
 
     def __init__(self, stream_iterator) -> None:
         self._queue: list[tuple] = []
         self._queued: set[tuple] = set()
         self._registry: dict[str, list[tuple]] = {}
         self._buffer: dict[str, dict] = {}
+        # Reverse index: person_id → [(timestep, poi_id, is_household)]
+        self._person_index: dict[str, list[tuple[int, str, bool]]] = {}
         self._stream = stream_iterator
         self._stream_exhausted = False
 
@@ -112,42 +119,39 @@ class EventQueue:
             self._queued.add(key)
 
     def register_infectious(self, person_id: str, variant: str, start: int, end: int) -> None:
-        """Record an infectious window and retroactively scan buffered patterns."""
+        """Record an infectious window and enqueue matching buffered visits via the index."""
         pid = str(person_id)
         self._registry.setdefault(pid, []).append((variant, start, end))
 
-        for ts_str, data in self._buffer.items():
-            ts = int(ts_str)
-            if ts < start or ts > end or not isinstance(data, dict):
-                continue
-            for poi_type, is_hh in POI_TYPES:
-                for poi_id, person_ids in data.get(poi_type, {}).items():
-                    if pid in (str(p) for p in person_ids):
-                        self.enqueue(ts, poi_id, is_hh)
+        # O(k) where k = number of visits for this person already in the buffer
+        for ts, poi_id, is_hh in self._person_index.get(pid, ()):
+            if start <= ts <= end:
+                self.enqueue(ts, poi_id, is_hh)
 
     @property
     def registry(self) -> dict[str, list[tuple]]:
         return self._registry
 
     def _ingest_patterns(self, patterns: dict) -> None:
-        """Add pattern data to the buffer and scan against the registry."""
+        """Add pattern data to the buffer, build the person index, and scan against the registry."""
         for ts_str, data in patterns.items():
             self._buffer[ts_str] = data
-            self._scan_for_infectious(data, int(ts_str))
-
-    def _scan_for_infectious(self, pattern_data: dict, timestep: int) -> None:
-        if not isinstance(pattern_data, dict):
-            return
-        for poi_type, is_hh in POI_TYPES:
-            for poi_id, person_ids in pattern_data.get(poi_type, {}).items():
-                for pid in person_ids:
-                    pid_str = str(pid)
-                    if pid_str not in self._registry:
-                        continue
-                    for _, inf_start, inf_end in self._registry[pid_str]:
-                        if inf_start <= timestep <= inf_end:
-                            self.enqueue(timestep, poi_id, is_hh)
-                            break
+            if not isinstance(data, dict):
+                continue
+            ts = int(ts_str)
+            for poi_type, is_hh in POI_TYPES:
+                for poi_id, person_ids in data.get(poi_type, {}).items():
+                    poi_id_str = str(poi_id)
+                    for pid in person_ids:
+                        pid_str = str(pid)
+                        # Build reverse index entry
+                        self._person_index.setdefault(pid_str, []).append((ts, poi_id_str, is_hh))
+                        # If this person is already registered as infectious, enqueue directly
+                        if pid_str in self._registry:
+                            for _, inf_start, inf_end in self._registry[pid_str]:
+                                if inf_start <= ts <= inf_end:
+                                    self.enqueue(ts, poi_id_str, is_hh)
+                                    break
 
     def _read_stream_chunk(self) -> bool:
         """Read one chunk from the stream. Returns False if exhausted."""
@@ -175,14 +179,15 @@ class EventQueue:
             pass
 
     def consume_pattern(self, ts_str: str) -> None:
-        """Free a consumed pattern from the buffer."""
+        """Free a consumed pattern from the buffer and its person index entries."""
         self._buffer.pop(ts_str, None)
 
 
 # MOVEMENT
 
-def move_people(simulator: DiseaseSimulator, items, is_household: bool, current_timestep: str) -> None:
-    interventions = simulator.get_interventions(current_timestep)
+def move_people(simulator: DiseaseSimulator, items, is_household: bool, current_timestep: str, interventions: Optional[dict] = None) -> None:
+    if interventions is None:
+        interventions = simulator.get_interventions(current_timestep)
 
     for loc_id, people in items:
         place = simulator.get_location(str(loc_id), is_household)
@@ -284,23 +289,20 @@ def run_simulator(
     if not simdata["randseed"]:
         random.seed(0)
 
-    # Step 1: Load Static Data
+    # Step 1: Load Static Data (bulk mode — no per-key JSON round-trip)
     _progress(0, 1, "Loading population data from server...")
     url = f"{DELINEO['DB_URL']}patterns/{simdata['czone_id']}?length={simdata['length']}"
-    stream_iterator = iter(StreamDataLoader.stream_data(url, timeout=360))
 
     try:
-        logger.info("Waiting for static data...")
-        first_chunk = next(stream_iterator)
-    except StopIteration:
-        return {"error": "No data received from server"}
+        logger.info("Fetching bulk data...")
+        papdata, patterns_data = StreamDataLoader.load_bulk(url, timeout=360)
     except Exception as e:
-        logger.exception("Failed to load static data")
+        logger.exception("Failed to load data")
         return {"error": str(e)}
 
-    people_data = first_chunk.get("people", {})
-    homes_data = first_chunk.get("homes", {})
-    places_data = first_chunk.get("places", {})
+    people_data = papdata.get("people", {})
+    homes_data = papdata.get("homes", {})
+    places_data = papdata.get("places", {})
     logger.info("Loaded: %d people, %d homes, %d places", len(people_data), len(homes_data), len(places_data))
 
     # Initialize simulator
@@ -318,10 +320,12 @@ def run_simulator(
     for fid, data in places_data.items():
         simulator.add_facility(_parse_facility(fid, data))
 
-    # Initialize event queue with initial patterns from first chunk
-    eq = EventQueue(stream_iterator)
-    if "patterns" in first_chunk:
-        eq._ingest_patterns(first_chunk["patterns"])
+    # Initialize event queue — pre-populate with all patterns (already in memory)
+    sim_length = simdata["length"]
+    eq = EventQueue(iter([]))  # no stream; data already loaded
+    # Filter patterns by simulation length and ingest
+    filtered = {k: v for k, v in patterns_data.items() if int(k) <= sim_length}
+    eq._ingest_patterns(filtered)
 
     # Build people & seed infections
     _progress(0, 1, f"Initializing {len(people_data)} people & seeding infections...")
@@ -365,10 +369,6 @@ def run_simulator(
         ]
     )
 
-    # Buffer all remaining stream data to populate the queue
-    _progress(0, 1, "Buffering movement stream data...")
-    eq.drain_stream()
-
     # Step 2: Queue-Based Simulation Loop
     simdata_writer = None
     patterns_writer = None
@@ -384,6 +384,11 @@ def run_simulator(
     max_len = simdata["length"]
     processed_count = 0
     last_movement_ts = -simulator.timestep
+    # Track people who have timelines (need update_state); start with seeded
+    people_with_timelines: set[str] = {
+        p.id for p in simulator.people.values() if p.timeline
+    }
+    last_interventions: Optional[dict] = None
 
     _progress(0, max_len, "Running simulation...")
     logger.info("Starting queue-based simulation (queue size: %d)", len(eq))
@@ -392,11 +397,11 @@ def run_simulator(
         """Write movement + infection-state snapshots for a timestep."""
         movement = {
             "homes": {
-                str(h.id): [p.id for p in h.population]
+                str(h.id): list(h.population.keys())
                 for h in simulator.households.values() if h.population
             },
             "places": {
-                str(f.id): [p.id for p in f.population]
+                str(f.id): list(f.population.keys())
                 for f in simulator.facilities.values() if f.population
             },
         }
@@ -426,30 +431,37 @@ def run_simulator(
 
     def process_movement_up_to(target_ts: int) -> None:
         """Apply movement for every timestep up to target_ts (inclusive)."""
-        nonlocal last_movement_ts, processed_count
+        nonlocal last_movement_ts, processed_count, last_interventions
 
         ts = last_movement_ts + simulator.timestep
         while ts <= target_ts:
             _progress(ts, max_len)
             ts_str = str(ts)
             processed_count += 1
-            eq.buffer_until(ts)
 
             if ts_str in eq.buffer:
                 data = eq.buffer[ts_str]
                 interventions = simulator.get_interventions(ts_str)
 
-                for person in simulator.people.values():
-                    person.update_state(ts_str, variants)
-                    apply_interventions(person, interventions, ts_str)
+                # Only update_state for people with infection timelines
+                for pid_str in people_with_timelines:
+                    person = simulator.get_person(pid_str)
+                    if person:
+                        person.update_state(ts_str, variants)
+
+                # Only re-apply interventions when they change
+                if interventions is not last_interventions:
+                    last_interventions = interventions
+                    for person in simulator.people.values():
+                        apply_interventions(person, interventions, ts_str)
 
                 if isinstance(data, dict):
                     if "homes" in data:
-                        move_people(simulator, data["homes"].items(), True, ts_str)
+                        move_people(simulator, data["homes"].items(), True, ts_str, interventions)
                     if "places" in data:
-                        move_people(simulator, data["places"].items(), False, ts_str)
+                        move_people(simulator, data["places"].items(), False, ts_str, interventions)
 
-            # Update variant tracking
+            # Update variant tracking — only check registered people
             for pid_str in eq.registry:
                 person = simulator.get_person(pid_str)
                 if not person:
@@ -481,10 +493,10 @@ def run_simulator(
             ts, poi_id, is_hh = eq.pop()
 
             place = simulator.get_location(str(poi_id), is_hh)
-            if not place or not place.population:
+            if not place or not place.population:  # dict is falsy when empty
                 continue
 
-            _run_infection_at_poi(simulator, infectionmgr, eq, place, poi_id, is_hh, ts, variant_infected)
+            _run_infection_at_poi(simulator, infectionmgr, eq, place, poi_id, is_hh, ts, variant_infected, people_with_timelines)
 
     # Fill remaining timesteps for complete output
     process_movement_up_to(max_len)
@@ -520,9 +532,10 @@ def _run_infection_at_poi(
     is_hh: bool,
     ts: int,
     variant_infected: dict[str, dict],
+    people_with_timelines: Optional[set[str]] = None,
 ) -> None:
     """Run targeted infection checks at a single POI for one timestep."""
-    snapshot = list(place.population)
+    snapshot = list(place.population.values())
 
     # Pre-filter: only people who are actually infectious for at least one variant
     infectious = [p for p in snapshot if p.is_infectious()]
@@ -563,6 +576,8 @@ def _run_infection_at_poi(
 
                 timeline = infectionmgr.create_timeline(target, variant, ts)
                 simulator.people[target.id].timeline = timeline
+                if people_with_timelines is not None:
+                    people_with_timelines.add(target.id)
 
                 if variant in timeline and InfectionState.INFECTIOUS in timeline[variant]:
                     inf_tl = timeline[variant][InfectionState.INFECTIOUS]

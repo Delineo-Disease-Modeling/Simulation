@@ -60,7 +60,7 @@
 #             total_infectious_people = 0
 
 #             # Iterate over each person in the location at time step t
-#             for person in p.location.population:
+#             for person in p.location.population.values():
 #                 if person.invisible == True:
 #                     continue
                 
@@ -266,7 +266,7 @@ def calculate_droplets_transport(p, num_time_steps):
             total_infectious_people = 0
 
             # Iterate over each person in the location at time step t
-            for person in p.location.population:
+            for person in p.location.population.values():
                 if person.invisible == True:
                     continue
                 

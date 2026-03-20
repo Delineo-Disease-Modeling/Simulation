@@ -83,6 +83,31 @@ def load_places():
     
 class StreamDataLoader:
     @staticmethod
+    def load_bulk(url: str, timeout: int = 360) -> tuple:
+        """
+        Fetch bulk data: first line is papdata JSON, remainder is raw patterns JSON.
+        Returns (papdata_dict, patterns_dict).
+        """
+        logging.info(f"Fetching bulk data from: {url}")
+        headers = {
+            'Accept': 'application/json, text/plain, */*',
+            'Cache-Control': 'no-cache',
+        }
+        with requests.get(url, stream=True, headers=headers, timeout=timeout) as response:
+            response.raise_for_status()
+            lines = response.iter_lines()
+            # First line: papdata
+            first_line = next(lines)
+            papdata = json.loads(first_line.decode('utf-8'))
+            # Remaining bytes: raw patterns JSON
+            chunks = []
+            for line in lines:
+                if line:
+                    chunks.append(line)
+            patterns = json.loads(b''.join(chunks).decode('utf-8'))
+            return papdata, patterns
+
+    @staticmethod
     def stream_data(url: str, timeout: int = 60) -> Generator[Dict[str, Any], None, None]:
         """
         Stream data from the specified URL, yielding data chunks.

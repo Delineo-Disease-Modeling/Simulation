@@ -157,7 +157,7 @@ def count_infectors_in_location(location, disease):
     infector_count = 0
     total_quanta_rate = 0
     
-    for person in location.population:
+    for person in location.population.values():
         if person.invisible:
             continue
         if (person.states.get(disease) and 

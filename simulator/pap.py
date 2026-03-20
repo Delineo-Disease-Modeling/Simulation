@@ -57,18 +57,19 @@ class Location:
         self.label: Optional[str] = label
         self.capacity: int = capacity        # -1 = unlimited
         self.location_type: str = location_type
-        self.population: list[Person] = []
-        self.total_count: int = 0
+        self.population: dict[str, Person] = {}
 
     # population management
 
+    @property
+    def total_count(self) -> int:
+        return len(self.population)
+
     def add_member(self, person: Person) -> None:
-        self.population.append(person)
-        self.total_count = len(self.population)
+        self.population[str(person.id)] = person
 
     def remove_member(self, person_id: str) -> None:
-        self.population = [p for p in self.population if p.id != person_id]
-        self.total_count = len(self.population)
+        self.population.pop(str(person_id), None)
 
     # convenience queries
 

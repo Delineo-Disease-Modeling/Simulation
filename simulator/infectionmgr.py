@@ -52,7 +52,7 @@ class InfectionManager:
             if infector is None or infector.invisible:
                 continue
 
-            for target in infector.location.population:
+            for target in infector.location.population.values():
                 if infector.id == target.id:
                     continue
 

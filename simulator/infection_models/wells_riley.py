@@ -34,7 +34,7 @@ def calculate_droplets_transport(p, num_time_steps):
 
     for _ in range(num_time_steps):
         total = 0
-        for person in p.location.population:
+        for person in p.location.population.values():
             if person.invisible:
                 continue
             if person.states.get(disease) and InfectionState.INFECTIOUS in person.states[disease]:
