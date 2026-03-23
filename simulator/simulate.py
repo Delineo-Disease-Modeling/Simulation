@@ -394,10 +394,10 @@ class SimulationLogger:
         #run analysis
         report = []
         ast.calculate_all_harmonic(start)
-        ast.check_sse(start, report)
-        ast.location_impact(start, report)
-        ast.time_gates(start, report)
-        ast.time_impact(start, report)
+        ast.check_sse(start, report, f'{self.log_dir}/person_logs.csv')
+        ast.location_impact(start, report, f'{self.log_dir}/location_logs.csv')
+        ast.time_gates(start, report, f'{self.log_dir}/location_logs.csv')
+        ast.time_impact(start, report, f'{self.log_dir}/location_logs.csv')
             
         with open(f'{self.log_dir}/graph_report.txt', 'w') as f:
             f.write("\n".join(report))

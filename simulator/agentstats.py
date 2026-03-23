@@ -144,7 +144,7 @@ def calculate_all_harmonic(st: Node):
 
     return 0
 
-def check_sse(st: Node, report: list):
+def check_sse(st: Node, report: list, data_dir: str):
     visited = set()
     dfs(st, visited)
 
@@ -167,15 +167,27 @@ def check_sse(st: Node, report: list):
 
     if curr < top20:
         report.append("Superspreader event detected! Potential superspreaders are: ")
-        for i in range(0, curr + 1): 
-            report.append(f"{targets[i][0]} ")
-        report.append("\n")
+        with open(data_dir, mode="r") as p:
+            person_file = csv.reader(p)
+            for i in range(0, curr + 1): 
+                report.append(f"{targets[i][0]}, ")
+                for row in person_file:
+                    if(row[1] != 'person_id'):
+                        if int(row[1]) == int(targets[i][0]):
+                            report.append(f"a {row[2]}-year old ")
+                            if row[3] == 0:
+                                report.append("male ")
+                            else:
+                                report.append("female ")
+                            report.append(f"from household {row[4]}")
+                            break
+            report.append("\n")
         return True
 
     print("This run was not a superspreader event.\n")
     return False
 
-def location_impact(st: Node, report: list):
+def location_impact(st: Node, report: list, data_dir: str):
     visited = set()
     dfs(st, visited)
     calculate_all_harmonic(st)
@@ -198,10 +210,38 @@ def location_impact(st: Node, report: list):
     count = min(len(weighted_locs), 5)
     report.append(f"Top {count} locations by relative weight: ")
     for i in range(0, count):
-        report.append(f"{weighted_locs[i][0]} ")
-    report.append("\n")
+        report.append(f"{weighted_locs[i][0]}, ")
+        h_or_f = ""
+        max_occupancy = 0
+        capacity = 0
+        with open(data_dir, mode="r") as p:
+            loc_file = csv.reader(p)
+            for row in loc_file:
+                if str(row[1]) != 'location_id':
+                    if int(row[1]) == int(weighted_locs[i][0]):
+                        h_or_f = str(row[2])
+                        if int(row[4]) > max_occupancy:
+                            max_occupancy = int(row[4])
+                        capacity = int(row[3])
+            report.append(f"a {h_or_f} with a max occupancy of {max_occupancy} ")
+            if capacity < 0:
+                report.append("with unlimited capacity")
+            else:
+                report.append(f"with a max capacity of {capacity}")
+
+        report.append("\n")
 
     return 0
+
+def find_max_time(data_dir: str):
+    max_time = 0
+    with open(data_dir, mode="r") as p:
+        time_file = csv.reader(p)
+        for row in time_file:
+            if str(row[0]) != "timestep":
+                if int(row[0]) > max_time:
+                    max_time = int(row[0])
+    return max_time
 
 def time_weight_calc(st: Node): 
     visited = set()
@@ -224,31 +264,37 @@ def time_weight_calc(st: Node):
 
     return weighted_times
 
-def time_gates(st: Node, report: list):
+def time_gates(st: Node, report: list, data_dir: str):
     weighted_times = time_weight_calc(st)
     weighted_times.sort(key=lambda x: x[0], reverse=False)
+    max_time = find_max_time(data_dir)
     curr_fault = float(0.0)
 
     flag50 = False
     for i in range(0,len(weighted_times)):
         curr_fault += weighted_times[i][1]
+        time_percent = (float(weighted_times[i][0]) / float(max_time))
+        time_percent *= 100
         if curr_fault >= 0.5 and not flag50:
-            report.append(f"50%% of the infection damage was done by time {weighted_times[i][0]}\n")
+            report.append(f"50% of the infection damage was done by time {weighted_times[i][0]}, \n{time_percent}% of the way through the simulation\n")
             flag50 = True
         if curr_fault >= 0.8:
-            report.append(f"80%% of the infection damage was done by time {weighted_times[i][0]}\n")
+            report.append(f"80% of the infection damage was done by time {weighted_times[i][0]}, \n{time_percent}% of the way through the simulation\n")
             break
     
     return 0
 
-def time_impact(st: Node, report: list):
+def time_impact(st: Node, report: list, data_dir: str):
     weighted_times = time_weight_calc(st)
     weighted_times.sort(key=lambda x: x[1], reverse=True)
+    max_time = find_max_time(data_dir)
 
     count = min(len(weighted_times), 5)
     report.append(f"Top {count} times by relative weight: ")
     for i in range(0, count):
-        report.append(f"{weighted_times[i][0]} ")
+        time_percent = float(weighted_times[i][0]) / float(max_time)
+        time_percent *= 100
+        report.append(f"{weighted_times[i][0]}, {time_percent}% of the way through the simulation")
     report.append("\n")
 
     return 0
