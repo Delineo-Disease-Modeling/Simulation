@@ -1,50 +1,53 @@
 Superspreader event detected! Potential superspreaders are: 
-12, 
-a 51-year old 
+
+23, 
+a 45-year old 
 female 
-from household 4
-6269, 
-a 1-year old 
+from household 8
+
+
+3659, 
+a 36-year old 
 female 
-from household 2114
+from household 1234
 
 
 Top 5 locations by relative weight: 
-196, 
-a household with a max occupancy of 64 
+251, 
+a household with a max occupancy of 156 
 with unlimited capacity
 
 
-371, 
+253, 
+a household with a max occupancy of 70 
+with unlimited capacity
+
+
+42, 
 a household with a max occupancy of 40 
 with unlimited capacity
 
 
-279, 
-a household with a max occupancy of 23 
+111, 
+a household with a max occupancy of 15 
 with unlimited capacity
 
 
-53, 
-a household with a max occupancy of 28 
+8, 
+a household with a max occupancy of 4 
 with unlimited capacity
 
 
-36, 
-a household with a max occupancy of 40 
-with unlimited capacity
+50% of the infection damage was done by time 1200, 
+41.66666666666667% of the way through the simulation
 
-
-50% of the infection damage was done by time 1860, 
-64.58333333333334% of the way through the simulation
-
-80% of the infection damage was done by time 2460, 
-85.41666666666666% of the way through the simulation
+80% of the infection damage was done by time 2100, 
+72.91666666666666% of the way through the simulation
 
 Top 5 times by relative weight: 
-900, 31.25% of the way through the simulation
-1860, 64.58333333333334% of the way through the simulation
-960, 33.33333333333333% of the way through the simulation
-1920, 66.66666666666666% of the way through the simulation
-2700, 93.75% of the way through the simulation
+1200, 41.66666666666667% of the way through the simulation
+2040, 70.83333333333334% of the way through the simulation
+480, 16.666666666666664% of the way through the simulation
+2580, 89.58333333333334% of the way through the simulation
+780, 27.083333333333332% of the way through the simulation
 

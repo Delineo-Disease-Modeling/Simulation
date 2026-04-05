@@ -53,6 +53,10 @@ class Edge:
         self.location = location    
         self.time = time
         self.fault = fault
+        self.label = ''
+        self.latitude = ''
+        self.longitude = ''
+        self.loctype = ''
 
 #harmonic complexity analysis
 
@@ -166,7 +170,7 @@ def check_sse(st: Node, report: list, data_dir: str):
         curr += 1
 
     if curr < top20:
-        report.append("Superspreader event detected! Potential superspreaders are: ")
+        report.append("Superspreader event detected! Potential superspreaders are: \n")
         with open(data_dir, mode="r") as p:
             person_file = csv.reader(p)
             for i in range(0, curr + 1): 
@@ -181,7 +185,7 @@ def check_sse(st: Node, report: list, data_dir: str):
                                 report.append("female ")
                             report.append(f"from household {row[4]}")
                             break
-            report.append("\n")
+                report.append("\n")
         return True
 
     print("This run was not a superspreader event.\n")
@@ -214,6 +218,9 @@ def location_impact(st: Node, report: list, data_dir: str):
         h_or_f = ""
         max_occupancy = 0
         capacity = 0
+        label = ""
+        latitude = ""
+        longitude = ""
         with open(data_dir, mode="r") as p:
             loc_file = csv.reader(p)
             for row in loc_file:
@@ -223,11 +230,17 @@ def location_impact(st: Node, report: list, data_dir: str):
                         if int(row[4]) > max_occupancy:
                             max_occupancy = int(row[4])
                         capacity = int(row[3])
+                        label = str(row[13])
+                        latitude = str(row[14])
+                        longitude = str(row[15])
             report.append(f"a {h_or_f} with a max occupancy of {max_occupancy} ")
             if capacity < 0:
                 report.append("with unlimited capacity")
             else:
                 report.append(f"with a max capacity of {capacity}")
+            if h_or_f != "household":
+                report.append(f"located at {latitude}:{longitude}")  
+                report.append(f"named {label}")
 
         report.append("\n")
 
@@ -301,9 +314,27 @@ def time_impact(st: Node, report: list, data_dir: str):
 
 #Construct graph, find the infectivity of one agent
 
-def build_agent_graph_nodupes(start: Node, data_dir: str):
+# def build_agent_graph_nodupes(start: Node, data_dir: str, places_data):
+#     with open(data_dir, mode="r") as ifile: 
+#         itable = csv.reader(ifile)
+#         for row in itable:
+#             if str(row[6]) != "infector_person_id":
+#                 if str(row[6]) == "":
+#                     new_node = Node(int(row[1]), -1, start)
+#                     start.addEdge(new_node, int(row[11]), 0, 0)
+#                 else:
+#                     infector = start.searchByID(start, int(row[6]))
+#                     infected = start.searchByID(start, int(row[1]))
+#                     if not infected:
+#                         new_node = Node(int(row[1]), int(row[6]), infector)
+#                         infector.addEdge(new_node, int(row[11]), int(row[0]), 0)
+#     return 0
+
+def build_agent_graph_nodupes(start: Node, data_dir: str, location_dir: str):
     with open(data_dir, mode="r") as ifile: 
         itable = csv.reader(ifile)
+        lfile = open(location_dir, mode="r")
+        ltable = csv.reader(lfile)
         for row in itable:
             if str(row[6]) != "infector_person_id":
                 if str(row[6]) == "":
@@ -315,6 +346,17 @@ def build_agent_graph_nodupes(start: Node, data_dir: str):
                     if not infected:
                         new_node = Node(int(row[1]), int(row[6]), infector)
                         infector.addEdge(new_node, int(row[11]), int(row[0]), 0)
+                        newest_edge = infector.edges[-1]
+                        for loc_row in ltable:
+                            if str(loc_row[0]) != "timestep":
+                                if(int(loc_row[1]) == int(row[11])):
+                                    newest_edge.label = str(loc_row[13])
+                                    newest_edge.latitude = str(loc_row[14])
+                                    newest_edge.longitude = str(loc_row[15])
+                                    newest_edge.loctype = str(loc_row[2])
+
+
+    
     return 0
 
 def direct_infectivity(head: Node, target: int):

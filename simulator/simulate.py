@@ -277,7 +277,10 @@ class SimulationLogger:
             'vaccinated_count': vaccinated_count,
             'avg_age': avg_age,
             'male_count': sum(1 for p in population if p.sex == '0'),
-            'female_count': sum(1 for p in population if p.sex == '1')
+            'female_count': sum(1 for p in population if p.sex == '1'),
+            'label': 'None' if isinstance(location, Household) else location.label,
+            'latitude': 'None' if isinstance(location, Household) else location.latitude,
+            'longitude': 'None' if isinstance(location, Household) else location.longitude
         }
 
         self._write_log('location_logs', location_log)
@@ -389,7 +392,7 @@ class SimulationLogger:
 
         #construct graph
         start = ast.Node(-1,-1,None)
-        ast.build_agent_graph_nodupes(start, f'{self.log_dir}/infection_logs.csv')
+        ast.build_agent_graph_nodupes(start, f'{self.log_dir}/infection_logs.csv', f'{self.log_dir}/location_logs.csv')
 
         #run analysis
         report = []
@@ -756,6 +759,7 @@ def run_simulator(
             top_category = 'Other'
             placekey = ''
             postal_code = 0
+            #address = ''
         elif isinstance(data, dict):
             cbg = data.get('cbg')
             label = data.get('label', f"Place_{id}")
@@ -765,6 +769,7 @@ def run_simulator(
             top_category = data.get('top_category', 'Other')
             placekey = data.get('placekey', '')
             postal_code = data.get('postal_code', 0)
+            #address = data.get('street_address', '')
         else:
             cbg = data
             label = f"Place_{id}"
@@ -774,6 +779,7 @@ def run_simulator(
             top_category = 'Other'
             placekey = ''
             postal_code = 0
+            #address = ''
         
         if isinstance(capacity, str):
             try:
@@ -958,7 +964,8 @@ def run_simulator(
                     break
         print(f"[INFMGR] Total people with INFECTIOUS state: {infectious_count}")
         print(f"[INFMGR] InfectionManager.infected has: {len(infectionmgr.infected)} people")
-        if infectious_count > 0 and len(infectionmgr.infected) == 0:
+        # if infectious_count > 0 and len(infectionmgr.infected) == 0:
+        if infectious_count > len(infectionmgr.infected):
             print(f"[INFMGR] BUG DETECTED: People are infectious but not in infected list!")
     
     # Prepare simulation
@@ -1251,6 +1258,8 @@ def run_simulator(
         print(f"[SIM_END] Infected at end of simulation: {end_infected}")
         if report:
             report.info(f"[SIM_END] Infected at end of simulation: {end_infected}")
+        if end_infected != len(infectionmgr.infected):
+            print("ERROR! Unequal infected in simulator than infectionmgr!")
 
         final_result = {
             'result': {i: j for i, j in result.items() if i != 0},
