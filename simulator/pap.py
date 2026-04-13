@@ -280,7 +280,7 @@ class Household(Population):
             self.id = id
 
 class Facility(Population):
-    def __init__(self, id, cbg, label, capacity=-1, latitude=0, longitude=0, top_category='Other', placekey='', postal_code=0):
+    def __init__(self, id, cbg, label, capacity=-1, latitude=0, longitude=0, top_category='Other', placekey='', postal_code=0, address=''):
         super().__init__()
         self.cbg = cbg
         self.id = id
@@ -290,6 +290,7 @@ class Facility(Population):
         self.top_category = top_category
         self.placekey = placekey
         self.postal_code = postal_code
+        self.address = address
         
         # maximum amount of people that can be in this population (-1 = no limit)
         self.capacity = capacity

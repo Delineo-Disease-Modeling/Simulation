@@ -280,7 +280,8 @@ class SimulationLogger:
             'female_count': sum(1 for p in population if p.sex == '1'),
             'label': 'None' if isinstance(location, Household) else location.label,
             'latitude': 'None' if isinstance(location, Household) else location.latitude,
-            'longitude': 'None' if isinstance(location, Household) else location.longitude
+            'longitude': 'None' if isinstance(location, Household) else location.longitude,
+            'address': 'None' if isinstance(location, Household) else location.address
         }
 
         self._write_log('location_logs', location_log)
@@ -759,7 +760,7 @@ def run_simulator(
             top_category = 'Other'
             placekey = ''
             postal_code = 0
-            #address = ''
+            address = ''
         elif isinstance(data, dict):
             cbg = data.get('cbg')
             label = data.get('label', f"Place_{id}")
@@ -769,7 +770,7 @@ def run_simulator(
             top_category = data.get('top_category', 'Other')
             placekey = data.get('placekey', '')
             postal_code = data.get('postal_code', 0)
-            #address = data.get('street_address', '')
+            address = data.get('address', 'None')
         else:
             cbg = data
             label = f"Place_{id}"
@@ -779,7 +780,7 @@ def run_simulator(
             top_category = 'Other'
             placekey = ''
             postal_code = 0
-            #address = ''
+            address = ''
         
         if isinstance(capacity, str):
             try:
@@ -787,7 +788,7 @@ def run_simulator(
             except ValueError:
                 capacity = -1
         
-        simulator.add_facility(Facility(id, cbg, label, capacity, latitude, longitude, top_category, placekey, postal_code))
+        simulator.add_facility(Facility(id, cbg, label, capacity, latitude, longitude, top_category, placekey, postal_code, address))
     print(f"Added {len(simulator.facilities)} facilities")
 
     # Get default infected IDs and variants from config
@@ -1223,7 +1224,8 @@ def run_simulator(
                 'latitude': getattr(f, 'latitude', 0),
                 'longitude': getattr(f, 'longitude', 0),
                 'top_category': getattr(f, 'top_category', 'Other'),
-                'postal_code': getattr(f, 'postal_code', 0)
+                'postal_code': getattr(f, 'postal_code', 0),
+                'address': getattr(f, 'address', '')
             } for f in simulator.facilities.values()}
         }
         
