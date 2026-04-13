@@ -1,10 +1,10 @@
 === Simulation Summary Report ===
 
 Total unique people tracked: 6565
-Total infections logged: 192
+Total infections logged: 308
 Total movements logged: 315120
 Total person state logs: 321685
 Total location state logs: 99936
-Total contact logs: 6077
+Total contact logs: 642
 Total intervention logs: 0
-Infection chains tracked: 191
+Infection chains tracked: 307
