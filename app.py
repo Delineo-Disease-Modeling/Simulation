@@ -11,6 +11,7 @@ import os
 import threading
 import queue
 import json
+import time
 
 app = Flask(__name__)
 
@@ -100,23 +101,56 @@ def run_simulation_endpoint():
                 msg_queue.put({"type": "error", "message": file_paths["error"]})
                 return
 
-            # Open files for streaming
-            # requests will stream the file content without loading it all into memory
-            with open(file_paths['simdata'], 'rb') as f_sim, open(file_paths['patterns'], 'rb') as f_pat:
-                resp = requests.post(f'{DELINEO["DB_URL"]}simdata', data={
-                    'czone_id': int(sim_data['czone_id']),
-                    'length': int(sim_data['length'])
-                }, files={
-                    'simdata': ('simdata.json.gz', f_sim, 'application/gzip'),
-                    'patterns': ('patterns.json.gz', f_pat, 'application/gzip')
-                })
-            
-            if resp.ok:
+            # Upload results with bounded retries. Transient truncation of the
+            # storage response (e.g. flaky proxy) used to surface as a raw
+            # Python JSONDecodeError in the UI; retry once, then fall back to a
+            # clear message.
+            sim_id = None
+            last_error = None
+            for attempt in range(2):
+                with open(file_paths['simdata'], 'rb') as f_sim, open(file_paths['patterns'], 'rb') as f_pat:
+                    try:
+                        resp = requests.post(f'{DELINEO["DB_URL"]}simdata', data={
+                            'czone_id': int(sim_data['czone_id']),
+                            'length': int(sim_data['length'])
+                        }, files={
+                            'simdata': ('simdata.json.gz', f_sim, 'application/gzip'),
+                            'patterns': ('patterns.json.gz', f_pat, 'application/gzip')
+                        }, timeout=600)
+                    except requests.RequestException as req_err:
+                        last_error = f"Network error uploading results: {req_err}"
+                        print(f"[attempt {attempt + 1}] {last_error}")
+                        time.sleep(1)
+                        continue
+
+                if not resp.ok:
+                    last_error = f"Storage returned {resp.status_code}"
+                    print(f"[attempt {attempt + 1}] {last_error}")
+                    time.sleep(1)
+                    continue
+
+                try:
+                    sim_id = resp.json()['data']['id']
+                except (json.JSONDecodeError, ValueError, KeyError, TypeError) as parse_err:
+                    body_len = len(resp.content or b'')
+                    last_error = (
+                        f"Storage response was not valid JSON "
+                        f"(status {resp.status_code}, {body_len} bytes): {parse_err}"
+                    )
+                    print(f"[attempt {attempt + 1}] {last_error}")
+                    time.sleep(1)
+                    continue
+
+                break
+
+            if sim_id is not None:
                 print('Sent successfully!')
-                msg_queue.put({"type": "result", "data": { 'id': resp.json()['data']['id'] }})
+                msg_queue.put({"type": "result", "data": {'id': sim_id}})
             else:
-                print(f'Error sending data... {resp.status_code}')
-                msg_queue.put({"type": "error", "message": f"Error sending data to storage: {resp.status_code}"})
+                msg_queue.put({
+                    "type": "error",
+                    "message": f"Failed to save simulation results. {last_error or 'unknown error'}",
+                })
             
             # Cleanup
             shutil.rmtree(temp_dir)
