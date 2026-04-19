@@ -117,9 +117,11 @@ def normalize_all_harmonic(st: Node, visited: set):
     #now that we have the total weights, normalize every node and edge
     for trgt in visited:
         if trgt.id != -1:
-            trgt.fault *= (float(1.0) / node_total)
+            if node_total > 0.0:
+                trgt.fault *= (float(1.0) / node_total)
             for e in trgt.edges:
-                e.fault *= (float(1.0) / edge_total)
+                if edge_total > 0.0:
+                    e.fault *= (float(1.0) / edge_total)
 
     return 0
 
@@ -155,13 +157,16 @@ def check_sse(st: Node, report: list):
             pair = (trgt.id, trgt.fault)
             targets.append(pair)
     targets.sort(key=lambda x: x[1], reverse=True)
+    if not targets:
+        print("This run was not a superspreader event.\n")
+        return False
 
     #check if top (< 20%) of agents account for at least 50% of infections
     total_hc = float(0.0)
     total_elements = 0
     curr = 0
     top20 = float(0.2 * len(targets))
-    while total_hc < 0.5:
+    while total_hc < 0.5 and curr < len(targets):
         total_hc += targets[curr][1]
         curr += 1
 

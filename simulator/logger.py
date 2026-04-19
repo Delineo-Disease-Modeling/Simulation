@@ -178,6 +178,8 @@ class SimulationLogger:
             'timestep': timestep,
             'location_id': location.id,
             'location_type': location.location_type,
+            'label': location.label,
+            'street_address': getattr(location, 'street_address', None),
             'capacity': location.capacity,
             'occupancy': location.total_count,
             'utilization_rate': location.total_count / cap,

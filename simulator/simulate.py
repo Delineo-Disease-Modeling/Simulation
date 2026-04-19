@@ -254,14 +254,17 @@ def _parse_facility(fid: str, data) -> Facility:
         cbg = data[0] if data else None
         label = data[1] if len(data) > 1 else None
         capacity = data[2] if len(data) > 2 else -1
+        street_address = None
     elif isinstance(data, dict):
         cbg = data.get("cbg")
         label = data.get("label", f"Place_{fid}")
         capacity = data.get("capacity", -1)
+        street_address = data.get("street_address")
     else:
         cbg = data
         label = f"Place_{fid}"
         capacity = -1
+        street_address = None
 
     if isinstance(capacity, str):
         try:
@@ -269,7 +272,7 @@ def _parse_facility(fid: str, data) -> Facility:
         except ValueError:
             capacity = -1
 
-    return Facility(str(fid), cbg, label, capacity)
+    return Facility(str(fid), cbg, label, capacity, street_address=street_address)
 
 
 # MAIN SIMULATION / ENTRY POINT
@@ -406,6 +409,14 @@ def run_simulator(
             },
         }
         result = {v: dict(inf) for v, inf in variant_infected.items()}
+
+        if simulator.enable_logging and simulator.logger:
+            for household in simulator.households.values():
+                if household.population:
+                    simulator.logger.log_location_state(household, ts_str)
+            for facility in simulator.facilities.values():
+                if facility.population:
+                    simulator.logger.log_location_state(facility, ts_str)
 
         if patterns_writer:
             patterns_writer.add(ts_str, movement)

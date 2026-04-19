@@ -106,8 +106,10 @@ class Facility(Location):
         cbg: Optional[str] = None,
         label: Optional[str] = None,
         capacity: int = -1,
+        street_address: Optional[str] = None,
     ) -> None:
         super().__init__(id=id, cbg=cbg, label=label, capacity=capacity, location_type="facility")
+        self.street_address: Optional[str] = street_address
 
 
 # Person
