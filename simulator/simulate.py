@@ -589,14 +589,14 @@ def run_simulator(
     data_loaded = False
     
     # Strategy 0: Use pre-loaded papdata and patterns_data if provided (multi-month optimization)
-    if papdata and patterns_data:
-        log_info(f"Strategy 0: Using pre-loaded papdata and patterns_data")
-        people_data = papdata.get('people', {})
-        homes_data = papdata.get('homes', {})
-        places_data = papdata.get('places', {})
-        patterns = patterns_data
-        log_info(f"Pre-loaded: {len(people_data)} people, {len(homes_data)} homes, {len(places_data)} places, {len(patterns)} patterns")
-        data_loaded = True
+    # if papdata and patterns_data:
+    #     log_info(f"Strategy 0: Using pre-loaded papdata and patterns_data")
+    #     people_data = papdata.get('people', {})
+    #     homes_data = papdata.get('homes', {})
+    #     places_data = papdata.get('places', {})
+    #     patterns = patterns_data
+    #     log_info(f"Pre-loaded: {len(people_data)} people, {len(homes_data)} homes, {len(places_data)} places, {len(patterns)} patterns")
+    #     data_loaded = True
     
     # Helper function to fetch from DB API
     def fetch_from_db_api(cz_id):
@@ -661,7 +661,8 @@ def run_simulator(
         return None
     
     # Strategy 1: If czone_id is provided, fetch from DB API
-    if not data_loaded and czone_id:
+    # if not data_loaded and czone_id:
+    if czone_id:
         log_info(f"Fetching data from DB API for czone_id={czone_id}")
         people_data, homes_data, places_data, patterns = fetch_from_db_api(czone_id)
         if people_data:
