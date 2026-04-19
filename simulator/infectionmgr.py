@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, TextIO
+from typing import Optional, TextIO, TYPE_CHECKING
 
 import requests
 
 from .pap import Person, InfectionState, InfectionTimeline, VaccinationState
 from .infection_models.v6_wells_riley import CAT
 from .config import DMP_API, INFECTION_MODEL
+
+if TYPE_CHECKING:
+    from .event_queue import EventQueue
 
 logger = logging.getLogger(__name__)
 
@@ -89,8 +92,13 @@ class InfectionManager:
                     elif not self.multidisease:
                         continue
 
-                    timeline = self.create_timeline(target, disease, curtime)
-                    simulator.people[target.id].timeline = timeline
+                    timeline = self.schedule_infection(
+                        simulator,
+                        None,
+                        target,
+                        disease,
+                        curtime,
+                    )
 
                     if file is not None:
                         file.write(f'{infector.id} infected {target.id} @ location {target.location.id} w/ {disease}\n')
@@ -98,6 +106,33 @@ class InfectionManager:
                     # Track newly infected
                     newly_infected.setdefault(disease, {})
                     newly_infected[disease].setdefault(str(infector.id), []).append(str(target.id))
+
+    def schedule_infection(
+        self,
+        simulator,
+        event_queue: Optional["EventQueue"],
+        person: Person,
+        disease: str,
+        curtime: int,
+        people_with_timelines: Optional[set[str]] = None,
+    ) -> dict[str, dict[InfectionState, InfectionTimeline]]:
+        """Create and register a new infection timeline without changing timeline semantics."""
+        timeline = self.create_timeline(person, disease, curtime)
+        simulator.people[person.id].timeline = timeline
+
+        if people_with_timelines is not None:
+            people_with_timelines.add(person.id)
+
+        if event_queue is not None and disease in timeline and InfectionState.INFECTIOUS in timeline[disease]:
+            infectious_timeline = timeline[disease][InfectionState.INFECTIOUS]
+            event_queue.register_infectious(
+                person.id,
+                disease,
+                infectious_timeline.start,
+                infectious_timeline.end,
+            )
+
+        return timeline
 
     def create_timeline(self, person: Person, disease: str, curtime: int) -> dict[str, dict[InfectionState, InfectionTimeline]]:
         """Create a disease timeline for a newly infected person using the DMP API.
