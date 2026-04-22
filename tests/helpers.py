@@ -29,6 +29,13 @@ DEFAULT_INTERVENTION = {
     "randseed": False,
 }
 
+# Durations (minutes) for the deterministic mock timeline tests build when
+# DMP is disabled via _disable_dmp_calls. Kept in test code so they cannot
+# leak into a real simulation run.
+_MOCK_INFECTED_DURATION = 1440      # 24 hours
+_MOCK_INFECTIOUS_DELAY = 240        # 4 hours
+_MOCK_RECOVERY_DURATION = 10080     # 7 days
+
 
 def resolve_fixture_path(*relative_paths: str) -> Path:
     """Resolve a fixture path from the repo-owned Simulation test fixtures."""
@@ -142,7 +149,7 @@ def _seed_initial_people(
         return
 
     initial_duration = INFECTION_MODEL["initial_timeline"]["duration"]
-    recovery_duration = INFECTION_MODEL["fallback_timeline"]["recovery_duration"]
+    recovery_duration = _MOCK_RECOVERY_DURATION
     infected_state = InfectionState.INFECTED | InfectionState.INFECTIOUS
 
     for index, pid in enumerate(infected_ids):
@@ -284,12 +291,28 @@ def _normalize_timestep_keys(series: dict) -> dict:
     return normalized
 
 
+def _mock_dmp_timeline(disease: str, curtime: int) -> dict:
+    """Deterministic timeline for tests that bypass the real DMP API."""
+    return {
+        disease: {
+            InfectionState.INFECTED: InfectionTimeline(
+                curtime, curtime + _MOCK_INFECTED_DURATION
+            ),
+            InfectionState.INFECTIOUS: InfectionTimeline(
+                curtime + _MOCK_INFECTIOUS_DELAY,
+                curtime + _MOCK_INFECTED_DURATION,
+            ),
+            InfectionState.RECOVERED: InfectionTimeline(
+                curtime + _MOCK_INFECTED_DURATION,
+                curtime + _MOCK_INFECTED_DURATION + _MOCK_RECOVERY_DURATION,
+            ),
+        }
+    }
+
+
 def _disable_dmp_calls(context) -> None:
     context.infection_manager.create_timeline = (
-        lambda person, disease, curtime: context.infection_manager._fallback_timeline(
-            disease,
-            curtime,
-        )
+        lambda person, disease, curtime: _mock_dmp_timeline(disease, curtime)
     )
 
 

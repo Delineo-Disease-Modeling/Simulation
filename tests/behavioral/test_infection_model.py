@@ -5,7 +5,6 @@ Tests that verify the Wells-Riley/CAT infection model works correctly:
 - Transmission probability calculations
 - Mask factor application
 - Co-location requirement for infection
-- The transmission_rate parameter's effect on spread
 """
 import pytest
 import sys

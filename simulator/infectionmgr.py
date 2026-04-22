@@ -136,7 +136,10 @@ class InfectionManager:
 
     def create_timeline(self, person: Person, disease: str, curtime: int) -> dict[str, dict[InfectionState, InfectionTimeline]]:
         """Create a disease timeline for a newly infected person using the DMP API.
-        Falls back to a config-driven default timeline if the API is unreachable.
+
+        Raises the underlying RequestException if the DMP API is unreachable;
+        the simulation has no fallback path and must hard-fail rather than
+        silently degrade to a partial timeline.
         """
         base_url = DMP_API["base_url"]
         payload = {
@@ -150,13 +153,9 @@ class InfectionManager:
             },
         }
 
-        try:
-            resp = _dmp_session.post(f"{base_url}/simulate", json=payload, timeout=30)
-            resp.raise_for_status()
-            return self._build_timeline_from_response(resp.json(), disease, curtime)
-        except requests.exceptions.RequestException as e:
-            logger.warning("DMP API error, using fallback timeline: %s", e)
-            return self._fallback_timeline(disease, curtime)
+        resp = _dmp_session.post(f"{base_url}/simulate", json=payload, timeout=30)
+        resp.raise_for_status()
+        return self._build_timeline_from_response(resp.json(), disease, curtime)
 
     @staticmethod
     def _build_timeline_from_response(
@@ -183,24 +182,6 @@ class InfectionManager:
                 result[inf_state] = InfectionTimeline(start_ts, end_ts)
 
         return {disease: result}
-
-    @staticmethod
-    def _fallback_timeline(disease: str, curtime: int) -> dict[str, dict[InfectionState, InfectionTimeline]]:
-        """Config-driven default timeline when the DMP API is unavailable."""
-        fb = INFECTION_MODEL["fallback_timeline"]
-        return {
-            disease: {
-                InfectionState.INFECTED: InfectionTimeline(
-                    curtime, curtime + fb["infected_duration"]
-                ),
-                InfectionState.INFECTIOUS: InfectionTimeline(
-                    curtime + fb["infectious_delay"], curtime + fb["infected_duration"]
-                ),
-                InfectionState.RECOVERED: InfectionTimeline(
-                    curtime + fb["infected_duration"], curtime + fb["recovery_duration"]
-                ),
-            }
-        }
 
     # Private helpers
 

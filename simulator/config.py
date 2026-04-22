@@ -32,16 +32,8 @@ DMP_API = {
 
 # Infection model parameters
 INFECTION_MODEL = {
-    # Fallback transmission rate used in CAT function when primary calculation method fails
-    "transmission_rate": 7e3,
     # Whether multiple diseases can infect the same person simultaneously
     "allow_multidisease": True,
-    # Fallback timeline values used only when DMP API fails to provide a timeline
-    "fallback_timeline": {
-        "infected_duration": 1440,      # 24 hours in minutes (fallback value)
-        "infectious_delay": 240,        # 4 hours in minutes (fallback value)
-        "recovery_duration": 10080      # 7 days in minutes (fallback value)
-    },
     # Initial timeline values for newly infected people before DMP updates
     "initial_timeline": {
         "duration": 10800  # 180 hours in minutes
