@@ -132,6 +132,12 @@ class Person:
 
         self.masked: bool = False
         self.vaccination_state: VaccinationState = VaccinationState.NONE
+        self.vaccination_status: bool = False
+        self.vaccine_doses: int = 0
+        self.days_since_vaccination: int = 0
+        self.vaccine_effectiveness_infection: float = 0.0
+        self.vaccine_effectiveness_transmission: float = 0.0
+        self.vaccine_effectiveness_severity: float = 0.0
         self.iv_threshold: float = 0.0
 
     # interventions
@@ -144,6 +150,21 @@ class Person:
 
     def set_vaccinated(self, state: VaccinationState) -> None:
         self.vaccination_state = state
+        self.vaccination_status = state != VaccinationState.NONE
+        self.vaccine_doses = state.value
+
+        if state == VaccinationState.PARTIAL:
+            self.vaccine_effectiveness_infection = 0.50
+            self.vaccine_effectiveness_transmission = 0.30
+            self.vaccine_effectiveness_severity = 0.75
+        elif state == VaccinationState.IMMUNIZED:
+            self.vaccine_effectiveness_infection = 0.75
+            self.vaccine_effectiveness_transmission = 0.50
+            self.vaccine_effectiveness_severity = 0.90
+        else:
+            self.vaccine_effectiveness_infection = 0.0
+            self.vaccine_effectiveness_transmission = 0.0
+            self.vaccine_effectiveness_severity = 0.0
 
     def get_vaccinated(self) -> VaccinationState:
         return self.vaccination_state

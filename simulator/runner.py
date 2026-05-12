@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import logging
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Optional
 
-from .config import DELINEO, SIMULATION
+from .config import DELINEO, DMP_API, SIMULATION
 from .data_interface import StreamDataLoader
 from .event_queue import EventQueue
 from .infection_models.v6_wells_riley import CAT
@@ -20,11 +20,13 @@ from .world import (
     DiseaseSimulator,
     build_event_queue,
     build_locations,
-    collect_infected_ids,
     seed_population,
 )
 
 logger = logging.getLogger(__name__)
+
+VALID_DMP_MODES = {"auto", "required", "off"}
+DETERMINISTIC_RANDOM_SEED = 0
 
 
 @dataclass(frozen=True)
@@ -48,6 +50,54 @@ class SimulationContext:
     processed_count: int = 0
     last_movement_ts: int = 0
     last_interventions: Optional[dict] = None
+    initial_infected_ids: list[str] = field(default_factory=list)
+
+
+def normalize_simdata(simdata: dict) -> dict:
+    normalized = dict(simdata)
+
+    normalized["randseed"] = bool(
+        normalized.get("randseed", SIMULATION["default_interventions"]["randseed"])
+    )
+    normalized["initial_infected_count"] = max(
+        0,
+        int(
+            normalized.get(
+                "initial_infected_count",
+                SIMULATION["default_initial_infected_count"],
+            )
+        ),
+    )
+    normalized["disease_name"] = str(
+        normalized.get("disease_name") or SIMULATION["disease_name"]
+    )
+
+    raw_variants = normalized.get("variants") or SIMULATION["variants"]
+    if isinstance(raw_variants, str):
+        raw_variants = [raw_variants]
+    variants = [
+        str(variant).strip()
+        for variant in raw_variants
+        if str(variant).strip()
+    ]
+    normalized["variants"] = variants or list(SIMULATION["variants"])
+
+    raw_mode = str(normalized.get("dmp_mode") or DMP_API["mode"]).lower()
+    normalized["dmp_mode"] = raw_mode if raw_mode in VALID_DMP_MODES else "auto"
+
+    raw_model_paths = normalized.get("model_path_by_variant") or {}
+    model_path_by_variant = {}
+    if isinstance(raw_model_paths, dict):
+        for variant, model_path in raw_model_paths.items():
+            if model_path is None:
+                model_path_by_variant[str(variant)] = None
+                continue
+            model_path_str = str(model_path).strip()
+            if model_path_str:
+                model_path_by_variant[str(variant)] = model_path_str
+    normalized["model_path_by_variant"] = model_path_by_variant
+
+    return normalized
 
 
 def move_people(
@@ -186,7 +236,7 @@ class SimulationRunner:
         progress_callback: Optional[Callable] = None,
         data_loader: Callable = StreamDataLoader.load_bulk,
     ) -> None:
-        self.simdata = simdata
+        self.simdata = normalize_simdata(simdata)
         self.enable_logging = enable_logging
         self.output_dir = output_dir
         self.progress_callback = progress_callback
@@ -202,9 +252,13 @@ class SimulationRunner:
             logger.exception("Failed to load data")
             return {"error": str(exc)}
 
-        context = self.build_context(loaded)
-        self.run_queue(context)
-        return self.finalize(context)
+        try:
+            context = self.build_context(loaded)
+            self.run_queue(context)
+            return self.finalize(context)
+        except Exception as exc:
+            logger.exception("Simulation runtime failed")
+            return {"error": str(exc)}
 
     def _progress(self, current_step, max_steps, message=None) -> None:
         if self.progress_callback:
@@ -212,7 +266,7 @@ class SimulationRunner:
 
     def _seed_random(self) -> None:
         if not self.simdata["randseed"]:
-            random.seed(0)
+            random.seed(DETERMINISTIC_RANDOM_SEED)
 
     def load_data(self) -> LoadedSimulationData:
         self._progress(0, 1, "Loading population data from server...")
@@ -258,15 +312,20 @@ class SimulationRunner:
             1,
             f"Initializing {len(loaded.people_data)} people & seeding infections...",
         )
-        variants = SIMULATION["variants"]
+        variants = self.simdata["variants"]
+        infection_manager = InfectionManager(
+            infected_ids=[],
+            disease_name=self.simdata["disease_name"],
+            dmp_mode=self.simdata["dmp_mode"],
+            model_path_by_variant=self.simdata["model_path_by_variant"],
+        )
         seeded_population = seed_population(
             simulator,
             loaded.people_data,
             variants,
             event_queue,
-        )
-        infection_manager = InfectionManager(
-            infected_ids=collect_infected_ids(simulator, variants)
+            infection_manager,
+            self.simdata["initial_infected_count"],
         )
 
         return SimulationContext(
@@ -279,6 +338,7 @@ class SimulationRunner:
             people_with_timelines=seeded_population.people_with_timelines,
             max_length=self.simdata["length"],
             last_movement_ts=-simulator.timestep,
+            initial_infected_ids=seeded_population.initial_infected_ids,
         )
 
     def run_queue(self, context: SimulationContext) -> None:
@@ -488,4 +548,21 @@ class SimulationRunner:
             context.simulator.logger.generate_summary_report()
             context.simulator.logger.graphic_analysis()
 
-        return context.snapshot_writer.result()
+        result = context.snapshot_writer.result()
+        result["metadata"] = {
+            "disease_name": self.simdata["disease_name"],
+            "variants": context.variants,
+            "dmp_mode": self.simdata["dmp_mode"],
+            "model_path_by_variant": self.simdata["model_path_by_variant"],
+            "initial_infected_count": self.simdata["initial_infected_count"],
+            "initial_infected_ids": context.initial_infected_ids,
+            "timeline_source_counts": context.infection_manager.timeline_source_counts,
+            "randseed": self.simdata["randseed"],
+            "random_seed_behavior": (
+                "random"
+                if self.simdata["randseed"]
+                else f"deterministic:{DETERMINISTIC_RANDOM_SEED}"
+            ),
+            "interventions": self.simdata["interventions"],
+        }
+        return result

@@ -15,7 +15,10 @@ def get_vaccination_protection(p, protection_type='infection'):
     Returns:
         float: Protection factor (0.0 = no protection, 1.0 = complete protection)
     """
-    if not hasattr(p, 'vaccination_status') or not p.vaccination_status:
+    vaccination_status = getattr(p, 'vaccination_status', None)
+    if vaccination_status is None and hasattr(p, 'vaccination_state'):
+        vaccination_status = getattr(p.vaccination_state, 'name', 'NONE') != 'NONE'
+    if not vaccination_status:
         return 0.0
 
     # Base vaccine effectiveness

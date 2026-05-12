@@ -18,12 +18,26 @@ logger = logging.getLogger(__name__)
 # Avoids TCP handshake + TLS negotiation on every DMP API call.
 _dmp_session = requests.Session()
 
+VALID_DMP_MODES = {"auto", "required", "off"}
+
+
 class InfectionManager:
     """Manages infection spread logic and DMP API timeline creation."""
 
-    def __init__(self, infected_ids: list[str]) -> None:
+    def __init__(
+        self,
+        infected_ids: list[str],
+        disease_name: str = "COVID-19",
+        dmp_mode: str = "auto",
+        model_path_by_variant: Optional[dict[str, Optional[str]]] = None,
+    ) -> None:
         self.multidisease: bool = INFECTION_MODEL["allow_multidisease"]
         self.infected: set[str] = set(infected_ids)
+        self.disease_name = disease_name or "COVID-19"
+        mode = (dmp_mode or "auto").lower()
+        self.dmp_mode = mode if mode in VALID_DMP_MODES else "auto"
+        self.model_path_by_variant = model_path_by_variant or {}
+        self.timeline_source_counts = {"dmp": 0, "fallback": 0}
 
     def run_model(
         self,
@@ -119,6 +133,7 @@ class InfectionManager:
         """Create and register a new infection timeline without changing timeline semantics."""
         timeline = self.create_timeline(person, disease, curtime)
         simulator.people[person.id].timeline = timeline
+        self.infected.add(person.id)
 
         if people_with_timelines is not None:
             people_with_timelines.add(person.id)
@@ -138,10 +153,14 @@ class InfectionManager:
         """Create a disease timeline for a newly infected person using the DMP API.
         Falls back to a config-driven default timeline if the API is unreachable.
         """
+        if self.dmp_mode == "off":
+            self.timeline_source_counts["fallback"] += 1
+            return self._fallback_timeline(disease, curtime)
+
         base_url = DMP_API["base_url"]
         payload = {
-            "disease_name": "COVID-19",
-            "model_path": None,
+            "disease_name": self.disease_name,
+            "model_path": self._model_path_for_variant(disease),
             "demographics": {
                 "Age": str(person.age),
                 "Vaccination Status": "Vaccinated" if person.vaccination_state != VaccinationState.NONE else "Unvaccinated",
@@ -151,12 +170,28 @@ class InfectionManager:
         }
 
         try:
-            resp = _dmp_session.post(f"{base_url}/simulate", json=payload, timeout=30)
+            resp = _dmp_session.post(
+                f"{base_url}/simulate",
+                json=payload,
+                timeout=DMP_API["timeout_seconds"],
+            )
             resp.raise_for_status()
-            return self._build_timeline_from_response(resp.json(), disease, curtime)
-        except requests.exceptions.RequestException as e:
+            timeline = self._build_timeline_from_response(resp.json(), disease, curtime)
+            self.timeline_source_counts["dmp"] += 1
+            return timeline
+        except (requests.exceptions.RequestException, KeyError, TypeError, ValueError) as e:
+            if self.dmp_mode == "required":
+                raise RuntimeError(f"DMP timeline required but unavailable: {e}") from e
             logger.warning("DMP API error, using fallback timeline: %s", e)
+            self.timeline_source_counts["fallback"] += 1
             return self._fallback_timeline(disease, curtime)
+
+    def _model_path_for_variant(self, disease: str) -> Optional[str]:
+        if disease in self.model_path_by_variant:
+            return self.model_path_by_variant[disease] or None
+        if self.disease_name == "COVID-19":
+            return f"variant.{disease}.general"
+        return None
 
     @staticmethod
     def _build_timeline_from_response(

@@ -25,6 +25,23 @@ simulation_schema = {
         "czone_id": { "type": "integer", "minimum": 1 },
         "length": { "type": "integer", "minimum": 1 },
         "randseed": { "type": "boolean" },
+        "initial_infected_count": { "type": "integer", "minimum": 0 },
+        "disease_name": { "type": "string", "minLength": 1 },
+        "variants": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1
+        },
+        "dmp_mode": { "type": "string", "enum": [ "auto", "required", "off" ] },
+        "model_path_by_variant": {
+            "type": "object",
+            "additionalProperties": {
+                "anyOf": [
+                    { "type": "string" },
+                    { "type": "null" }
+                ]
+            }
+        },
         "interventions": {
             "type": "array",
             "items": {

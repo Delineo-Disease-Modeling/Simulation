@@ -81,12 +81,16 @@ class SimulationResultUploader:
                 file_paths["patterns"], "rb"
             ) as patterns_file:
                 try:
+                    upload_data = {
+                        "czone_id": int(sim_data["czone_id"]),
+                        "length": int(sim_data["length"]),
+                    }
+                    if file_paths.get("metadata"):
+                        upload_data["metadata"] = json.dumps(file_paths["metadata"])
+
                     response = self.session.post(
                         f"{self.base_url}simdata",
-                        data={
-                            "czone_id": int(sim_data["czone_id"]),
-                            "length": int(sim_data["length"]),
-                        },
+                        data=upload_data,
                         files={
                             "simdata": ("simdata.json.gz", simdata_file, "application/gzip"),
                             "patterns": ("patterns.json.gz", patterns_file, "application/gzip"),

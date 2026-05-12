@@ -6,7 +6,9 @@ import os
 
 # DMP API settings
 DMP_API = {
-    "base_url": "http://localhost:8000",
+    "base_url": os.environ.get("DMP_API_BASE_URL", "http://localhost:8000"),
+    "mode": os.environ.get("DMP_MODE", "auto"),
+    "timeout_seconds": int(os.environ.get("DMP_API_TIMEOUT_SECONDS", "30")),
     "paths": {
         # Default paths for initialization
         # "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/config_data/combined_matrices.csv",
@@ -53,6 +55,8 @@ SIMULATION = {
     "default_timestep": 60,             # Default timestep in minutes
     "default_location": "barnsdall",    # Default location for simulation
     "default_max_length": 72000,        # Default simulation length (50 days in minutes)
+    "disease_name": "COVID-19",
+    "default_initial_infected_count": 1,
     "log_interval": 6000,               # Interval for printing progress logs
     "vaccination_options": {
         "min_doses": 1,                 # Minimum number of vaccine doses
@@ -82,4 +86,4 @@ SERVER = {
         "bad_request": "Bad Request",
         "no_data": "No data sent"
     }
-} 
+}

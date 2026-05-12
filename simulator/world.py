@@ -6,10 +6,10 @@ from math import ceil
 from bisect import bisect_right
 from typing import Optional
 
-from .config import INFECTION_MODEL, SIMULATION
+from .config import SIMULATION
 from .event_queue import EventQueue
 from .logger import SimulationLogger
-from .pap import Facility, Household, InfectionState, InfectionTimeline, Person
+from .pap import Facility, Household, InfectionState, Person
 
 
 class DiseaseSimulator:
@@ -67,6 +67,7 @@ class DiseaseSimulator:
 @dataclass(frozen=True)
 class PopulationBuildResult:
     people_with_timelines: set[str]
+    initial_infected_ids: list[str]
 
 
 def parse_cbg(data) -> Optional[str]:
@@ -127,14 +128,15 @@ def seed_population(
     people_data: dict,
     variants: list[str],
     event_queue: EventQueue,
+    infection_manager,
+    initial_infected_count: int,
 ) -> PopulationBuildResult:
-    seed_ids = random.sample(list(people_data.keys()), min(len(people_data), len(variants)))
-    variant_assignments = dict(zip(seed_ids, variants))
     iv_thresholds = [
         ceil((100.0 * index) / len(people_data)) / 100.0
         for index in range(len(people_data))
     ]
     people_with_timelines: set[str] = set()
+    eligible_ids: list[str] = []
 
     for pid, data in people_data.items():
         household = simulator.get_household(str(data["home"]))
@@ -143,28 +145,41 @@ def seed_population(
 
         person = Person(pid, data["sex"], data["age"], household)
 
-        if str(pid) in variant_assignments:
-            variant = variant_assignments[str(pid)]
-            person.states[variant] = InfectionState.INFECTED | InfectionState.INFECTIOUS
-            duration = INFECTION_MODEL["initial_timeline"]["duration"]
-            person.timeline = {
-                variant: {
-                    InfectionState.INFECTED: InfectionTimeline(0, duration),
-                    InfectionState.INFECTIOUS: InfectionTimeline(0, duration),
-                }
-            }
-            event_queue.register_infectious(pid, variant, 0, duration)
-            people_with_timelines.add(person.id)
-            simulator.log_event("log_infection_event", person, None, person.household, variant, 0)
-
         person.iv_threshold = random.choice(iv_thresholds)
         iv_thresholds.remove(person.iv_threshold)
 
         simulator.add_person(person)
         household.add_member(person)
+        eligible_ids.append(str(pid))
         simulator.log_event("log_person_demographics", person, 0)
 
-    return PopulationBuildResult(people_with_timelines=people_with_timelines)
+    if not variants:
+        return PopulationBuildResult(
+            people_with_timelines=people_with_timelines,
+            initial_infected_ids=[],
+        )
+
+    seed_count = min(max(int(initial_infected_count), 0), len(eligible_ids))
+    seed_ids = random.sample(eligible_ids, seed_count) if seed_count else []
+
+    for index, pid in enumerate(seed_ids):
+        person = simulator.people[pid]
+        variant = variants[index % len(variants)]
+        infection_manager.schedule_infection(
+            simulator,
+            event_queue,
+            person,
+            variant,
+            0,
+            people_with_timelines,
+        )
+        person.update_state(0, variants)
+        simulator.log_event("log_infection_event", person, None, person.household, variant, 0)
+
+    return PopulationBuildResult(
+        people_with_timelines=people_with_timelines,
+        initial_infected_ids=seed_ids,
+    )
 
 
 def collect_infected_ids(simulator: DiseaseSimulator, variants: list[str]) -> list[str]:
