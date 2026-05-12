@@ -71,7 +71,7 @@ SIMULATION = {
         "randseed": True               # Whether to use random seed
     },
     "default_infected_ids": ['160', '43', '47', '4', '36', '9', '14', '19', '27', '22', '3', '5', '6', '7', '8', '10', '11', '12', '13', '15', '16', '17', '18', '20', '21', '23', '24', '25', '26'],
-    "variants": ['Delta', 'Omicron']    # Available disease variants
+    "variants": ['Delta']               # Default disease variants
 }
 
 DELINEO = {

@@ -308,7 +308,7 @@ class TestSimulatorRefactor(unittest.TestCase):
 
         self.assertEqual(normalized["initial_infected_count"], 1)
         self.assertEqual(normalized["disease_name"], "COVID-19")
-        self.assertEqual(normalized["variants"], ["Delta", "Omicron"])
+        self.assertEqual(normalized["variants"], ["Delta"])
         self.assertEqual(normalized["dmp_mode"], "auto")
 
     def test_runner_uses_runtime_variants_and_records_provenance(self):
