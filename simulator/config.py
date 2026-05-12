@@ -18,13 +18,15 @@ DMP_API = {
     },
     # Mapping from DMP API state names to internal infection states
     "state_mapping": {
-        "Infected": "INFECTED",
-        "Infectious_Asymptomatic": "INFECTIOUS",
-        "Infectious_Symptomatic": "INFECTIOUS",
-        "Hospitalized": "HOSPITALIZED",
-        "ICU": "HOSPITALIZED",
-        "Recovered": "RECOVERED",
-        "Deceased": "REMOVED"
+        "Exposed": ["INFECTED"],
+        "Infected": ["INFECTED"],
+        "Infectious_Asymptomatic": ["INFECTED", "INFECTIOUS"],
+        "Infectious_Presymptomatic": ["INFECTED", "INFECTIOUS"],
+        "Infectious_Symptomatic": ["INFECTED", "INFECTIOUS", "SYMPTOMATIC"],
+        "Hospitalized": ["HOSPITALIZED"],
+        "ICU": ["HOSPITALIZED"],
+        "Recovered": ["RECOVERED"],
+        "Deceased": ["REMOVED"]
     },
     # Time conversion factor from API time units to simulation time units
     "time_conversion_factor": 60
@@ -45,7 +47,9 @@ INFECTION_MODEL = {
     # Initial timeline values for newly infected people before DMP updates
     "initial_timeline": {
         "duration": 10800  # 180 hours in minutes
-    }
+    },
+    # Keep final states active long enough for charts and downstream summaries.
+    "terminal_state_extension": 525600  # 365 days in minutes
 }
 
 # Simulation defaults

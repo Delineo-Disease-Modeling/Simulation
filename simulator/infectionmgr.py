@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 # Module-level session for HTTP connection reuse (keep-alive).
 # Avoids TCP handshake + TLS negotiation on every DMP API call.
 _dmp_session = requests.Session()
+_dmp_response_cache: dict[tuple[str, str, str, str, str], dict] = {}
+_dmp_fallback_cache: set[tuple[str, str, str, str, str]] = set()
 
 class InfectionManager:
     """Manages infection spread logic and DMP API timeline creation."""
@@ -139,22 +141,43 @@ class InfectionManager:
         Falls back to a config-driven default timeline if the API is unreachable.
         """
         base_url = DMP_API["base_url"]
+        demographics = {
+            "Age": str(person.age),
+            "Vaccination Status": "Vaccinated" if person.vaccination_state != VaccinationState.NONE else "Unvaccinated",
+            "Sex": "F" if person.sex == 1 else "M",
+            "Variant": disease,
+        }
+        cache_key = (
+            "COVID-19",
+            demographics["Age"],
+            demographics["Vaccination Status"],
+            demographics["Sex"],
+            demographics["Variant"],
+        )
+
+        if cache_key in _dmp_response_cache:
+            return self._build_timeline_from_response(
+                _dmp_response_cache[cache_key],
+                disease,
+                curtime,
+            )
+        if cache_key in _dmp_fallback_cache:
+            return self._fallback_timeline(disease, curtime)
+
         payload = {
             "disease_name": "COVID-19",
             "model_path": None,
-            "demographics": {
-                "Age": str(person.age),
-                "Vaccination Status": "Vaccinated" if person.vaccination_state != VaccinationState.NONE else "Unvaccinated",
-                "Sex": "F" if person.sex == 1 else "M",
-                "Variant": disease,
-            },
+            "demographics": demographics,
         }
 
         try:
             resp = _dmp_session.post(f"{base_url}/simulate", json=payload, timeout=30)
             resp.raise_for_status()
-            return self._build_timeline_from_response(resp.json(), disease, curtime)
+            timeline_data = resp.json()
+            _dmp_response_cache[cache_key] = timeline_data
+            return self._build_timeline_from_response(timeline_data, disease, curtime)
         except requests.exceptions.RequestException as e:
+            _dmp_fallback_cache.add(cache_key)
             logger.warning("DMP API error, using fallback timeline: %s", e)
             return self._fallback_timeline(disease, curtime)
 
@@ -164,23 +187,32 @@ class InfectionManager:
     ) -> dict[str, dict[InfectionState, InfectionTimeline]]:
         """Convert a cached DMP API response into an absolute-time timeline."""
         time_factor = DMP_API["time_conversion_factor"]
-        state_map = {k: getattr(InfectionState, v) for k, v in DMP_API["state_mapping"].items()}
-        max_time = max(time for _, time in timeline_data["timeline"])
-        end_ts = curtime + max_time / time_factor
+        terminal_extension = INFECTION_MODEL["terminal_state_extension"]
+        state_map = {
+            status: tuple(getattr(InfectionState, name) for name in state_names)
+            for status, state_names in DMP_API["state_mapping"].items()
+        }
 
         result: dict[InfectionState, InfectionTimeline] = {}
-        for status, time in timeline_data["timeline"]:
+        timeline = timeline_data.get("timeline", [])
+
+        for index, (status, time) in enumerate(timeline):
             if status not in state_map:
                 continue
-            inf_state = state_map[status]
-            start_ts = curtime + time / time_factor
-
-            if inf_state in result:
-                result[inf_state] = InfectionTimeline(
-                    min(result[inf_state].start, start_ts), end_ts
-                )
+            start_ts = curtime + time * time_factor
+            if index < len(timeline) - 1:
+                end_ts = curtime + timeline[index + 1][1] * time_factor
             else:
-                result[inf_state] = InfectionTimeline(start_ts, end_ts)
+                end_ts = start_ts + terminal_extension
+
+            for inf_state in state_map[status]:
+                if inf_state in result:
+                    result[inf_state] = InfectionTimeline(
+                        min(result[inf_state].start, start_ts),
+                        max(result[inf_state].end, end_ts),
+                    )
+                else:
+                    result[inf_state] = InfectionTimeline(start_ts, end_ts)
 
         return {disease: result}
 

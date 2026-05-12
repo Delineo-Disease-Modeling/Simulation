@@ -31,6 +31,69 @@ def make_simulator():
 
 
 class TestSimulatorRefactor(unittest.TestCase):
+    def test_build_timeline_from_response_uses_transition_boundaries(self):
+        timeline_data = {
+            "timeline": [
+                ["Exposed", 0.0],
+                ["Infectious_Presymptomatic", 2.0],
+                ["Infectious_Symptomatic", 3.5],
+                ["Recovered", 8.0],
+            ]
+        }
+
+        timeline = InfectionManager._build_timeline_from_response(
+            timeline_data,
+            "Delta",
+            60,
+        )["Delta"]
+
+        self.assertEqual(
+            (timeline[InfectionState.INFECTED].start, timeline[InfectionState.INFECTED].end),
+            (60, 540),
+        )
+        self.assertEqual(
+            (timeline[InfectionState.INFECTIOUS].start, timeline[InfectionState.INFECTIOUS].end),
+            (180, 540),
+        )
+        self.assertEqual(
+            (timeline[InfectionState.SYMPTOMATIC].start, timeline[InfectionState.SYMPTOMATIC].end),
+            (270, 540),
+        )
+        self.assertEqual(timeline[InfectionState.RECOVERED].start, 540)
+        self.assertGreater(timeline[InfectionState.RECOVERED].end, 540)
+
+    def test_update_state_activates_expected_flags_from_dmp_timeline(self):
+        home = Household("cbg-home", "home")
+        person = Person("p1", 0, 30, home)
+        person.timeline = InfectionManager._build_timeline_from_response(
+            {
+                "timeline": [
+                    ["Exposed", 0.0],
+                    ["Infectious_Presymptomatic", 2.0],
+                    ["Infectious_Symptomatic", 3.5],
+                    ["Recovered", 8.0],
+                ]
+            },
+            "Delta",
+            60,
+        )
+
+        person.update_state(120, ["Delta"])
+        self.assertTrue(person.states["Delta"] & InfectionState.INFECTED)
+        self.assertFalse(person.states["Delta"] & InfectionState.INFECTIOUS)
+        self.assertFalse(person.states["Delta"] & InfectionState.SYMPTOMATIC)
+
+        person.update_state(240, ["Delta"])
+        self.assertTrue(person.states["Delta"] & InfectionState.INFECTED)
+        self.assertTrue(person.states["Delta"] & InfectionState.INFECTIOUS)
+        self.assertFalse(person.states["Delta"] & InfectionState.SYMPTOMATIC)
+
+        person.update_state(300, ["Delta"])
+        self.assertTrue(person.states["Delta"] & InfectionState.SYMPTOMATIC)
+
+        person.update_state(600, ["Delta"])
+        self.assertEqual(person.states["Delta"], InfectionState.RECOVERED)
+
     def test_event_queue_registers_matching_visits_without_duplicates(self):
         event_queue = EventQueue(iter(()))
         event_queue.register_infectious("p1", "Delta", 60, 120)
