@@ -10,7 +10,13 @@ import requests
 from simulator.event_queue import EventQueue
 from simulator.infectionmgr import InfectionManager
 from simulator.pap import Facility, Household, InfectionState, InfectionTimeline, Person, VaccinationState
-from simulator.runner import LoadedSimulationData, SimulationRunner, move_people, normalize_simdata
+from simulator.runner import (
+    LoadedSimulationData,
+    SimulationRunner,
+    apply_person_interventions,
+    move_people,
+    normalize_simdata,
+)
 from simulator.snapshots import SimulationSnapshotWriter, build_movement_snapshot
 from simulator.world import DiseaseSimulator, build_locations, seed_population
 from simulator.infection_models.v6_wells_riley import CAT, get_vaccination_protection
@@ -298,6 +304,60 @@ class TestSimulatorRefactor(unittest.TestCase):
                     infector=infector,
                 )
             )
+
+    def test_masking_intervention_unmasks_when_policy_is_lowered(self):
+        simulator = make_simulator()
+        home = Household("cbg-home", "home")
+        person = Person("p1", 0, 30, home)
+        person.iv_threshold = 0.3
+
+        apply_person_interventions(
+            simulator,
+            person,
+            {"mask": 0.5, "vaccine": 0.0},
+            "0",
+        )
+        self.assertTrue(person.is_masked())
+
+        apply_person_interventions(
+            simulator,
+            person,
+            {"mask": 0.2, "vaccine": 0.0},
+            "60",
+        )
+        self.assertFalse(person.is_masked())
+
+    def test_vaccination_intervention_does_not_re_randomize_doses(self):
+        simulator = make_simulator()
+        home = Household("cbg-home", "home")
+        person = Person("p1", 0, 30, home)
+        person.iv_threshold = 0.1
+        person.set_vaccinated(VaccinationState.PARTIAL)
+
+        apply_person_interventions(
+            simulator,
+            person,
+            {"mask": 0.0, "vaccine": 0.5},
+            "60",
+        )
+
+        self.assertEqual(person.get_vaccinated(), VaccinationState.PARTIAL)
+
+    def test_vaccination_intervention_assigns_doses_on_first_application(self):
+        simulator = make_simulator()
+        home = Household("cbg-home", "home")
+        person = Person("p1", 0, 30, home)
+        person.iv_threshold = 0.1
+
+        with mock.patch("simulator.runner.random.randint", return_value=2):
+            apply_person_interventions(
+                simulator,
+                person,
+                {"mask": 0.0, "vaccine": 0.5},
+                "0",
+            )
+
+        self.assertEqual(person.get_vaccinated(), VaccinationState.IMMUNIZED)
 
     def test_normalize_simdata_exposes_runtime_contract_defaults(self):
         normalized = normalize_simdata({

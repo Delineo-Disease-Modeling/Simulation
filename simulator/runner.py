@@ -207,23 +207,30 @@ def apply_person_interventions(
     interventions: dict,
     ts_str: str,
 ) -> None:
-    if person.iv_threshold <= interventions["mask"]:
-        if not person.is_masked():
-            simulator.log_event("log_intervention_effect", person, "mask", "complied", ts_str)
+    # Masking is reversible: lowering the policy unmasks previously compliant people.
+    should_mask = person.iv_threshold <= interventions["mask"]
+    if should_mask and not person.is_masked():
+        simulator.log_event("log_intervention_effect", person, "mask", "complied", ts_str)
         person.set_masked(True)
+    elif not should_mask and person.is_masked():
+        simulator.log_event("log_intervention_effect", person, "mask", "unmasked", ts_str)
+        person.set_masked(False)
 
-    if person.iv_threshold <= interventions["vaccine"]:
+    # Vaccination is permanent and dose count is locked at first inoculation.
+    if (
+        person.iv_threshold <= interventions["vaccine"]
+        and person.get_vaccinated() == VaccinationState.NONE
+    ):
         min_doses = SIMULATION["vaccination_options"]["min_doses"]
         max_doses = SIMULATION["vaccination_options"]["max_doses"]
         doses = random.randint(min_doses, max_doses)
-        if person.get_vaccinated() == VaccinationState.NONE:
-            simulator.log_event(
-                "log_intervention_effect",
-                person,
-                "vaccine",
-                f"received_{doses}_doses",
-                ts_str,
-            )
+        simulator.log_event(
+            "log_intervention_effect",
+            person,
+            "vaccine",
+            f"received_{doses}_doses",
+            ts_str,
+        )
         person.set_vaccinated(VaccinationState(doses))
 
 
