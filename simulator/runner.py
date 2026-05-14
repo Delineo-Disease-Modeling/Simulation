@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import logging
+import os
 import random
+import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
@@ -27,6 +29,15 @@ logger = logging.getLogger(__name__)
 
 VALID_DMP_MODES = {"auto", "required", "off"}
 DETERMINISTIC_RANDOM_SEED = 0
+
+
+def _perf_timings_enabled() -> bool:
+    return os.getenv("DELINEO_PERF_TIMINGS", "").lower() in {"1", "true", "yes", "on"}
+
+
+def _log_perf_timing(label: str, started_at: float) -> None:
+    if _perf_timings_enabled():
+        logger.info("[perf] %s: %.3fs", label, time.perf_counter() - started_at)
 
 
 @dataclass(frozen=True)
@@ -260,17 +271,28 @@ class SimulationRunner:
     def run(self) -> dict:
         logger.info("QUEUE-BASED SIMULATION START (max_length=%s)", self.simdata["length"])
         self._seed_random()
+        total_start = time.perf_counter()
 
         try:
+            stage_start = time.perf_counter()
             loaded = self.load_data()
+            _log_perf_timing("load_data", stage_start)
         except Exception as exc:
             logger.exception("Failed to load data")
             return {"error": str(exc)}
 
         try:
+            stage_start = time.perf_counter()
             context = self.build_context(loaded)
+            _log_perf_timing("build_context", stage_start)
+            stage_start = time.perf_counter()
             self.run_queue(context)
-            return self.finalize(context)
+            _log_perf_timing("run_queue", stage_start)
+            stage_start = time.perf_counter()
+            result = self.finalize(context)
+            _log_perf_timing("finalize", stage_start)
+            _log_perf_timing("simulation total", total_start)
+            return result
         except Exception as exc:
             logger.exception("Simulation runtime failed")
             return {"error": str(exc)}
