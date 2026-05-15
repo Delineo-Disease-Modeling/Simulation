@@ -351,8 +351,10 @@ class SimulationRunner:
             enable_logging=self.enable_logging,
             intervention_weights=self.simdata["interventions"],
         )
-        build_locations(simulator, loaded.homes_data, loaded.places_data)
-        event_queue = build_event_queue(loaded.patterns_data, self.simdata["length"])
+        with self._timed("build_context/build_locations"):
+            build_locations(simulator, loaded.homes_data, loaded.places_data)
+        with self._timed("build_context/build_event_queue"):
+            event_queue = build_event_queue(loaded.patterns_data, self.simdata["length"])
 
         self._progress(
             0,
@@ -366,14 +368,15 @@ class SimulationRunner:
             dmp_mode=self.simdata["dmp_mode"],
             model_path_by_variant=self.simdata["model_path_by_variant"],
         )
-        seeded_population = seed_population(
-            simulator,
-            loaded.people_data,
-            variants,
-            event_queue,
-            infection_manager,
-            self.simdata["initial_infected_count"],
-        )
+        with self._timed("build_context/seed_population"):
+            seeded_population = seed_population(
+                simulator,
+                loaded.people_data,
+                variants,
+                event_queue,
+                infection_manager,
+                self.simdata["initial_infected_count"],
+            )
 
         return SimulationContext(
             simulator=simulator,
@@ -394,7 +397,8 @@ class SimulationRunner:
             "Starting queue-based simulation (queue size: %d)",
             len(context.event_queue),
         )
-        self._perf_accum.clear()
+        # Do NOT clear self._perf_accum here — build_context fills it before
+        # run_queue is entered, and we want both phases summarized together.
 
         while context.event_queue:
             next_ts = context.event_queue.peek()[0]
@@ -499,11 +503,12 @@ class SimulationRunner:
                 if facility.population:
                     context.simulator.logger.log_location_state(facility, ts_str)
 
-        context.snapshot_writer.write(
-            ts_str,
-            build_movement_snapshot(context.simulator),
-            build_infection_snapshot(context.variant_infected),
-        )
+        with self._timed("write_snapshot/build_movement"):
+            movement = build_movement_snapshot(context.simulator)
+        with self._timed("write_snapshot/build_infection"):
+            infection = build_infection_snapshot(context.variant_infected)
+        with self._timed("write_snapshot/writer_write"):
+            context.snapshot_writer.write(ts_str, movement, infection)
 
     def process_infections_at_timestep(self, context: SimulationContext, timestep: int) -> None:
         while context.event_queue and context.event_queue.peek()[0] == timestep:
