@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import random
@@ -37,7 +38,10 @@ def _perf_timings_enabled() -> bool:
 
 def _log_perf_timing(label: str, started_at: float) -> None:
     if _perf_timings_enabled():
-        logger.info("[perf] %s: %.3fs", label, time.perf_counter() - started_at)
+        # Emit via print so the line is visible even when the simulator logger
+        # is silenced at runtime (e.g. by the benchmark harness raising
+        # simulator.runner to WARNING to suppress infection-event INFO logs).
+        print(f"[perf] {label}: {time.perf_counter() - started_at:.3f}s", flush=True)
 
 
 @dataclass(frozen=True)
@@ -259,6 +263,20 @@ class SimulationRunner:
         self.output_dir = output_dir
         self.progress_callback = progress_callback
         self.data_loader = data_loader
+        self._perf_accum: dict[str, float] = {}
+
+    @contextlib.contextmanager
+    def _timed(self, label: str):
+        if not _perf_timings_enabled():
+            yield
+            return
+        started = time.perf_counter()
+        try:
+            yield
+        finally:
+            self._perf_accum[label] = (
+                self._perf_accum.get(label, 0.0) + (time.perf_counter() - started)
+            )
 
     def run(self) -> dict:
         logger.info("QUEUE-BASED SIMULATION START (max_length=%s)", self.simdata["length"])
@@ -376,6 +394,7 @@ class SimulationRunner:
             "Starting queue-based simulation (queue size: %d)",
             len(context.event_queue),
         )
+        self._perf_accum.clear()
 
         while context.event_queue:
             next_ts = context.event_queue.peek()[0]
@@ -391,11 +410,16 @@ class SimulationRunner:
                 )
 
             self.process_movement_up_to(context, next_ts)
-            self.process_infections_at_timestep(context, next_ts)
+            with self._timed("run_queue/process_infections"):
+                self.process_infections_at_timestep(context, next_ts)
 
         self.process_movement_up_to(context, context.max_length)
         self._progress(context.max_length, context.max_length, "Simulation complete, writing output...")
         logger.info("SIMULATION COMPLETE (%d timesteps processed)", context.processed_count)
+
+        if _perf_timings_enabled():
+            for label in sorted(self._perf_accum):
+                print(f"[perf] {label}: {self._perf_accum[label]:.3f}s", flush=True)
 
     def process_movement_up_to(self, context: SimulationContext, target_ts: int) -> None:
         ts = context.last_movement_ts + context.simulator.timestep
@@ -407,39 +431,46 @@ class SimulationRunner:
             if ts_str in context.event_queue.buffer:
                 timestep_data = context.event_queue.buffer[ts_str]
                 interventions = context.simulator.get_interventions(ts_str)
-                self.update_people_states(context, ts_str)
+                with self._timed("run_queue/update_people_states"):
+                    self.update_people_states(context, ts_str)
 
                 if interventions is not context.last_interventions:
-                    context.last_interventions = interventions
-                    for person in context.simulator.people.values():
-                        apply_person_interventions(
-                            context.simulator,
-                            person,
-                            interventions,
-                            ts_str,
-                        )
+                    with self._timed("run_queue/apply_interventions"):
+                        context.last_interventions = interventions
+                        for person in context.simulator.people.values():
+                            apply_person_interventions(
+                                context.simulator,
+                                person,
+                                interventions,
+                                ts_str,
+                            )
 
                 if isinstance(timestep_data, dict):
                     if "homes" in timestep_data:
-                        move_people(
-                            context.simulator,
-                            timestep_data["homes"].items(),
-                            True,
-                            ts_str,
-                            interventions,
-                        )
+                        with self._timed("run_queue/move_people_home"):
+                            move_people(
+                                context.simulator,
+                                timestep_data["homes"].items(),
+                                True,
+                                ts_str,
+                                interventions,
+                            )
                     if "places" in timestep_data:
-                        move_people(
-                            context.simulator,
-                            timestep_data["places"].items(),
-                            False,
-                            ts_str,
-                            interventions,
-                        )
+                        with self._timed("run_queue/move_people_places"):
+                            move_people(
+                                context.simulator,
+                                timestep_data["places"].items(),
+                                False,
+                                ts_str,
+                                interventions,
+                            )
 
-            self.update_variant_tracking(context)
-            self.write_snapshot(context, ts_str)
-            context.event_queue.consume_pattern(ts_str)
+            with self._timed("run_queue/update_variant_tracking"):
+                self.update_variant_tracking(context)
+            with self._timed("run_queue/write_snapshot"):
+                self.write_snapshot(context, ts_str)
+            with self._timed("run_queue/consume_pattern"):
+                context.event_queue.consume_pattern(ts_str)
             context.last_movement_ts = ts
             ts += context.simulator.timestep
 
@@ -497,76 +528,78 @@ class SimulationRunner:
 
         exposure_hours = context.simulator.timestep / 60.0
 
-        for infector in infectious_people:
-            for variant, state in infector.states.items():
-                if not (state & InfectionState.INFECTIOUS):
-                    continue
-
-                for target in snapshot:
-                    if target.id == infector.id or target.invisible:
-                        continue
-                    if target.states.get(variant, InfectionState.SUSCEPTIBLE) != InfectionState.SUSCEPTIBLE:
-                        continue
-                    if not context.infection_manager.multidisease and any(
-                        disease_state != InfectionState.SUSCEPTIBLE
-                        for disease_state in target.states.values()
-                    ):
+        with self._timed("infection_event/infection_pair_iteration"):
+            for infector in infectious_people:
+                for variant, state in infector.states.items():
+                    if not (state & InfectionState.INFECTIOUS):
                         continue
 
-                    if not CAT(
-                        target,
-                        indoor=not is_household,
-                        exposure_hours=exposure_hours,
-                        infector=infector,
-                        infector_masked=infector.is_masked(),
-                        susceptible_masked=target.is_masked(),
-                    ):
-                        continue
+                    for target in snapshot:
+                        if target.id == infector.id or target.invisible:
+                            continue
+                        if target.states.get(variant, InfectionState.SUSCEPTIBLE) != InfectionState.SUSCEPTIBLE:
+                            continue
+                        if not context.infection_manager.multidisease and any(
+                            disease_state != InfectionState.SUSCEPTIBLE
+                            for disease_state in target.states.values()
+                        ):
+                            continue
 
-                    logger.info(
-                        "[Infection] %s -> %s @ %s (t=%d, variant=%s)",
-                        infector.id,
-                        target.id,
-                        poi_id,
-                        ts,
-                        variant,
-                    )
+                        if not CAT(
+                            target,
+                            indoor=not is_household,
+                            exposure_hours=exposure_hours,
+                            infector=infector,
+                            infector_masked=infector.is_masked(),
+                            susceptible_masked=target.is_masked(),
+                        ):
+                            continue
 
-                    if target.id not in context.infection_manager.infected:
-                        context.infection_manager.infected.add(target.id)
-                    elif not context.infection_manager.multidisease:
-                        continue
+                        logger.info(
+                            "[Infection] %s -> %s @ %s (t=%d, variant=%s)",
+                            infector.id,
+                            target.id,
+                            poi_id,
+                            ts,
+                            variant,
+                        )
 
-                    context.infection_manager.schedule_infection(
-                        context.simulator,
-                        context.event_queue,
-                        target,
-                        variant,
-                        ts,
-                        context.people_with_timelines,
-                    )
-                    context.variant_infected[variant][target.id] = int(
-                        (InfectionState.INFECTED | InfectionState.INFECTIOUS).value
-                    )
-                    context.simulator.log_event(
-                        "log_infection_event",
-                        target,
-                        infector,
-                        place,
-                        variant,
-                        ts,
-                    )
+                        if target.id not in context.infection_manager.infected:
+                            context.infection_manager.infected.add(target.id)
+                        elif not context.infection_manager.multidisease:
+                            continue
+
+                        context.infection_manager.schedule_infection(
+                            context.simulator,
+                            context.event_queue,
+                            target,
+                            variant,
+                            ts,
+                            context.people_with_timelines,
+                        )
+                        context.variant_infected[variant][target.id] = int(
+                            (InfectionState.INFECTED | InfectionState.INFECTIOUS).value
+                        )
+                        context.simulator.log_event(
+                            "log_infection_event",
+                            target,
+                            infector,
+                            place,
+                            variant,
+                            ts,
+                        )
 
         if not is_household:
-            for index, person_one in enumerate(snapshot):
-                for person_two in snapshot[index + 1:]:
-                    context.simulator.log_event(
-                        "log_contact_event",
-                        person_one,
-                        person_two,
-                        place,
-                        ts,
-                    )
+            with self._timed("infection_event/contact_pair_logging"):
+                for index, person_one in enumerate(snapshot):
+                    for person_two in snapshot[index + 1:]:
+                        context.simulator.log_event(
+                            "log_contact_event",
+                            person_one,
+                            person_two,
+                            place,
+                            ts,
+                        )
 
     def finalize(self, context: SimulationContext) -> dict:
         context.snapshot_writer.close()
