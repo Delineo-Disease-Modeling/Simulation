@@ -21,6 +21,13 @@ _dmp_session = requests.Session()
 VALID_DMP_MODES = {"auto", "required", "off"}
 
 
+try:
+    from dmp_functions import DMPContext, initialize_dmp_from_string, run_dmp_simulation as _run_dmp_csv
+    _CSV_DMP_AVAILABLE = True
+except ImportError:
+    _CSV_DMP_AVAILABLE = False
+
+
 class InfectionManager:
     """Manages infection spread logic and DMP API timeline creation."""
 
@@ -30,6 +37,7 @@ class InfectionManager:
         disease_name: str = "COVID-19",
         dmp_mode: str = "auto",
         model_path_by_variant: Optional[dict[str, Optional[str]]] = None,
+        matrix_csv_by_variant: Optional[dict[str, str]] = None,
     ) -> None:
         self.multidisease: bool = INFECTION_MODEL["allow_multidisease"]
         self.infected: set[str] = set(infected_ids)
@@ -38,6 +46,19 @@ class InfectionManager:
         self.dmp_mode = mode if mode in VALID_DMP_MODES else "auto"
         self.model_path_by_variant = model_path_by_variant or {}
         self.timeline_source_counts = {"dmp": 0, "fallback": 0}
+
+        self._csv_contexts: dict = {}
+        if matrix_csv_by_variant and _CSV_DMP_AVAILABLE:
+            for variant, csv_content in matrix_csv_by_variant.items():
+                if not csv_content or not csv_content.strip():
+                    continue
+                try:
+                    ctx = DMPContext()
+                    initialize_dmp_from_string(ctx, csv_content)
+                    self._csv_contexts[variant] = ctx
+                    logger.info("Loaded custom CSV matrix for variant '%s'", variant)
+                except Exception as exc:
+                    logger.warning("Failed to load CSV matrix for variant '%s': %s", variant, exc)
 
     def run_model(
         self,
@@ -150,12 +171,19 @@ class InfectionManager:
         return timeline
 
     def create_timeline(self, person: Person, disease: str, curtime: int) -> dict[str, dict[InfectionState, InfectionTimeline]]:
-        """Create a disease timeline for a newly infected person using the DMP API.
-        Falls back to a config-driven default timeline if the API is unreachable.
+        """Create a disease timeline for a newly infected person.
+
+        Priority:
+          1. Custom CSV matrix (if loaded for this variant)
+          2. DMP state-machine API (if dmp_mode != "off")
+          3. Config-driven fallback timeline
         """
         if self.dmp_mode == "off":
             self.timeline_source_counts["fallback"] += 1
             return self._fallback_timeline(disease, curtime)
+
+        if disease in self._csv_contexts:
+            return self._csv_timeline(person, disease, curtime)
 
         base_url = DMP_API["base_url"]
         payload = {
@@ -185,6 +213,60 @@ class InfectionManager:
             logger.warning("DMP API error, using fallback timeline: %s", e)
             self.timeline_source_counts["fallback"] += 1
             return self._fallback_timeline(disease, curtime)
+
+    def _csv_timeline(self, person: Person, disease: str, curtime: int) -> dict[str, dict[InfectionState, InfectionTimeline]]:
+        """Build a timeline using the custom CSV matrix loaded for this variant."""
+        ctx = self._csv_contexts[disease]
+        demographics = {
+            "Age": str(person.age),
+            "Vaccination Status": "Vaccinated" if person.vaccination_state != VaccinationState.NONE else "Unvaccinated",
+            "Sex": "F" if person.sex == 1 else "M",
+            "Variant": disease,
+        }
+        try:
+            result = _run_dmp_csv(ctx, demographics)
+            timeline = self._build_timeline_from_csv_result(result["timeline"], disease, curtime)
+            self.timeline_source_counts["dmp"] += 1
+            return timeline
+        except Exception as exc:
+            if self.dmp_mode == "required":
+                raise RuntimeError(f"CSV DMP timeline required but failed for variant '{disease}': {exc}") from exc
+            logger.warning("CSV DMP failed for variant '%s', using fallback: %s", disease, exc)
+            self.timeline_source_counts["fallback"] += 1
+            return self._fallback_timeline(disease, curtime)
+
+    @staticmethod
+    def _build_timeline_from_csv_result(
+        csv_timeline: list,
+        disease: str,
+        curtime: int,
+    ) -> dict[str, dict[InfectionState, InfectionTimeline]]:
+        """Convert CSV simulation output (hours) into an absolute-time InfectionTimeline."""
+        state_map = {
+            k: getattr(InfectionState, v)
+            for k, v in DMP_API["state_mapping"].items()
+            if hasattr(InfectionState, v)
+        }
+        if not csv_timeline:
+            return InfectionManager._fallback_timeline(disease, curtime)
+
+        max_time_hours = max(t for _, t in csv_timeline)
+        end_ts = curtime + int(max_time_hours * 60)
+
+        result: dict[InfectionState, InfectionTimeline] = {}
+        for status, time_hours in csv_timeline:
+            if status not in state_map:
+                continue
+            inf_state = state_map[status]
+            start_ts = curtime + int(time_hours * 60)
+            if inf_state in result:
+                result[inf_state] = InfectionTimeline(
+                    min(result[inf_state].start, start_ts), end_ts
+                )
+            else:
+                result[inf_state] = InfectionTimeline(start_ts, end_ts)
+
+        return {disease: result}
 
     def _model_path_for_variant(self, disease: str) -> Optional[str]:
         if disease in self.model_path_by_variant:

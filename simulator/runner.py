@@ -97,6 +97,14 @@ def normalize_simdata(simdata: dict) -> dict:
                 model_path_by_variant[str(variant)] = model_path_str
     normalized["model_path_by_variant"] = model_path_by_variant
 
+    raw_csv = normalized.get("matrix_csv_by_variant") or {}
+    matrix_csv_by_variant: dict[str, str] = {}
+    if isinstance(raw_csv, dict):
+        for variant, csv_content in raw_csv.items():
+            if isinstance(csv_content, str) and csv_content.strip():
+                matrix_csv_by_variant[str(variant)] = csv_content
+    normalized["matrix_csv_by_variant"] = matrix_csv_by_variant
+
     return normalized
 
 
@@ -325,6 +333,7 @@ class SimulationRunner:
             disease_name=self.simdata["disease_name"],
             dmp_mode=self.simdata["dmp_mode"],
             model_path_by_variant=self.simdata["model_path_by_variant"],
+            matrix_csv_by_variant=self.simdata["matrix_csv_by_variant"],
         )
         seeded_population = seed_population(
             simulator,

@@ -42,6 +42,15 @@ simulation_schema = {
                 ]
             }
         },
+        "matrix_csv_by_variant": {
+            "type": "object",
+            "additionalProperties": {
+                "anyOf": [
+                    { "type": "string" },
+                    { "type": "null" }
+                ]
+            }
+        },
         "interventions": {
             "type": "array",
             "items": {

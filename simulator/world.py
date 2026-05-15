@@ -159,7 +159,8 @@ def seed_population(
             initial_infected_ids=[],
         )
 
-    seed_count = min(max(int(initial_infected_count), 0), len(eligible_ids))
+    per_variant = max(int(initial_infected_count), 0)
+    seed_count = min(per_variant * len(variants), len(eligible_ids))
     seed_ids = random.sample(eligible_ids, seed_count) if seed_count else []
 
     for index, pid in enumerate(seed_ids):
