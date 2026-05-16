@@ -603,7 +603,11 @@ class SimulationRunner:
                             ts,
                         )
 
-        if not is_household:
+        # The contact-pair loop is O(n^2) over place population. log_event is
+        # a no-op when enable_logging is False, but the iteration still runs.
+        # Skip it entirely when logging is off — saves ~8s per simulation at
+        # ZIP 74002 / 168h.
+        if not is_household and context.simulator.enable_logging:
             with self._timed("infection_event/contact_pair_logging"):
                 for index, person_one in enumerate(snapshot):
                     for person_two in snapshot[index + 1:]:
