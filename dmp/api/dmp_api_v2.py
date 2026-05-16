@@ -2,19 +2,13 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Union
 import pandas as pd
-import os
-import sys
 from pathlib import Path
 import json
 import time
 
-# Add the parent directory to the Python path for imports
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(parent_dir)
-
-from core.simulation_functions import run_simulation
-from app.state_machine.state_machine_db import StateMachineDB
-from app.state_machine.utils.graph_utils import convert_graph_to_matrices
+from dmp.core.simulation_functions import run_simulation
+from dmp.app.state_machine.state_machine_db import StateMachineDB
+from dmp.app.state_machine.utils.graph_utils import convert_graph_to_matrices
 
 app = FastAPI(
     title="Disease Modeling Platform API v2.0",
@@ -203,7 +197,7 @@ async def run_dmp_simulation(request: SimulationRequest):
         print(f"Model path: {request.model_path}")
         
         # Import the disease configuration functions
-        from app.state_machine.disease_configurations import (
+        from dmp.app.state_machine.disease_configurations import (
             validate_model_path, get_parent_model_path, get_default_model_path,
             get_model_info
         )
@@ -366,4 +360,4 @@ async def run_dmp_simulation(request: SimulationRequest):
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
     print(f"Unhandled error: {str(exc)}")
-    return {"detail": str(exc)} 
+    return {"detail": str(exc)}
