@@ -140,6 +140,15 @@ class Person:
         self.vaccine_effectiveness_severity: float = 0.0
         self.iv_threshold: float = 0.0
 
+        # Next time at which update_state's output will actually change for
+        # this person — i.e., the next timeline boundary they'll cross. Lets
+        # update_state early-exit during the long flat phases between
+        # transitions (e.g. the 20h INFECTED window before INFECTIOUS or the
+        # multi-day RECOVERED tail). 0 forces a recompute on the first call.
+        # Invalidate by setting to 0 whenever self.timeline changes (see
+        # InfectionManager.schedule_infection).
+        self._next_transition_time: int = 0
+
     # interventions
 
     def is_masked(self) -> bool:
@@ -188,20 +197,40 @@ class Person:
 
     def update_state(self, curtime: str | int, variants: list[str]) -> None:
         """Advance this person's infection state based on *curtime* and their timeline."""
-        self.invisible = False
         time = int(curtime)
 
+        # Fast path: if we're still in the same timeline window we were last
+        # called in, no flags can change. Saves the full timeline scan on the
+        # ~80% of timesteps that fall between transitions.
+        if time < self._next_transition_time:
+            return
+
+        self.invisible = False
         for variant in variants:
             self.states[variant] = InfectionState.SUSCEPTIBLE
 
+        # Walk the timeline once, both applying state flags AND tracking the
+        # next time any boundary will be crossed.
+        next_boundary = 2 ** 62  # effectively infinity for sim timesteps
         for disease, value in self.timeline.items():
             for state, tl in value.items():
-                if tl.start <= time <= tl.end:
+                start = tl.start
+                end = tl.end
+                if start <= time <= end:
                     self.states[disease] = self.states[disease] | state
                     if state in (InfectionState.REMOVED, InfectionState.RECOVERED, InfectionState.HOSPITALIZED):
                         self.invisible = True
+                    # Active window: next boundary is when this entry ends.
+                    if end + 1 < next_boundary:
+                        next_boundary = end + 1
                 else:
                     self.states[disease] = self.states[disease] & ~state
+                    # Inactive: only future boundary that can change us is
+                    # when this entry becomes active. (Past entries don't
+                    # contribute.)
+                    if start > time and start < next_boundary:
+                        next_boundary = start
+        self._next_transition_time = next_boundary
 
     def __repr__(self) -> str:
         return f"Person(id={self.id!r}, age={self.age})"

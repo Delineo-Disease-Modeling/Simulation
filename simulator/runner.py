@@ -60,7 +60,9 @@ class SimulationContext:
     snapshot_writer: SimulationSnapshotWriter
     variants: list[str]
     variant_infected: dict[str, dict[str, int]]
-    people_with_timelines: set[str]
+    # Holds Person object refs (not pid strings). Populated by seed_population
+    # and infection_manager.schedule_infection; iterated in update_people_states.
+    people_with_timelines: set
     max_length: int
     processed_count: int = 0
     last_movement_ts: int = 0
@@ -488,10 +490,10 @@ class SimulationRunner:
             ts += context.simulator.timestep
 
     def update_people_states(self, context: SimulationContext, ts_str: str) -> None:
-        for pid_str in context.people_with_timelines:
-            person = context.simulator.get_person(pid_str)
-            if person:
-                person.update_state(ts_str, context.variants)
+        # people_with_timelines holds Person refs directly (see PopulationBuildResult);
+        # iterate them without a simulator.get_person(pid) lookup per call.
+        for person in context.people_with_timelines:
+            person.update_state(ts_str, context.variants)
 
     def update_variant_tracking(self, context: SimulationContext) -> None:
         for pid_str in context.event_queue.registry:

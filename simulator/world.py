@@ -66,7 +66,9 @@ class DiseaseSimulator:
 
 @dataclass(frozen=True)
 class PopulationBuildResult:
-    people_with_timelines: set[str]
+    # Holds Person object refs (not pid strings) so update_people_states can
+    # iterate directly without a per-call simulator.get_person(pid) dict lookup.
+    people_with_timelines: set
     initial_infected_ids: list[str]
 
 
@@ -144,7 +146,9 @@ def seed_population(
     random.shuffle(iv_thresholds)
     threshold_iter = iter(iv_thresholds)
 
-    people_with_timelines: set[str] = set()
+    # Holds Person object refs so update_people_states can iterate without a
+    # per-call simulator.get_person(pid) dict lookup. See update_people_states.
+    people_with_timelines: set = set()
     eligible_ids: list[str] = []
 
     for pid, data in people_data.items():
