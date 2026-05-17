@@ -128,15 +128,21 @@ class InfectionManager:
         person: Person,
         disease: str,
         curtime: int,
-        people_with_timelines: Optional[set[str]] = None,
+        people_with_timelines: Optional[set] = None,
     ) -> dict[str, dict[InfectionState, InfectionTimeline]]:
         """Create and register a new infection timeline without changing timeline semantics."""
         timeline = self.create_timeline(person, disease, curtime)
-        simulator.people[person.id].timeline = timeline
+        target_person = simulator.people[person.id]
+        target_person.timeline = timeline
+        # Force update_state to recompute on next call: its cached
+        # _next_transition_time was based on the old (empty or stale) timeline.
+        target_person._next_transition_time = 0
         self.infected.add(person.id)
 
         if people_with_timelines is not None:
-            people_with_timelines.add(person.id)
+            # Store the Person ref directly (not pid string) so update_people_states
+            # can iterate without a per-call simulator.get_person(pid) dict lookup.
+            people_with_timelines.add(person)
 
         if event_queue is not None and disease in timeline and InfectionState.INFECTIOUS in timeline[disease]:
             infectious_timeline = timeline[disease][InfectionState.INFECTIOUS]
