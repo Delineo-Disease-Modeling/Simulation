@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import logging
+import math
 import os
 import random
 import time
@@ -11,7 +12,7 @@ from typing import Callable, Optional
 from .config import DELINEO, DMP_API, SIMULATION
 from .data_interface import StreamDataLoader
 from .event_queue import EventQueue
-from .infection_models.v6_wells_riley import CAT
+from .infection_models.v6_wells_riley import CAT, get_vaccination_protection
 from .infectionmgr import InfectionManager
 from .pap import InfectionState, Person, VaccinationState
 from .snapshots import (
@@ -534,49 +535,109 @@ class SimulationRunner:
             return
 
         exposure_hours = context.simulator.timestep / 60.0
+        infection_mgr = context.infection_manager
+        multidisease = infection_mgr.multidisease
+        infected_set = infection_mgr.infected
+        susceptible = InfectionState.SUSCEPTIBLE
+        infectious_flag = InfectionState.INFECTIOUS
+        infected_state_value = int(
+            (InfectionState.INFECTED | InfectionState.INFECTIOUS).value
+        )
+
+        # Wells-Riley constants — see infection_models.v6_wells_riley.CAT.
+        # Inlined here so the inner loop avoids the per-call function-call
+        # overhead and the per-call hasattr/debug branches. Equivalent math,
+        # equivalent RNG consumption (one random.random() per CAT-eligible
+        # pair). CAT was called with indoor = not is_household; the outdoor
+        # branch multiplies ventilation_rate by 20.
+        _QUANTA_RATE = 20.0
+        _BREATHING_RATE = 0.5
+        ventilation_rate = 3000.0 if is_household else 150.0
+        base_quanta_per_pair = (
+            _QUANTA_RATE * _BREATHING_RATE * exposure_hours
+        ) / ventilation_rate
 
         with self._timed("infection_event/infection_pair_iteration"):
             for infector in infectious_people:
+                infector_id = infector.id
+                infector_masked = infector.masked
+                # get_vaccination_protection short-circuits on
+                # vaccination_status=False; skip the call entirely when we
+                # already know there's no protection (avoids the getattr
+                # chain for the common unvaccinated case).
+                infector_factor = 1.0
+                if infector.vaccination_status:
+                    infector_factor = 1.0 - get_vaccination_protection(infector, 'transmission')
+
                 for variant, state in infector.states.items():
-                    if not (state & InfectionState.INFECTIOUS):
+                    if not (state & infectious_flag):
                         continue
+                    variant_bucket = context.variant_infected[variant]
 
                     for target in snapshot:
-                        if target.id == infector.id or target.invisible:
+                        target_id = target.id
+                        if target_id == infector_id:
                             continue
-                        if target.states.get(variant, InfectionState.SUSCEPTIBLE) != InfectionState.SUSCEPTIBLE:
+                        if target.invisible:
                             continue
-                        if not context.infection_manager.multidisease and any(
-                            disease_state != InfectionState.SUSCEPTIBLE
-                            for disease_state in target.states.values()
-                        ):
+                        target_states = target.states
+                        if target_states.get(variant, susceptible) != susceptible:
                             continue
+                        if not multidisease:
+                            # Inline the any() so we can break early on first
+                            # non-susceptible state without paying generator overhead.
+                            skip = False
+                            for s in target_states.values():
+                                if s != susceptible:
+                                    skip = True
+                                    break
+                            if skip:
+                                continue
 
-                        if not CAT(
-                            target,
-                            indoor=not is_household,
-                            exposure_hours=exposure_hours,
-                            infector=infector,
-                            infector_masked=infector.is_masked(),
-                            susceptible_masked=target.is_masked(),
-                        ):
+                        # Inlined Wells-Riley transmission probability.
+                        target_masked = target.masked
+                        if infector_masked:
+                            if target_masked:
+                                mask_factor = 0.15  # 1 - 0.85
+                            else:
+                                mask_factor = 0.30  # 1 - 0.70
+                        elif target_masked:
+                            mask_factor = 0.50  # 1 - 0.50
+                        else:
+                            mask_factor = 1.0
+
+                        if target.vaccination_status:
+                            target_protection = get_vaccination_protection(target, 'infection')
+                        else:
+                            target_protection = 0.0
+
+                        mean_quanta = (
+                            base_quanta_per_pair
+                            * mask_factor
+                            * infector_factor
+                            * (1.0 - target_protection)
+                        )
+                        # P = 1 - exp(-mean_quanta); infect iff
+                        # random.random() < P. Match the original CAT's RNG
+                        # draw order exactly so simdata stays byte-identical.
+                        if random.random() >= 1.0 - math.exp(-mean_quanta):
                             continue
 
                         logger.info(
                             "[Infection] %s -> %s @ %s (t=%d, variant=%s)",
-                            infector.id,
-                            target.id,
+                            infector_id,
+                            target_id,
                             poi_id,
                             ts,
                             variant,
                         )
 
-                        if target.id not in context.infection_manager.infected:
-                            context.infection_manager.infected.add(target.id)
-                        elif not context.infection_manager.multidisease:
+                        if target_id not in infected_set:
+                            infected_set.add(target_id)
+                        elif not multidisease:
                             continue
 
-                        context.infection_manager.schedule_infection(
+                        infection_mgr.schedule_infection(
                             context.simulator,
                             context.event_queue,
                             target,
@@ -584,9 +645,7 @@ class SimulationRunner:
                             ts,
                             context.people_with_timelines,
                         )
-                        context.variant_infected[variant][target.id] = int(
-                            (InfectionState.INFECTED | InfectionState.INFECTIOUS).value
-                        )
+                        variant_bucket[target_id] = infected_state_value
                         context.simulator.log_event(
                             "log_infection_event",
                             target,
