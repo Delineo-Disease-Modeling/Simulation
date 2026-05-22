@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import contextlib
 import logging
+import math
+import os
 import random
+import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
 from .config import DELINEO, DMP_API, SIMULATION
 from .data_interface import StreamDataLoader
 from .event_queue import EventQueue
-from .infection_models.v6_wells_riley import CAT
+from .infection_models.v6_wells_riley import CAT, get_vaccination_protection
 from .infectionmgr import InfectionManager
 from .pap import InfectionState, Person, VaccinationState
 from .snapshots import (
@@ -29,6 +33,18 @@ VALID_DMP_MODES = {"auto", "required", "off"}
 DETERMINISTIC_RANDOM_SEED = 0
 
 
+def _perf_timings_enabled() -> bool:
+    return os.getenv("DELINEO_PERF_TIMINGS", "").lower() in {"1", "true", "yes", "on"}
+
+
+def _log_perf_timing(label: str, started_at: float) -> None:
+    if _perf_timings_enabled():
+        # Emit via print so the line is visible even when the simulator logger
+        # is silenced at runtime (e.g. by the benchmark harness raising
+        # simulator.runner to WARNING to suppress infection-event INFO logs).
+        print(f"[perf] {label}: {time.perf_counter() - started_at:.3f}s", flush=True)
+
+
 @dataclass(frozen=True)
 class LoadedSimulationData:
     people_data: dict
@@ -45,7 +61,9 @@ class SimulationContext:
     snapshot_writer: SimulationSnapshotWriter
     variants: list[str]
     variant_infected: dict[str, dict[str, int]]
-    people_with_timelines: set[str]
+    # Holds Person object refs (not pid strings). Populated by seed_population
+    # and infection_manager.schedule_infection; iterated in update_people_states.
+    people_with_timelines: set
     max_length: int
     processed_count: int = 0
     last_movement_ts: int = 0
@@ -256,21 +274,46 @@ class SimulationRunner:
         self.output_dir = output_dir
         self.progress_callback = progress_callback
         self.data_loader = data_loader
+        self._perf_accum: dict[str, float] = {}
+
+    @contextlib.contextmanager
+    def _timed(self, label: str):
+        if not _perf_timings_enabled():
+            yield
+            return
+        started = time.perf_counter()
+        try:
+            yield
+        finally:
+            self._perf_accum[label] = (
+                self._perf_accum.get(label, 0.0) + (time.perf_counter() - started)
+            )
 
     def run(self) -> dict:
         logger.info("QUEUE-BASED SIMULATION START (max_length=%s)", self.simdata["length"])
         self._seed_random()
+        total_start = time.perf_counter()
 
         try:
+            stage_start = time.perf_counter()
             loaded = self.load_data()
+            _log_perf_timing("load_data", stage_start)
         except Exception as exc:
             logger.exception("Failed to load data")
             return {"error": str(exc)}
 
         try:
+            stage_start = time.perf_counter()
             context = self.build_context(loaded)
+            _log_perf_timing("build_context", stage_start)
+            stage_start = time.perf_counter()
             self.run_queue(context)
-            return self.finalize(context)
+            _log_perf_timing("run_queue", stage_start)
+            stage_start = time.perf_counter()
+            result = self.finalize(context)
+            _log_perf_timing("finalize", stage_start)
+            _log_perf_timing("simulation total", total_start)
+            return result
         except Exception as exc:
             logger.exception("Simulation runtime failed")
             return {"error": str(exc)}
@@ -319,8 +362,10 @@ class SimulationRunner:
             enable_logging=self.enable_logging,
             intervention_weights=self.simdata["interventions"],
         )
-        build_locations(simulator, loaded.homes_data, loaded.places_data)
-        event_queue = build_event_queue(loaded.patterns_data, self.simdata["length"])
+        with self._timed("build_context/build_locations"):
+            build_locations(simulator, loaded.homes_data, loaded.places_data)
+        with self._timed("build_context/build_event_queue"):
+            event_queue = build_event_queue(loaded.patterns_data, self.simdata["length"])
 
         self._progress(
             0,
@@ -335,14 +380,15 @@ class SimulationRunner:
             model_path_by_variant=self.simdata["model_path_by_variant"],
             matrix_csv_by_variant=self.simdata["matrix_csv_by_variant"],
         )
-        seeded_population = seed_population(
-            simulator,
-            loaded.people_data,
-            variants,
-            event_queue,
-            infection_manager,
-            self.simdata["initial_infected_count"],
-        )
+        with self._timed("build_context/seed_population"):
+            seeded_population = seed_population(
+                simulator,
+                loaded.people_data,
+                variants,
+                event_queue,
+                infection_manager,
+                self.simdata["initial_infected_count"],
+            )
 
         return SimulationContext(
             simulator=simulator,
@@ -363,6 +409,8 @@ class SimulationRunner:
             "Starting queue-based simulation (queue size: %d)",
             len(context.event_queue),
         )
+        # Do NOT clear self._perf_accum here — build_context fills it before
+        # run_queue is entered, and we want both phases summarized together.
 
         while context.event_queue:
             next_ts = context.event_queue.peek()[0]
@@ -378,11 +426,16 @@ class SimulationRunner:
                 )
 
             self.process_movement_up_to(context, next_ts)
-            self.process_infections_at_timestep(context, next_ts)
+            with self._timed("run_queue/process_infections"):
+                self.process_infections_at_timestep(context, next_ts)
 
         self.process_movement_up_to(context, context.max_length)
         self._progress(context.max_length, context.max_length, "Simulation complete, writing output...")
         logger.info("SIMULATION COMPLETE (%d timesteps processed)", context.processed_count)
+
+        if _perf_timings_enabled():
+            for label in sorted(self._perf_accum):
+                print(f"[perf] {label}: {self._perf_accum[label]:.3f}s", flush=True)
 
     def process_movement_up_to(self, context: SimulationContext, target_ts: int) -> None:
         ts = context.last_movement_ts + context.simulator.timestep
@@ -394,47 +447,54 @@ class SimulationRunner:
             if ts_str in context.event_queue.buffer:
                 timestep_data = context.event_queue.buffer[ts_str]
                 interventions = context.simulator.get_interventions(ts_str)
-                self.update_people_states(context, ts_str)
+                with self._timed("run_queue/update_people_states"):
+                    self.update_people_states(context, ts_str)
 
                 if interventions is not context.last_interventions:
-                    context.last_interventions = interventions
-                    for person in context.simulator.people.values():
-                        apply_person_interventions(
-                            context.simulator,
-                            person,
-                            interventions,
-                            ts_str,
-                        )
+                    with self._timed("run_queue/apply_interventions"):
+                        context.last_interventions = interventions
+                        for person in context.simulator.people.values():
+                            apply_person_interventions(
+                                context.simulator,
+                                person,
+                                interventions,
+                                ts_str,
+                            )
 
                 if isinstance(timestep_data, dict):
                     if "homes" in timestep_data:
-                        move_people(
-                            context.simulator,
-                            timestep_data["homes"].items(),
-                            True,
-                            ts_str,
-                            interventions,
-                        )
+                        with self._timed("run_queue/move_people_home"):
+                            move_people(
+                                context.simulator,
+                                timestep_data["homes"].items(),
+                                True,
+                                ts_str,
+                                interventions,
+                            )
                     if "places" in timestep_data:
-                        move_people(
-                            context.simulator,
-                            timestep_data["places"].items(),
-                            False,
-                            ts_str,
-                            interventions,
-                        )
+                        with self._timed("run_queue/move_people_places"):
+                            move_people(
+                                context.simulator,
+                                timestep_data["places"].items(),
+                                False,
+                                ts_str,
+                                interventions,
+                            )
 
-            self.update_variant_tracking(context)
-            self.write_snapshot(context, ts_str)
-            context.event_queue.consume_pattern(ts_str)
+            with self._timed("run_queue/update_variant_tracking"):
+                self.update_variant_tracking(context)
+            with self._timed("run_queue/write_snapshot"):
+                self.write_snapshot(context, ts_str)
+            with self._timed("run_queue/consume_pattern"):
+                context.event_queue.consume_pattern(ts_str)
             context.last_movement_ts = ts
             ts += context.simulator.timestep
 
     def update_people_states(self, context: SimulationContext, ts_str: str) -> None:
-        for pid_str in context.people_with_timelines:
-            person = context.simulator.get_person(pid_str)
-            if person:
-                person.update_state(ts_str, context.variants)
+        # people_with_timelines holds Person refs directly (see PopulationBuildResult);
+        # iterate them without a simulator.get_person(pid) lookup per call.
+        for person in context.people_with_timelines:
+            person.update_state(ts_str, context.variants)
 
     def update_variant_tracking(self, context: SimulationContext) -> None:
         for pid_str in context.event_queue.registry:
@@ -455,11 +515,12 @@ class SimulationRunner:
                 if facility.population:
                     context.simulator.logger.log_location_state(facility, ts_str)
 
-        context.snapshot_writer.write(
-            ts_str,
-            build_movement_snapshot(context.simulator),
-            build_infection_snapshot(context.variant_infected),
-        )
+        with self._timed("write_snapshot/build_movement"):
+            movement = build_movement_snapshot(context.simulator)
+        with self._timed("write_snapshot/build_infection"):
+            infection = build_infection_snapshot(context.variant_infected)
+        with self._timed("write_snapshot/writer_write"):
+            context.snapshot_writer.write(ts_str, movement, infection)
 
     def process_infections_at_timestep(self, context: SimulationContext, timestep: int) -> None:
         while context.event_queue and context.event_queue.peek()[0] == timestep:
@@ -483,77 +544,141 @@ class SimulationRunner:
             return
 
         exposure_hours = context.simulator.timestep / 60.0
+        infection_mgr = context.infection_manager
+        multidisease = infection_mgr.multidisease
+        infected_set = infection_mgr.infected
+        susceptible = InfectionState.SUSCEPTIBLE
+        infectious_flag = InfectionState.INFECTIOUS
+        infected_state_value = int(
+            (InfectionState.INFECTED | InfectionState.INFECTIOUS).value
+        )
 
-        for infector in infectious_people:
-            for variant, state in infector.states.items():
-                if not (state & InfectionState.INFECTIOUS):
-                    continue
+        # Wells-Riley constants — see infection_models.v6_wells_riley.CAT.
+        # Inlined here so the inner loop avoids the per-call function-call
+        # overhead and the per-call hasattr/debug branches. Equivalent math,
+        # equivalent RNG consumption (one random.random() per CAT-eligible
+        # pair). CAT was called with indoor = not is_household; the outdoor
+        # branch multiplies ventilation_rate by 20.
+        _QUANTA_RATE = 20.0
+        _BREATHING_RATE = 0.5
+        ventilation_rate = 3000.0 if is_household else 150.0
+        base_quanta_per_pair = (
+            _QUANTA_RATE * _BREATHING_RATE * exposure_hours
+        ) / ventilation_rate
 
-                for target in snapshot:
-                    if target.id == infector.id or target.invisible:
+        with self._timed("infection_event/infection_pair_iteration"):
+            for infector in infectious_people:
+                infector_id = infector.id
+                infector_masked = infector.masked
+                # get_vaccination_protection short-circuits on
+                # vaccination_status=False; skip the call entirely when we
+                # already know there's no protection (avoids the getattr
+                # chain for the common unvaccinated case).
+                infector_factor = 1.0
+                if infector.vaccination_status:
+                    infector_factor = 1.0 - get_vaccination_protection(infector, 'transmission')
+
+                for variant, state in infector.states.items():
+                    if not (state & infectious_flag):
                         continue
-                    if target.states.get(variant, InfectionState.SUSCEPTIBLE) != InfectionState.SUSCEPTIBLE:
-                        continue
-                    if not context.infection_manager.multidisease and any(
-                        disease_state != InfectionState.SUSCEPTIBLE
-                        for disease_state in target.states.values()
-                    ):
-                        continue
+                    variant_bucket = context.variant_infected[variant]
 
-                    if not CAT(
-                        target,
-                        indoor=not is_household,
-                        exposure_hours=exposure_hours,
-                        infector=infector,
-                        infector_masked=infector.is_masked(),
-                        susceptible_masked=target.is_masked(),
-                    ):
-                        continue
+                    for target in snapshot:
+                        target_id = target.id
+                        if target_id == infector_id:
+                            continue
+                        if target.invisible:
+                            continue
+                        target_states = target.states
+                        if target_states.get(variant, susceptible) != susceptible:
+                            continue
+                        if not multidisease:
+                            # Inline the any() so we can break early on first
+                            # non-susceptible state without paying generator overhead.
+                            skip = False
+                            for s in target_states.values():
+                                if s != susceptible:
+                                    skip = True
+                                    break
+                            if skip:
+                                continue
 
-                    logger.info(
-                        "[Infection] %s -> %s @ %s (t=%d, variant=%s)",
-                        infector.id,
-                        target.id,
-                        poi_id,
-                        ts,
-                        variant,
-                    )
+                        # Inlined Wells-Riley transmission probability.
+                        target_masked = target.masked
+                        if infector_masked:
+                            if target_masked:
+                                mask_factor = 0.15  # 1 - 0.85
+                            else:
+                                mask_factor = 0.30  # 1 - 0.70
+                        elif target_masked:
+                            mask_factor = 0.50  # 1 - 0.50
+                        else:
+                            mask_factor = 1.0
 
-                    if target.id not in context.infection_manager.infected:
-                        context.infection_manager.infected.add(target.id)
-                    elif not context.infection_manager.multidisease:
-                        continue
+                        if target.vaccination_status:
+                            target_protection = get_vaccination_protection(target, 'infection')
+                        else:
+                            target_protection = 0.0
 
-                    context.infection_manager.schedule_infection(
-                        context.simulator,
-                        context.event_queue,
-                        target,
-                        variant,
-                        ts,
-                        context.people_with_timelines,
-                    )
-                    context.variant_infected[variant][target.id] = int(
-                        (InfectionState.INFECTED | InfectionState.INFECTIOUS).value
-                    )
-                    context.simulator.log_event(
-                        "log_infection_event",
-                        target,
-                        infector,
-                        place,
-                        variant,
-                        ts,
-                    )
+                        mean_quanta = (
+                            base_quanta_per_pair
+                            * mask_factor
+                            * infector_factor
+                            * (1.0 - target_protection)
+                        )
+                        # P = 1 - exp(-mean_quanta); infect iff
+                        # random.random() < P. Match the original CAT's RNG
+                        # draw order exactly so simdata stays byte-identical.
+                        if random.random() >= 1.0 - math.exp(-mean_quanta):
+                            continue
 
-        if not is_household:
-            for index, person_one in enumerate(snapshot):
-                for person_two in snapshot[index + 1:]:
-                    context.simulator.log_event(
-                        "log_contact_event",
-                        person_one,
-                        person_two,
-                        place,
-                        ts,
-                    )
+                        logger.info(
+                            "[Infection] %s -> %s @ %s (t=%d, variant=%s)",
+                            infector_id,
+                            target_id,
+                            poi_id,
+                            ts,
+                            variant,
+                        )
+
+                        if target_id not in infected_set:
+                            infected_set.add(target_id)
+                        elif not multidisease:
+                            continue
+
+                        infection_mgr.schedule_infection(
+                            context.simulator,
+                            context.event_queue,
+                            target,
+                            variant,
+                            ts,
+                            context.people_with_timelines,
+                        )
+                        variant_bucket[target_id] = infected_state_value
+                        context.simulator.log_event(
+                            "log_infection_event",
+                            target,
+                            infector,
+                            place,
+                            variant,
+                            ts,
+                        )
+
+        # The contact-pair loop is O(n^2) over place population. log_event is
+        # a no-op when enable_logging is False, but the iteration still runs.
+        # Skip it entirely when logging is off — saves ~8s per simulation at
+        # ZIP 74002 / 168h.
+        if not is_household and context.simulator.enable_logging:
+            with self._timed("infection_event/contact_pair_logging"):
+                for index, person_one in enumerate(snapshot):
+                    for person_two in snapshot[index + 1:]:
+                        context.simulator.log_event(
+                            "log_contact_event",
+                            person_one,
+                            person_two,
+                            place,
+                            ts,
+                        )
 
     def finalize(self, context: SimulationContext) -> dict:
         context.snapshot_writer.close()

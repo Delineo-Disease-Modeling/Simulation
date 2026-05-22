@@ -66,7 +66,9 @@ class DiseaseSimulator:
 
 @dataclass(frozen=True)
 class PopulationBuildResult:
-    people_with_timelines: set[str]
+    # Holds Person object refs (not pid strings) so update_people_states can
+    # iterate directly without a per-call simulator.get_person(pid) dict lookup.
+    people_with_timelines: set
     initial_infected_ids: list[str]
 
 
@@ -131,11 +133,22 @@ def seed_population(
     infection_manager,
     initial_infected_count: int,
 ) -> PopulationBuildResult:
+    # Pre-shuffle the threshold list and consume it linearly. The original
+    # code did random.choice(L) followed by L.remove(value) per person, which
+    # is O(n^2) over ~50k people. A single shuffle + linear iteration produces
+    # the same statistical distribution (each person gets a distinct threshold,
+    # drawn uniformly without replacement) in O(n). Specific person-to-threshold
+    # bijection differs, so downstream simdata/movement hashes shift.
     iv_thresholds = [
         ceil((100.0 * index) / len(people_data)) / 100.0
         for index in range(len(people_data))
     ]
-    people_with_timelines: set[str] = set()
+    random.shuffle(iv_thresholds)
+    threshold_iter = iter(iv_thresholds)
+
+    # Holds Person object refs so update_people_states can iterate without a
+    # per-call simulator.get_person(pid) dict lookup. See update_people_states.
+    people_with_timelines: set = set()
     eligible_ids: list[str] = []
 
     for pid, data in people_data.items():
@@ -145,8 +158,7 @@ def seed_population(
 
         person = Person(pid, data["sex"], data["age"], household)
 
-        person.iv_threshold = random.choice(iv_thresholds)
-        iv_thresholds.remove(person.iv_threshold)
+        person.iv_threshold = next(threshold_iter)
 
         simulator.add_person(person)
         household.add_member(person)
