@@ -130,7 +130,7 @@ class TestSimulatorRefactor(unittest.TestCase):
 
         self.assertIs(returned_timeline, timeline)
         self.assertIs(simulator.people[target.id].timeline, timeline)
-        self.assertEqual(people_with_timelines, {target.id})
+        self.assertEqual(people_with_timelines, {target})
         self.assertEqual(len(event_queue), 2)
         self.assertEqual(event_queue.pop(), (60, "work", False))
         self.assertEqual(event_queue.pop(), (120, "work", False))
