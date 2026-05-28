@@ -9,6 +9,11 @@ DMP_API = {
     "base_url": os.environ.get("DMP_API_BASE_URL", "http://localhost:8000"),
     "mode": os.environ.get("DMP_MODE", "auto"),
     "timeout_seconds": int(os.environ.get("DMP_API_TIMEOUT_SECONDS", "30")),
+    # When true, resolve timelines via the in-process DMP (reads the local
+    # state-machine DB directly, with a demographic cache) instead of the
+    # per-infection HTTP call. Falls back to HTTP if the dmp package/DB can't
+    # be loaded. Set DMP_INPROCESS=0 to force the HTTP path.
+    "use_inprocess": os.environ.get("DMP_INPROCESS", "1").lower() in {"1", "true", "yes", "on"},
     "paths": {
         # Default paths for initialization
         # "matrices_path": "/Users/jason/Documents/Academics/Research/Delineo/Simulation/simulator/config_data/combined_matrices.csv",

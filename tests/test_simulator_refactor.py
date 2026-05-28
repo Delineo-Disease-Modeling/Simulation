@@ -222,6 +222,9 @@ class TestSimulatorRefactor(unittest.TestCase):
         home = Household("cbg-home", "home")
         person = Person("p1", 0, 30, home)
         manager = InfectionManager(infected_ids=[], dmp_mode="required")
+        # Exercise the HTTP fallback path: disable the in-process provider so
+        # this verifies the API-unavailable behavior, not the local DB.
+        manager._inprocess = None
 
         with mock.patch(
             "simulator.infectionmgr._dmp_session.post",
@@ -239,6 +242,8 @@ class TestSimulatorRefactor(unittest.TestCase):
             dmp_mode="required",
             model_path_by_variant={"H1N1": "flu.h1n1.general"},
         )
+        # This test asserts on the HTTP request payload, so force the HTTP path.
+        manager._inprocess = None
         response = mock.Mock()
         response.raise_for_status.return_value = None
         response.json.return_value = {
@@ -261,6 +266,27 @@ class TestSimulatorRefactor(unittest.TestCase):
         self.assertEqual(payload["model_path"], "flu.h1n1.general")
         self.assertEqual(payload["demographics"]["Variant"], "H1N1")
         self.assertEqual(manager.timeline_source_counts["dmp"], 1)
+
+    def test_inprocess_dmp_resolves_timeline_without_http(self):
+        manager = InfectionManager(
+            infected_ids=[], disease_name="COVID-19", dmp_mode="auto"
+        )
+        if manager._inprocess is None:
+            self.skipTest("in-process DMP unavailable (state-machine DB not present)")
+
+        home = Household("cbg-home", "home")
+        person = Person("p1", 0, 35, home)
+
+        with mock.patch("simulator.infectionmgr._dmp_session.post") as post:
+            timeline = manager.create_timeline(person, "Delta", 0)
+
+        # In-process path must not touch the HTTP API, and must produce a real
+        # DMP timeline (not the fallback).
+        post.assert_not_called()
+        self.assertIn("Delta", timeline)
+        self.assertIn(InfectionState.INFECTIOUS, timeline["Delta"])
+        self.assertEqual(manager.timeline_source_counts["dmp"], 1)
+        self.assertEqual(manager.timeline_source_counts["fallback"], 0)
 
     def test_vaccination_state_feeds_active_transmission_model(self):
         home = Household("cbg-home", "home")
