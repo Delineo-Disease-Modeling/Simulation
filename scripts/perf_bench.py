@@ -53,6 +53,9 @@ def parse_args() -> argparse.Namespace:
                    help="Measured runs (default 3); 1 smoke run is always discarded")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--label", default="run")
+    p.add_argument("--dmp-mode", default="auto", choices=["auto", "required", "off"],
+                   help="DMP timeline source. 'off' uses the local fallback and "
+                        "skips the per-infection HTTP call (default: auto)")
     return p.parse_args()
 
 
@@ -103,6 +106,7 @@ def main() -> int:
                 "randseed": False,
                 "interventions": interventions,
                 "czone_id": 1,
+                "dmp_mode": args.dmp_mode,
             }
             logs = io.StringIO()
             t0 = time.perf_counter()
