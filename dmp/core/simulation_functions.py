@@ -22,9 +22,12 @@ def run_simulation(transition_matrix, mean_matrix, std_dev_matrix,
     Returns:
         List of (state_name, time) tuples where time is in hours
     """
-    # Reset random seed for each simulation to ensure different results
-    np.random.seed()
-    
+    # Intentionally do NOT reseed here. numpy's global RNG advances after every
+    # draw, so consecutive calls already yield different samples; reseeding from
+    # OS entropy on every call only destroyed reproducibility — a fixed seed set
+    # by the caller could never take effect. Seed once at the start of a run for
+    # reproducible results; leave unseeded for stochastic ones.
+
     HOURS_PER_DAY = 24  # Convert days to hours
     
     # Initialize current state with the provided index

@@ -60,6 +60,20 @@ class InfectionManager:
                 except Exception as exc:
                     logger.warning("Failed to load CSV matrix for variant '%s': %s", variant, exc)
 
+        # In-process DMP: read the local state-machine DB directly instead of
+        # one HTTP round-trip per infection. Constructed once; None if the dmp
+        # package/DB can't be loaded, in which case create_timeline uses HTTP.
+        self._inprocess = None
+        if self.dmp_mode != "off" and DMP_API.get("use_inprocess"):
+            try:
+                from .dmp_inprocess import InProcessDMP
+
+                self._inprocess = InProcessDMP()
+                logger.info("DMP timelines resolved in-process (HTTP path disabled)")
+            except Exception as exc:
+                logger.warning("In-process DMP unavailable (%s); using HTTP API", exc)
+                self._inprocess = None
+
     def run_model(
         self,
         simulator,
@@ -191,21 +205,48 @@ class InfectionManager:
         if disease in self._csv_contexts:
             return self._csv_timeline(person, disease, curtime)
 
-        base_url = DMP_API["base_url"]
+        demographics = self._demographics_for(person, disease)
+        model_path = self._model_path_for_variant(disease)
+
+        # Fast path: in-process DMP — cached matrices + a per-person stochastic
+        # sample, no HTTP. Returns the same (state, hours) timeline the HTTP
+        # endpoint would, so it flows through the shared CSV-result builder.
+        if self._inprocess is not None:
+            try:
+                timeline_list = self._inprocess.simulate(
+                    self.disease_name, model_path, demographics
+                )
+            except Exception as e:
+                if self.dmp_mode == "required":
+                    raise RuntimeError(
+                        f"DMP timeline required but in-process failed: {e}"
+                    ) from e
+                logger.warning("In-process DMP error, using fallback timeline: %s", e)
+                self.timeline_source_counts["fallback"] += 1
+                return self._fallback_timeline(disease, curtime)
+
+            if timeline_list:
+                self.timeline_source_counts["dmp"] += 1
+                return self._build_timeline_from_csv_result(timeline_list, disease, curtime)
+
+            # No state machine matched these demographics.
+            if self.dmp_mode == "required":
+                raise RuntimeError(
+                    f"DMP timeline required but no state machine matched {demographics}"
+                )
+            self.timeline_source_counts["fallback"] += 1
+            return self._fallback_timeline(disease, curtime)
+
+        # HTTP path: used only when the in-process provider is unavailable.
         payload = {
             "disease_name": self.disease_name,
-            "model_path": self._model_path_for_variant(disease),
-            "demographics": {
-                "Age": str(person.age),
-                "Vaccination Status": "Vaccinated" if person.vaccination_state != VaccinationState.NONE else "Unvaccinated",
-                "Sex": "F" if person.sex == 1 else "M",
-                "Variant": disease,
-            },
+            "model_path": model_path,
+            "demographics": demographics,
         }
 
         try:
             resp = _dmp_session.post(
-                f"{base_url}/simulate",
+                f"{DMP_API['base_url']}/simulate",
                 json=payload,
                 timeout=DMP_API["timeout_seconds"],
             )
@@ -219,6 +260,20 @@ class InfectionManager:
             logger.warning("DMP API error, using fallback timeline: %s", e)
             self.timeline_source_counts["fallback"] += 1
             return self._fallback_timeline(disease, curtime)
+
+    def _demographics_for(self, person: Person, disease: str) -> dict:
+        """Demographic payload for DMP matching. Shared by the in-process and
+        HTTP paths so both resolve to the same state machine."""
+        return {
+            "Age": str(person.age),
+            "Vaccination Status": (
+                "Vaccinated"
+                if person.vaccination_state != VaccinationState.NONE
+                else "Unvaccinated"
+            ),
+            "Sex": "F" if person.sex == 1 else "M",
+            "Variant": disease,
+        }
 
     def _csv_timeline(self, person: Person, disease: str, curtime: int) -> dict[str, dict[InfectionState, InfectionTimeline]]:
         """Build a timeline using the custom CSV matrix loaded for this variant."""
