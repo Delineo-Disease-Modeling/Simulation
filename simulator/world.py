@@ -133,17 +133,17 @@ def seed_population(
     infection_manager,
     initial_infected_count: int,
 ) -> PopulationBuildResult:
-    # Pre-shuffle the threshold list and consume it linearly. The original
-    # code did random.choice(L) followed by L.remove(value) per person, which
-    # is O(n^2) over ~50k people. A single shuffle + linear iteration produces
-    # the same statistical distribution (each person gets a distinct threshold,
-    # drawn uniformly without replacement) in O(n). Specific person-to-threshold
-    # bijection differs, so downstream simdata/movement hashes shift.
+    # Threshold-to-person assignment is a uniform-without-replacement bijection
+    # whose only role is labeling — the threshold *distribution* is uniform
+    # regardless of which person gets which value, so this draw has no
+    # epidemiological meaning. We isolate it on its own Random so it can't
+    # perturb the global stream that Wells-Riley, lockdown checks, and seed
+    # sampling consume from.
     iv_thresholds = [
         ceil((100.0 * index) / len(people_data)) / 100.0
         for index in range(len(people_data))
     ]
-    random.shuffle(iv_thresholds)
+    random.Random(0).shuffle(iv_thresholds)
     threshold_iter = iter(iv_thresholds)
 
     # Holds Person object refs so update_people_states can iterate without a
