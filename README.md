@@ -36,7 +36,7 @@ Main simulation logic and configuration files.
 
 ## Root-Level Files
 
-- `app_3.py`, `app_profiling.py`, `app.py`: Simulation applications with various configurations.
+- `app_3.py`, `app_profiling.py`, `server.py`: Simulation applications with various configurations (`server.py` is the Flask entrypoint; run it as `server:app`, never `app:app`, so it does not shadow the dmp/app package).
 - `dmp_functions.py`: Functions supporting DMP operations.
 - `simulation_functions.py`: Core functions used across simulation runs.
 - `simulator_results.txt`, `simulator_results_1.txt`: Text-based output logs of simulation runs.
@@ -66,4 +66,4 @@ For this reason, please use cell data when running the simulation for the time b
 To run a simulation:
 
 ```bash
-python app.py
+python server.py

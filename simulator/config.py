@@ -6,7 +6,16 @@ import os
 
 # DMP API settings
 DMP_API = {
-    "base_url": os.environ.get("DMP_API_BASE_URL", "http://localhost:8000"),
+    # HTTP fallback target, used only when the in-process DMP is unavailable.
+    # Accept DMP_API_URL as an alias: the deploy compose sets DMP_API_URL, so
+    # without this alias base_url would silently default to localhost:8000 (where
+    # nothing listens inside the sim container) and the fallback would never reach
+    # the real dmp service.
+    "base_url": (
+        os.environ.get("DMP_API_BASE_URL")
+        or os.environ.get("DMP_API_URL")
+        or "http://localhost:8000"
+    ),
     "mode": os.environ.get("DMP_MODE", "auto"),
     "timeout_seconds": int(os.environ.get("DMP_API_TIMEOUT_SECONDS", "30")),
     # When true, resolve timelines via the in-process DMP (reads the local
