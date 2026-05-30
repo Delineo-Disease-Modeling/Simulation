@@ -567,7 +567,7 @@ def create_state_machine(states):
             st.markdown("---")
             
             # Import the calculation function from manager
-            from .state_machine_manager import calculate_aggregated_probabilities
+            from .logic.transition_math import calculate_aggregated_probabilities
             
             aggregated_probs = calculate_aggregated_probabilities(st.session_state.states, st.session_state.graph_edges)
             
