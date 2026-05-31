@@ -59,7 +59,8 @@ def calculate_waning_immunity(days_since_vaccination):
         return max(0.5, 0.7 - 0.2 * (days_since_vaccination - 180) / 180)
 
 
-def CAT(p, indoor, exposure_hours, infector=None, infector_masked=False, susceptible_masked=False):
+def CAT(p, indoor, exposure_hours, infector=None, infector_masked=False, susceptible_masked=False,
+        area_m2=None, ventilation_coeff=9.0, area_clamp=(65.0, 70000.0)):
     """
     Calculate transmission probability using the Wells-Riley equation
     with vaccination effects:
@@ -87,7 +88,17 @@ def CAT(p, indoor, exposure_hours, infector=None, infector_masked=False, suscept
     # Wells-Riley parameters
     quanta_rate = 20.0        # quanta/hr
     breathing_rate = 0.5      # m³/hr
-    ventilation_rate = 150.0  # m³/hr
+
+    # Room ventilation Q (m³/hr). With an area supplied (area-aware mode), scale
+    # Q by the POI's physical floor area: Q = ventilation_coeff * clamp(area),
+    # making per-contact risk ∝ 1/area so small crowded venues are higher-risk.
+    # area_m2=None (flag off, or a location without area such as a household)
+    # falls back to the legacy fixed 150 m³/hr, preserving the golden run.
+    if area_m2 is not None and area_m2 > 0:
+        lo, hi = area_clamp
+        ventilation_rate = ventilation_coeff * min(max(float(area_m2), lo), hi)
+    else:
+        ventilation_rate = 150.0  # m³/hr
 
     if not indoor:
         # Outdoor

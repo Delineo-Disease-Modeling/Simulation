@@ -109,6 +109,13 @@ def normalize_simdata(simdata: dict) -> dict:
         )
     )
 
+    normalized["area_aware_ventilation"] = bool(
+        normalized.get(
+            "area_aware_ventilation",
+            INFECTION_MODEL.get("area_aware_ventilation", False),
+        )
+    )
+
     raw_model_paths = normalized.get("model_path_by_variant") or {}
     model_path_by_variant = {}
     if isinstance(raw_model_paths, dict):
@@ -281,6 +288,14 @@ class SimulationRunner:
         self.progress_callback = progress_callback
         self.data_loader = data_loader
         self.aggregate_transmission = self.simdata["aggregate_transmission"]
+        # Area-aware Wells-Riley ventilation (default off → fixed Q, golden
+        # preserved). When on, facility Q scales with physical floor area.
+        self.area_aware_ventilation = self.simdata["area_aware_ventilation"]
+        self.ventilation_coeff = float(INFECTION_MODEL.get("ventilation_coeff", 9.0))
+        self.area_clamp = (
+            float(INFECTION_MODEL.get("area_clamp_min", 65.0)),
+            float(INFECTION_MODEL.get("area_clamp_max", 70000.0)),
+        )
         self._perf_accum: dict[str, float] = {}
 
     @contextlib.contextmanager
@@ -534,6 +549,24 @@ class SimulationRunner:
             ts, poi_id, is_household = context.event_queue.pop()
             self.process_infection_event(context, ts, poi_id, is_household)
 
+    def _ventilation_rate(self, place, is_household: bool) -> float:
+        """Wells-Riley ventilation term Q (m^3/hr).
+
+        Households use a fixed 3000; facilities use a fixed 150 unless
+        area-aware ventilation is enabled, in which case Q scales with the
+        facility's physical floor area (Q = ventilation_coeff * clamp(area)),
+        making per-contact risk inversely proportional to area. Facilities with
+        no known area fall back to 150, so flag-off behaviour is bit-identical.
+        """
+        if is_household:
+            return 3000.0
+        if self.area_aware_ventilation:
+            area = getattr(place, "area", None)
+            if area is not None and area > 0:
+                lo, hi = self.area_clamp
+                return self.ventilation_coeff * min(max(float(area), lo), hi)
+        return 150.0
+
     def process_infection_event(
         self,
         context: SimulationContext,
@@ -572,7 +605,7 @@ class SimulationRunner:
         # branch multiplies ventilation_rate by 20.
         _QUANTA_RATE = 20.0
         _BREATHING_RATE = 0.5
-        ventilation_rate = 3000.0 if is_household else 150.0
+        ventilation_rate = self._ventilation_rate(place, is_household)
         base_quanta_per_pair = (
             _QUANTA_RATE * _BREATHING_RATE * exposure_hours
         ) / ventilation_rate
@@ -743,7 +776,7 @@ class SimulationRunner:
 
         _QUANTA_RATE = 20.0
         _BREATHING_RATE = 0.5
-        ventilation_rate = 3000.0 if is_household else 150.0
+        ventilation_rate = self._ventilation_rate(place, is_household)
         base_quanta = (_QUANTA_RATE * _BREATHING_RATE * exposure_hours) / ventilation_rate
 
         with self._timed("infection_event/aggregate_iteration"):
@@ -865,6 +898,7 @@ class SimulationRunner:
             "variants": context.variants,
             "dmp_mode": self.simdata["dmp_mode"],
             "aggregate_transmission": self.simdata["aggregate_transmission"],
+            "area_aware_ventilation": self.simdata["area_aware_ventilation"],
             "model_path_by_variant": self.simdata["model_path_by_variant"],
             "initial_infected_count": self.simdata["initial_infected_count"],
             "initial_infected_ids": context.initial_infected_ids,
