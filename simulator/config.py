@@ -52,6 +52,16 @@ INFECTION_MODEL = {
     "transmission_rate": 7e3,
     # Whether multiple diseases can infect the same person simultaneously
     "allow_multidisease": True,
+    # When true, resolve per-location transmission with the O(n) aggregate
+    # Wells-Riley kernel (sum infector quanta once per location/variant, then
+    # one infection draw per susceptible) instead of the O(infectors x
+    # susceptibles) pairwise kernel. Statistically equivalent per susceptible
+    # (1 - prod_i exp(-lambda_i) == 1 - exp(-sum_i lambda_i)), but it consumes a
+    # different RNG stream, so it is NOT byte-identical to the pairwise path and
+    # must be validated by ensemble equivalence rather than the golden hash.
+    # Overridable per run via the simdata "aggregate_transmission" field.
+    "aggregate_transmission": os.environ.get("DELINEO_AGG_TRANSMISSION", "0").lower()
+    in {"1", "true", "yes", "on"},
     # Fallback timeline values used only when DMP API fails to provide a timeline
     "fallback_timeline": {
         "infected_duration": 1440,      # 24 hours in minutes (fallback value)
