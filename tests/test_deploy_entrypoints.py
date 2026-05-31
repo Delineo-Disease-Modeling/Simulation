@@ -2,7 +2,7 @@ import importlib
 
 
 def test_dmp_entrypoint_imports_with_simulation_app_module_present():
-    importlib.import_module("app")
+    importlib.import_module("server")
 
     module = importlib.import_module("dmp.api.dmp_api_v2")
 
