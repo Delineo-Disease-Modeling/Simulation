@@ -17,6 +17,8 @@ from .logic.transition_math import (
     analyze_simulation_results,
     create_visualizations,
 )
+from .utils.json_edge_editor import render_json_edge_editor, render_json_format_guide
+from .logic.machine_naming import build_demographics_dict
 
 def manage_state_machines(states):
     """Manage state machines using Streamlit."""
@@ -340,141 +342,18 @@ def manage_state_machines(states):
             
             # JSON Editor for Edges
             st.markdown("---")
-            with st.expander("📝 JSON Edge Editor", expanded=False):
-                st.write("Edit all edges in JSON format for bulk modifications:")
-                
-                # Convert edges to a more readable format for JSON editing
-                edges_for_json = []
-                for edge in st.session_state.graph_edges:
-                    edge_data = edge['data'].copy()
-                    # Remove the label field as it's auto-generated
-                    if 'label' in edge_data:
-                        del edge_data['label']
-                    edges_for_json.append(edge_data)
-                
-                # Display current edges as JSON
-                current_json = json.dumps(edges_for_json, indent=2)
-                
-                # JSON editor with validation
-                edited_json = st.text_area(
-                    "Edit Edges (JSON format):",
-                    value=current_json,
-                    height=400,
-                    key="manager_json_editor",
-                    help="Edit the edges in JSON format. Each edge should have: source, target, transition_prob, mean_time, std_dev, distribution_type, min_cutoff, max_cutoff"
-                )
-                
-                # Add buttons for JSON operations
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    if st.button("🔄 Update from JSON", key="manager_update_from_json"):
-                        try:
-                            # Parse the JSON
-                            parsed_edges = json.loads(edited_json)
-                            
-                            # Validate the structure
-                            if not isinstance(parsed_edges, list):
-                                st.error("❌ JSON must be a list of edge objects")
-                                return
-                            
-                            # Convert back to the expected format with 'data' wrapper
-                            new_edges = []
-                            for edge_data in parsed_edges:
-                                if not isinstance(edge_data, dict):
-                                    st.error("❌ Each edge must be a JSON object")
-                                    return
-                                
-                                # Validate required fields
-                                required_fields = ['source', 'target', 'transition_prob', 'mean_time', 'std_dev', 'distribution_type', 'min_cutoff', 'max_cutoff']
-                                missing_fields = [field for field in required_fields if field not in edge_data]
-                                if missing_fields:
-                                    st.error(f"❌ Missing required fields: {', '.join(missing_fields)}")
-                                    return
-                                
-                                # Validate that source and target states exist
-                                if edge_data['source'] not in st.session_state.states:
-                                    st.error(f"❌ Source state '{edge_data['source']}' not found in states list")
-                                    return
-                                if edge_data['target'] not in st.session_state.states:
-                                    st.error(f"❌ Target state '{edge_data['target']}' not found in states list")
-                                    return
-                                
-                                # Create the edge in the expected format
-                                new_edge = {
-                                    'data': {
-                                        'source': edge_data['source'],
-                                        'target': edge_data['target'],
-                                        'transition_prob': float(edge_data['transition_prob']),
-                                        'mean_time': int(edge_data['mean_time']),
-                                        'std_dev': float(edge_data['std_dev']),
-                                        'distribution_type': edge_data['distribution_type'],
-                                        'min_cutoff': float(edge_data['min_cutoff']),
-                                        'max_cutoff': float(edge_data['max_cutoff']),
-                                        'label': create_edge_label(
-                                            float(edge_data['transition_prob']),
-                                            int(edge_data['mean_time']),
-                                            float(edge_data['std_dev']),
-                                            edge_data['distribution_type'],
-                                            float(edge_data['min_cutoff']),
-                                            float(edge_data['max_cutoff'])
-                                        )
-                                    }
-                                }
-                                new_edges.append(new_edge)
-                            
-                            # Update the session state
-                            st.session_state.graph_edges = new_edges
-                            st.success(f"✅ Successfully updated {len(new_edges)} edges from JSON")
-                            st.rerun()
-                            
-                        except json.JSONDecodeError as e:
-                            st.error(f"❌ Invalid JSON format: {str(e)}")
-                        except ValueError as e:
-                            st.error(f"❌ Invalid data type: {str(e)}")
-                        except Exception as e:
-                            st.error(f"❌ Error updating edges: {str(e)}")
-                
-                with col2:
-                    if st.button("📋 Copy JSON", key="manager_copy_json"):
-                        st.write("```json")
-                        st.code(current_json, language="json")
-                        st.write("```")
-                        st.success("✅ JSON copied to clipboard (use Ctrl+C)")
-                
-                with col3:
-                    if st.button("🗑️ Clear All Edges", key="manager_clear_edges"):
-                        st.session_state.graph_edges = []
-                        st.success("✅ All edges cleared")
-                        st.rerun()
-            
+            if render_json_edge_editor(
+                st.session_state.states,
+                st.session_state.graph_edges,
+                editor_key="manager_json_editor",
+                update_key="manager_update_from_json",
+                copy_key="manager_copy_json",
+                clear_key="manager_clear_edges",
+            ):
+                return
+
             # Show validation info (moved outside the main expander)
-            with st.expander("ℹ️ JSON Format Guide", expanded=False):
-                st.write("""
-                **Required fields for each edge:**
-                - `source`: Source state name (must exist in states list)
-                - `target`: Target state name (must exist in states list)
-                - `transition_prob`: Probability of transition (0.0 to 1.0)
-                - `mean_time`: Average time in hours before transition
-                - `std_dev`: Standard deviation of transition time
-                - `distribution_type`: Distribution type ("normal", "triangular", etc.)
-                - `min_cutoff`: Minimum time cutoff in hours
-                - `max_cutoff`: Maximum time cutoff in hours
-                
-                **Example edge:**
-                ```json
-                {
-                  "source": "Exposed",
-                  "target": "Infectious_Presymptomatic",
-                  "transition_prob": 1.0,
-                  "mean_time": 10.0,
-                  "std_dev": 2.0,
-                  "distribution_type": "triangular",
-                  "min_cutoff": 7.0,
-                  "max_cutoff": 14.0
-                }
-                ```
-                """)
+            render_json_format_guide()
             
             # Add save changes button
             # st.subheader("Save Changes")
@@ -494,13 +373,7 @@ def manage_state_machines(states):
                     machine_name = st.session_state.selected_machine['name']
                     
                     # Create demographics dictionary from session state
-                    demographics = {}
-                    for demo in st.session_state.demographics:
-                        if demo["key"] == "Custom":
-                            if demo.get("custom_key") and demo.get("custom_value"):
-                                demographics[demo["custom_key"]] = demo["custom_value"]
-                        elif demo["key"] and demo["value"]:
-                            demographics[demo["key"]] = demo["value"]
+                    demographics = build_demographics_dict(st.session_state.demographics)
                     
                     # Save the updated state machine
                     state_machine_id = db.save_state_machine(

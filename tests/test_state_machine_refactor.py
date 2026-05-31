@@ -13,6 +13,7 @@ package root to resolve.
 
 import os
 import sys
+import json
 import shutil
 import tempfile
 import unittest
@@ -33,6 +34,8 @@ from state_machine.logic.transition_math import (
     create_visualizations,
 )
 from state_machine.state_machine_db import StateMachineDB
+from state_machine.logic.edge_json import edges_to_json_payload, parse_edges_json
+from state_machine.logic.machine_naming import build_demographics_dict
 
 
 def edge(source, target, prob, mean=5, std=1.0, dist="normal", mn=0.0, mx=10.0):
@@ -244,6 +247,95 @@ class TestStateMachineDB(unittest.TestCase):
         self.db.save_state_machine("M1", self.states, self.edges)
         reopened = StateMachineDB(db_path=self.db_path)
         self.assertEqual(len(reopened.list_state_machines()), 1)
+
+
+class TestEdgeJson(unittest.TestCase):
+    def test_payload_strips_label(self):
+        e = edge("A", "B", 1.0)
+        e["data"]["label"] = "p=1.000"
+        payload = edges_to_json_payload([e])
+        self.assertNotIn("label", payload)
+        self.assertEqual(json.loads(payload)[0]["source"], "A")
+
+    def test_parse_ok_round_trip(self):
+        edges = [edge("A", "B", 0.5, mean=5), edge("A", "C", 0.5, mean=9)]
+        status, new_edges, errors = parse_edges_json(edges_to_json_payload(edges), ["A", "B", "C"])
+        self.assertEqual(status, "ok")
+        self.assertEqual(errors, [])
+        self.assertEqual(len(new_edges), 2)
+        self.assertEqual(new_edges[0]["data"]["mean_time"], 5)
+        self.assertIn("label", new_edges[0]["data"])
+
+    def test_parse_mean_time_coerced_to_int(self):
+        payload = json.dumps([{
+            "source": "A", "target": "B", "transition_prob": 1.0,
+            "mean_time": 10.0, "std_dev": 2.0, "distribution_type": "triangular",
+            "min_cutoff": 7.0, "max_cutoff": 14.0,
+        }])
+        status, new_edges, _ = parse_edges_json(payload, ["A", "B"])
+        self.assertEqual(status, "ok")
+        self.assertIsInstance(new_edges[0]["data"]["mean_time"], int)
+        self.assertEqual(new_edges[0]["data"]["mean_time"], 10)
+
+    def test_parse_not_a_list_is_invalid(self):
+        status, new_edges, errors = parse_edges_json("{}", ["A"])
+        self.assertEqual(status, "invalid")
+        self.assertIsNone(new_edges)
+        self.assertIn("list", errors[0])
+
+    def test_parse_element_not_dict_is_invalid(self):
+        status, _, errors = parse_edges_json("[1]", ["A"])
+        self.assertEqual(status, "invalid")
+        self.assertIn("JSON object", errors[0])
+
+    def test_parse_missing_fields_is_invalid(self):
+        status, _, errors = parse_edges_json('[{"source": "A", "target": "B"}]', ["A", "B"])
+        self.assertEqual(status, "invalid")
+        self.assertIn("Missing required fields", errors[0])
+
+    def test_parse_unknown_source_and_target_are_invalid(self):
+        s1, _, e1 = parse_edges_json(edges_to_json_payload([edge("X", "B", 1.0)]), ["A", "B"])
+        self.assertEqual(s1, "invalid")
+        self.assertIn("Source state", e1[0])
+        s2, _, e2 = parse_edges_json(edges_to_json_payload([edge("A", "Z", 1.0)]), ["A", "B"])
+        self.assertEqual(s2, "invalid")
+        self.assertIn("Target state", e2[0])
+
+    def test_parse_malformed_json_is_error(self):
+        # Exceptions map to 'error' (the original showed the error but did NOT halt the page).
+        status, new_edges, errors = parse_edges_json("not json", ["A"])
+        self.assertEqual(status, "error")
+        self.assertIsNone(new_edges)
+        self.assertIn("Invalid JSON format", errors[0])
+
+    def test_parse_bad_numeric_is_error(self):
+        payload = json.dumps([{
+            "source": "A", "target": "B", "transition_prob": "abc",
+            "mean_time": 5, "std_dev": 1.0, "distribution_type": "normal",
+            "min_cutoff": 0.0, "max_cutoff": 10.0,
+        }])
+        status, _, errors = parse_edges_json(payload, ["A", "B"])
+        self.assertEqual(status, "error")
+        self.assertIn("Invalid data type", errors[0])
+
+
+class TestBuildDemographicsDict(unittest.TestCase):
+    def test_standard_rows(self):
+        rows = [{"key": "Sex", "value": "Male"}, {"key": "Age", "value": "30"}]
+        self.assertEqual(build_demographics_dict(rows), {"Sex": "Male", "Age": "30"})
+
+    def test_custom_row_uses_custom_key_value(self):
+        rows = [{"key": "Custom", "custom_key": "Region", "custom_value": "West"}]
+        self.assertEqual(build_demographics_dict(rows), {"Region": "West"})
+
+    def test_incomplete_rows_are_skipped(self):
+        rows = [
+            {"key": "", "value": "x"},                                 # empty key
+            {"key": "Sex", "value": ""},                               # empty value
+            {"key": "Custom", "custom_key": "", "custom_value": "v"},  # incomplete custom
+            {"key": "Custom"},                                         # missing custom keys (uses .get)
+        ]
+        self.assertEqual(build_demographics_dict(rows), {})
 
 
 if __name__ == "__main__":
