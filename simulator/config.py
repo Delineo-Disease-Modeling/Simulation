@@ -63,6 +63,28 @@ INFECTION_MODEL = {
     # kernel, or override per run via the simdata "aggregate_transmission" field.
     "aggregate_transmission": os.environ.get("DELINEO_AGG_TRANSMISSION", "1").lower()
     in {"1", "true", "yes", "on"},
+    # When true, derive the Wells-Riley ventilation term Q per-facility from its
+    # physical floor area (Q = ventilation_coeff * clamp(area_m2)) instead of the
+    # legacy fixed 150 m^3/hr. Makes transmission density-dependent: small crowded
+    # POIs become higher-risk, large airy ones lower-risk, matching the inverse-
+    # area scaling of Chang et al. 2021 (Nature). Facilities with no known area
+    # fall back to Q=150. DEFAULT ON; set DELINEO_AREA_VENTILATION=0 to restore the
+    # legacy fixed-Q behaviour, or override per run via the simdata
+    # "area_aware_ventilation" field. NOTE: the transmission *level*
+    # (ventilation_coeff) is a physical estimate, not yet calibrated to a target.
+    "area_aware_ventilation": os.environ.get("DELINEO_AREA_VENTILATION", "1").lower()
+    in {"1", "true", "yes", "on"},
+    # Ventilation coefficient c (m^3/hr per m^2 of floor) used when
+    # area_aware_ventilation is on: Q = c * area_m2. Physical default 9.0 ~= air
+    # changes/hr (3) x ceiling height (3 m). This constant sets the overall
+    # transmission *level* and is the single global knob to recalibrate later,
+    # separate from the area *shape* it introduces.
+    "ventilation_coeff": float(os.environ.get("DELINEO_VENTILATION_COEFF", "9.0")),
+    # Floor-area clamp (m^2) before computing Q: winsorizes bad geometry (region
+    # polygons recorded as one 200+ km^2 "POI") and sub-room areas. ~ p01..p99 of
+    # the observed footprint distribution.
+    "area_clamp_min": float(os.environ.get("DELINEO_AREA_CLAMP_MIN", "65.0")),
+    "area_clamp_max": float(os.environ.get("DELINEO_AREA_CLAMP_MAX", "70000.0")),
     # Fallback timeline values used only when DMP API fails to provide a timeline
     "fallback_timeline": {
         "infected_duration": 1440,      # 24 hours in minutes (fallback value)

@@ -51,12 +51,14 @@ class Location:
         label: Optional[str] = None,
         capacity: int = -1,
         location_type: str = "unknown",
+        area: Optional[float] = None,
     ) -> None:
         self.id: str = str(id)
         self.cbg: Optional[str] = cbg
         self.label: Optional[str] = label
         self.capacity: int = capacity        # -1 = unlimited
         self.location_type: str = location_type
+        self.area: Optional[float] = area    # physical floor area in m^2 (None = unknown)
         self.population: dict[str, Person] = {}
 
     # population management
@@ -107,8 +109,9 @@ class Facility(Location):
         label: Optional[str] = None,
         capacity: int = -1,
         street_address: Optional[str] = None,
+        area: Optional[float] = None,
     ) -> None:
-        super().__init__(id=id, cbg=cbg, label=label, capacity=capacity, location_type="facility")
+        super().__init__(id=id, cbg=cbg, label=label, capacity=capacity, location_type="facility", area=area)
         self.street_address: Optional[str] = street_address
 
 
