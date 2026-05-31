@@ -9,7 +9,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
-from .config import DELINEO, DMP_API, SIMULATION
+from .config import DELINEO, DMP_API, INFECTION_MODEL, SIMULATION
 from .data_interface import StreamDataLoader
 from .event_queue import EventQueue
 from .infection_models.v6_wells_riley import CAT, get_vaccination_protection
@@ -102,6 +102,12 @@ def normalize_simdata(simdata: dict) -> dict:
 
     raw_mode = str(normalized.get("dmp_mode") or DMP_API["mode"]).lower()
     normalized["dmp_mode"] = raw_mode if raw_mode in VALID_DMP_MODES else "auto"
+
+    normalized["aggregate_transmission"] = bool(
+        normalized.get(
+            "aggregate_transmission", INFECTION_MODEL.get("aggregate_transmission", False)
+        )
+    )
 
     raw_model_paths = normalized.get("model_path_by_variant") or {}
     model_path_by_variant = {}
@@ -274,6 +280,7 @@ class SimulationRunner:
         self.output_dir = output_dir
         self.progress_callback = progress_callback
         self.data_loader = data_loader
+        self.aggregate_transmission = self.simdata["aggregate_transmission"]
         self._perf_accum: dict[str, float] = {}
 
     @contextlib.contextmanager
@@ -534,6 +541,10 @@ class SimulationRunner:
         poi_id: str,
         is_household: bool,
     ) -> None:
+        if self.aggregate_transmission:
+            self._aggregate_transmission_event(context, ts, poi_id, is_household)
+            return
+
         place = context.simulator.get_location(str(poi_id), is_household)
         if not place or not place.population:
             return
@@ -680,6 +691,165 @@ class SimulationRunner:
                             ts,
                         )
 
+    def _aggregate_transmission_event(
+        self,
+        context: SimulationContext,
+        ts: int,
+        poi_id: str,
+        is_household: bool,
+    ) -> None:
+        """O(infectors + susceptibles) per-location Wells-Riley kernel.
+
+        The well-mixed-room form of Wells-Riley: a susceptible's risk depends on
+        the *total* quanta in the room (the sum over infectors), not on pairwise
+        encounters. We sum each infectious person's emission weight once per
+        location/variant (W), then draw a single infection trial per susceptible
+        against P = 1 - exp(-base * W * susceptible_intake).
+
+        This yields the same marginal infection probability per susceptible as
+        the pairwise kernel in process_infection_event, because for independent
+        per-infector Poisson exposures
+            1 - prod_i (1 - p_i) == 1 - exp(-sum_i lambda_i),
+        while doing O(infectors + susceptibles) work instead of
+        O(infectors * susceptibles). Mask/vaccination factors separate cleanly
+        into infector-side (mask 0.30 / vax transmission) and susceptible-side
+        (mask 0.50 / vax infection) weights, so base * w_i * u_j reproduces the
+        pairwise per-pair quanta exactly (e.g. both-masked 0.30 * 0.50 = 0.15).
+
+        It consumes a *different* RNG stream than the pairwise path (one draw per
+        susceptible/variant, not one per pair), so output is NOT byte-identical
+        and is validated by ensemble equivalence rather than the golden hash.
+        Enabled via INFECTION_MODEL["aggregate_transmission"] / the simdata
+        "aggregate_transmission" field.
+        """
+        place = context.simulator.get_location(str(poi_id), is_household)
+        if not place or not place.population:
+            return
+
+        snapshot = list(place.population.values())
+        infectious_people = [person for person in snapshot if person.is_infectious()]
+        if not infectious_people:
+            return
+
+        exposure_hours = context.simulator.timestep / 60.0
+        infection_mgr = context.infection_manager
+        multidisease = infection_mgr.multidisease
+        infected_set = infection_mgr.infected
+        susceptible = InfectionState.SUSCEPTIBLE
+        infectious_flag = InfectionState.INFECTIOUS
+        infected_state_value = int(
+            (InfectionState.INFECTED | InfectionState.INFECTIOUS).value
+        )
+
+        _QUANTA_RATE = 20.0
+        _BREATHING_RATE = 0.5
+        ventilation_rate = 3000.0 if is_household else 150.0
+        base_quanta = (_QUANTA_RATE * _BREATHING_RATE * exposure_hours) / ventilation_rate
+
+        with self._timed("infection_event/aggregate_iteration"):
+            # 1) Sum infector emission weights per variant — O(infectors).
+            #    w_i = infector mask factor (0.30 masked, else 1.0) * infector
+            #    vaccination transmission factor (same factors as the pairwise
+            #    kernel, just summed instead of applied per pair).
+            emission: dict[str, float] = {}
+            for infector in infectious_people:
+                infector_mask_factor = 0.30 if infector.masked else 1.0
+                if infector.vaccination_status:
+                    infector_factor = 1.0 - get_vaccination_protection(infector, 'transmission')
+                else:
+                    infector_factor = 1.0
+                w_i = infector_mask_factor * infector_factor
+                for variant, state in infector.states.items():
+                    if state & infectious_flag:
+                        emission[variant] = emission.get(variant, 0.0) + w_i
+
+            if not emission:
+                return
+
+            # 2) One infection trial per susceptible per active variant against
+            #    the summed room concentration — O(susceptibles).
+            for target in snapshot:
+                if target.invisible:
+                    continue
+                target_states = target.states
+                if not multidisease:
+                    skip = False
+                    for s in target_states.values():
+                        if s != susceptible:
+                            skip = True
+                            break
+                    if skip:
+                        continue
+
+                target_mask_factor = 0.50 if target.masked else 1.0
+                if target.vaccination_status:
+                    target_protection = get_vaccination_protection(target, 'infection')
+                else:
+                    target_protection = 0.0
+                # Susceptible intake weight u_j; the susceptible's protection is
+                # constant across infectors, so it is computed once here rather
+                # than once per pair as in the pairwise kernel.
+                intake = target_mask_factor * (1.0 - target_protection)
+                if intake <= 0.0:
+                    continue
+
+                target_id = target.id
+                for variant, w_sum in emission.items():
+                    if target_states.get(variant, susceptible) != susceptible:
+                        continue
+                    mean_quanta = base_quanta * w_sum * intake
+                    if mean_quanta <= 0.0:
+                        continue
+                    if random.random() >= 1.0 - math.exp(-mean_quanta):
+                        continue
+
+                    logger.info(
+                        "[Infection] (room) -> %s @ %s (t=%d, variant=%s)",
+                        target_id, poi_id, ts, variant,
+                    )
+
+                    if target_id not in infected_set:
+                        infected_set.add(target_id)
+                    elif not multidisease:
+                        continue
+
+                    infection_mgr.schedule_infection(
+                        context.simulator,
+                        context.event_queue,
+                        target,
+                        variant,
+                        ts,
+                        context.people_with_timelines,
+                    )
+                    context.variant_infected[variant][target_id] = infected_state_value
+                    context.simulator.log_event(
+                        "log_infection_event",
+                        target,
+                        None,
+                        place,
+                        variant,
+                        ts,
+                    )
+
+                    if not multidisease:
+                        # First infection claims this susceptible for the
+                        # timestep, mirroring the pairwise infected_set guard.
+                        break
+
+        # Contact-pair logging is O(n^2) and a no-op when logging is off; skip
+        # the iteration entirely in that case (identical to the pairwise path).
+        if not is_household and context.simulator.enable_logging:
+            with self._timed("infection_event/contact_pair_logging"):
+                for index, person_one in enumerate(snapshot):
+                    for person_two in snapshot[index + 1:]:
+                        context.simulator.log_event(
+                            "log_contact_event",
+                            person_one,
+                            person_two,
+                            place,
+                            ts,
+                        )
+
     def finalize(self, context: SimulationContext) -> dict:
         context.snapshot_writer.close()
 
@@ -694,6 +864,7 @@ class SimulationRunner:
             "disease_name": self.simdata["disease_name"],
             "variants": context.variants,
             "dmp_mode": self.simdata["dmp_mode"],
+            "aggregate_transmission": self.simdata["aggregate_transmission"],
             "model_path_by_variant": self.simdata["model_path_by_variant"],
             "initial_infected_count": self.simdata["initial_infected_count"],
             "initial_infected_ids": context.initial_infected_ids,
