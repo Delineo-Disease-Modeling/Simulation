@@ -35,7 +35,7 @@ from state_machine.logic.transition_math import (
 )
 from state_machine.state_machine_db import StateMachineDB
 from state_machine.logic.edge_json import edges_to_json_payload, parse_edges_json
-from state_machine.logic.machine_naming import build_demographics_dict
+from state_machine.logic.machine_naming import build_demographics_dict, build_machine_name_and_path
 from state_machine.logic.machine_filters import filter_machines
 
 
@@ -383,6 +383,33 @@ class TestFilterMachines(unittest.TestCase):
         before = list(rows)
         filter_machines(rows, "All Diseases", "All Categories", None, None, [])
         self.assertEqual(rows, before)
+
+
+class TestBuildMachineNameAndPath(unittest.TestCase):
+    def test_covid_variant(self):
+        name, path = build_machine_name_and_path("COVID-19", "variant", "Delta", None, {})
+        self.assertEqual(path, "variant.Delta.general")
+        self.assertIn("variant=Delta", name)
+
+    def test_covid_default(self):
+        name, path = build_machine_name_and_path("COVID-19", "default", None, None, {})
+        self.assertEqual(path, "default.general")
+        self.assertEqual(name, "COVID-19 | Default")
+
+    def test_measles_vaccination(self):
+        name, path = build_machine_name_and_path("Measles", "vaccination", None, "Fully Vaccinated", {})
+        self.assertEqual(path, "vaccination.Fully Vaccinated.general")
+        self.assertIn("vaccination=Fully Vaccinated", name)
+
+    def test_other_disease_defaults(self):
+        name, path = build_machine_name_and_path("Influenza", "default", None, None, {})
+        self.assertEqual(path, "default.general")
+        self.assertEqual(name, "Influenza | Default")
+
+    def test_demographics_appended_to_name(self):
+        name, path = build_machine_name_and_path("COVID-19", "variant", "Delta", None, {"Sex": "Male"})
+        self.assertIn("variant=Delta", name)
+        self.assertIn("Sex=Male", name)
 
 
 if __name__ == "__main__":
