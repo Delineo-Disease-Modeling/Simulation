@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS, cross_origin
 from jsonschema import validate
 from werkzeug.exceptions import BadRequest
-from simulator import simulate
 from simulator.jobs import start_simulation_job, stream_sse_messages
 from simulator.config import SERVER
 import os
@@ -99,10 +98,9 @@ def run_simulation_endpoint():
 @cross_origin()
 def run_main():
     """
-    Basic simulation endpoint for testing.
+    Health/status endpoint. The actual simulation entrypoint is POST /simulation/.
     """
-    # Use default values from config
-    return simulate.run_simulator()
+    return jsonify({"status": "ok", "service": "delineo-simulation"})
 
 
 if __name__ == '__main__':
