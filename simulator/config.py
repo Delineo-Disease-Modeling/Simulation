@@ -67,10 +67,12 @@ INFECTION_MODEL = {
     # physical floor area (Q = ventilation_coeff * clamp(area_m2)) instead of the
     # legacy fixed 150 m^3/hr. Makes transmission density-dependent: small crowded
     # POIs become higher-risk, large airy ones lower-risk, matching the inverse-
-    # area scaling of Chang et al. 2021 (Nature). Default off so the fixed-Q paths
-    # are preserved exactly (the kernels fall back to 150 when area is unknown).
-    # Overridable per run via the simdata "area_aware_ventilation" field.
-    "area_aware_ventilation": os.environ.get("DELINEO_AREA_VENTILATION", "0").lower()
+    # area scaling of Chang et al. 2021 (Nature). Facilities with no known area
+    # fall back to Q=150. DEFAULT ON; set DELINEO_AREA_VENTILATION=0 to restore the
+    # legacy fixed-Q behaviour, or override per run via the simdata
+    # "area_aware_ventilation" field. NOTE: the transmission *level*
+    # (ventilation_coeff) is a physical estimate, not yet calibrated to a target.
+    "area_aware_ventilation": os.environ.get("DELINEO_AREA_VENTILATION", "1").lower()
     in {"1", "true", "yes", "on"},
     # Ventilation coefficient c (m^3/hr per m^2 of floor) used when
     # area_aware_ventilation is on: Q = c * area_m2. Physical default 9.0 ~= air
