@@ -36,6 +36,7 @@ from state_machine.logic.transition_math import (
 from state_machine.state_machine_db import StateMachineDB
 from state_machine.logic.edge_json import edges_to_json_payload, parse_edges_json
 from state_machine.logic.machine_naming import build_demographics_dict
+from state_machine.logic.machine_filters import filter_machines
 
 
 def edge(source, target, prob, mean=5, std=1.0, dist="normal", mn=0.0, mx=10.0):
@@ -52,6 +53,13 @@ def edge(source, target, prob, mean=5, std=1.0, dist="normal", mn=0.0, mx=10.0):
             "max_cutoff": mx,
         }
     }
+
+
+def machine_row(id=1, name="M", disease="COVID-19", variant=None, category="default",
+                model_path="default.general", created="2024-01-01", updated="2024-01-01",
+                demographics="{}"):
+    """Build a StateMachineDB.list_state_machines() row tuple."""
+    return (id, name, disease, variant, category, model_path, created, updated, demographics)
 
 
 class TestValidateTransitionProbabilities(unittest.TestCase):
@@ -336,6 +344,45 @@ class TestBuildDemographicsDict(unittest.TestCase):
             {"key": "Custom"},                                         # missing custom keys (uses .get)
         ]
         self.assertEqual(build_demographics_dict(rows), {})
+
+
+class TestFilterMachines(unittest.TestCase):
+    def test_all_passes_through_sorted_by_updated_desc(self):
+        rows = [machine_row(1, updated="2024-01-01"),
+                machine_row(2, updated="2024-03-01"),
+                machine_row(3, updated="2024-02-01")]
+        out = filter_machines(rows, "All Diseases", "All Categories", None, None, [])
+        self.assertEqual([m[0] for m in out], [2, 3, 1])
+
+    def test_disease_filter(self):
+        rows = [machine_row(1, disease="COVID-19"), machine_row(2, disease="Measles")]
+        out = filter_machines(rows, "COVID-19", "All Categories", None, None, [])
+        self.assertEqual([m[0] for m in out], [1])
+
+    def test_category_filter_matches_model_path_prefix(self):
+        model_categories = [{"name": "Variant", "id": "variant"}]
+        rows = [machine_row(1, model_path="variant.Delta.general"),
+                machine_row(2, model_path="default.general")]
+        out = filter_machines(rows, "COVID-19", "Variant", None, None, model_categories)
+        self.assertEqual([m[0] for m in out], [1])
+
+    def test_variant_filter(self):
+        rows = [machine_row(1, model_path="variant.Delta.general"),
+                machine_row(2, model_path="variant.Omicron.general")]
+        out = filter_machines(rows, "COVID-19", "All Categories", "Delta", None, [])
+        self.assertEqual([m[0] for m in out], [1])
+
+    def test_vaccination_filter_is_measles_only(self):
+        rows = [machine_row(1, disease="Measles", model_path="vaccination.Fully Vaccinated.general"),
+                machine_row(2, disease="Measles", model_path="vaccination.Unvaccinated.general")]
+        out = filter_machines(rows, "Measles", "All Categories", None, "Fully Vaccinated", [])
+        self.assertEqual([m[0] for m in out], [1])
+
+    def test_does_not_mutate_input_list(self):
+        rows = [machine_row(1, updated="2024-01-01"), machine_row(2, updated="2024-03-01")]
+        before = list(rows)
+        filter_machines(rows, "All Diseases", "All Categories", None, None, [])
+        self.assertEqual(rows, before)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ from .logic.transition_math import (
 )
 from .utils.json_edge_editor import render_json_edge_editor, render_json_format_guide
 from .logic.machine_naming import build_demographics_dict
+from .logic.machine_filters import filter_machines
 
 def manage_state_machines(states):
     """Manage state machines using Streamlit."""
@@ -58,6 +59,7 @@ def manage_state_machines(states):
     selected_category = "All Categories"
     selected_variant = None
     selected_vaccination = None
+    model_categories = []
     
     # Add category filter
     if selected_disease != "All Diseases":
@@ -104,35 +106,10 @@ def manage_state_machines(states):
     # List all saved state machines
     saved_machines = db.list_state_machines()
     if saved_machines:
-        # Filter machines by selected disease
-        if selected_disease != "All Diseases":
-            saved_machines = [machine for machine in saved_machines if machine[2] == selected_disease]
-        
-        # Filter by category
-        if selected_category != "All Categories":
-            # Find the selected category ID for filtering
-            selected_category_id = None
-            for category in model_categories:
-                if category["name"] == selected_category:
-                    selected_category_id = category["id"]
-                    break
-            
-            if selected_category_id:
-                # Filter by model_path that starts with the category
-                saved_machines = [machine for machine in saved_machines if machine[5].startswith(selected_category_id)]
-        
-        # Filter by variant
-        if selected_variant and selected_variant != "All Variants":
-            # Filter by model_path that contains the variant
-            saved_machines = [machine for machine in saved_machines if selected_variant in machine[5]]
-        
-        # Filter by vaccination status for measles
-        if selected_disease == "Measles" and selected_vaccination and selected_vaccination != "All Vaccination Statuses":
-            # Filter by vaccination status in the model_path
-            saved_machines = [machine for machine in saved_machines if selected_vaccination in machine[5]]
-        
-        # Sort machines by update time (most recent first) and limit to last 10 by default
-        saved_machines.sort(key=lambda x: x[7], reverse=True)  # Sort by update time descending
+        saved_machines = filter_machines(
+            saved_machines, selected_disease, selected_category,
+            selected_variant, selected_vaccination, model_categories,
+        )
         
         # Add option to show all machines or just recent ones
         show_all = st.checkbox("Show all state machines", value=False, 
@@ -147,78 +124,7 @@ def manage_state_machines(states):
             recent_machines = saved_machines
             st.subheader(f"Saved State Machines ({len(recent_machines)} total)")
         
-        # Display state machines in a table format
-        for machine in recent_machines:
-            disease_name = machine[2] if machine[2] and machine[2] != "Unknown" else "Unknown Disease"
-            model_path = machine[5] if machine[5] else "default"
-            
-            # Create display name with model path info
-            if model_path != "default":
-                display_name = f"{machine[1]} ({disease_name} - {model_path})"
-            else:
-                display_name = f"{machine[1]} ({disease_name} - Default Model)"
-            
-            with st.expander(f"{display_name} - Created: {machine[6]}, Updated: {machine[7]})"):
-                col1, col2 = st.columns(2)
-                
-                # Load demographics
-                demographics = json.loads(machine[8] or "{}")
-                
-                with col1:
-                    st.write("Demographics:")
-                    for key, value in demographics.items():
-                        st.write(f"- {key}: {value}")
-                
-                with col2:
-                    col2a, col2b, col2c = st.columns(3)
-                    
-                    with col2a:
-                        if st.button("Load", key=f"load_{machine[0]}"):
-                            machine_data = db.load_state_machine(machine[0])
-                            if machine_data:
-                                # Update session state with loaded data
-                                st.session_state.states = machine_data["states"]
-                                st.session_state.graph_edges = machine_data["edges"]
-                                st.session_state.demographics = [
-                                    {"key": k, "value": v}
-                                    for k, v in machine_data["demographics"].items()
-                                ]
-                                st.session_state.selected_machine = machine_data
-                                st.success(f"Loaded state machine: {machine_data['name']}")
-                                st.rerun()
-                    
-                    with col2b:
-                        if st.button("Export JSON", key=f"export_{machine[0]}"):
-                            machine_data = db.load_state_machine(machine[0])
-                            if machine_data:
-                                # Create export data
-                                export_data = {
-                                    "name": machine_data["name"],
-                                    "disease_name": machine_data.get("disease_name", "Unknown"),
-                                    "variant_name": machine_data.get("variant_name"),
-                                    "model_path": machine_data.get("model_path", "default"),
-                                    "states": machine_data["states"],
-                                    "edges": machine_data["edges"],
-                                    "demographics": machine_data["demographics"],
-                                    "created_at": machine[6],
-                                    "updated_at": machine[7]
-                                }
-                                
-                                # Create downloadable JSON
-                                json_str = json.dumps(export_data, indent=2)
-                                st.download_button(
-                                    label="📥 Download JSON",
-                                    data=json_str,
-                                    file_name=f"{machine_data['name'].replace(' ', '_')}.json",
-                                    mime="application/json",
-                                    key=f"download_{machine[0]}"
-                                )
-                    
-                    with col2c:
-                        if st.button("Delete", key=f"delete_{machine[0]}"):
-                            db.delete_state_machine(machine[0])
-                            st.success("State machine deleted")
-                            st.rerun()
+        _render_machine_list(db, recent_machines)
 
         # Display the loaded state machine if one is selected
         if st.session_state.selected_machine:
@@ -411,263 +317,347 @@ def manage_state_machines(states):
             sim_tab, multi_tab = st.tabs(["Single Simulation", "Multi-Run Analysis"])
             
             with sim_tab:
-                # Single simulation
-                if st.button("Start Single Simulation", key="single_sim"):
-                    if not st.session_state.graph_edges:
-                        st.warning("Please add at least one edge to the state machine before running the simulation.")
-                    else:
-                        # Get the index of the selected initial state
-                        initial_state_idx = st.session_state.states.index(initial_state)
-                        
-                        # Get matrices from the graph
-                        matrices = convert_graph_to_matrices(st.session_state.states, st.session_state.graph_edges)
-                        
-                        # Run the simulation
-                        timeline = run_simulation(
-                            transition_matrix=matrices["Transition Matrix"],
-                            mean_matrix=matrices["Mean Matrix"],
-                            std_dev_matrix=matrices["Standard Deviation Matrix"],
-                            min_cutoff_matrix=matrices["Min Cutoff Matrix"],
-                            max_cutoff_matrix=matrices["Max Cutoff Matrix"],
-                            distribution_matrix=matrices["Distribution Type Matrix"],
-                            initial_state_idx=initial_state_idx,
-                            states=st.session_state.states
-                        )
-                        
-                        # Display the timeline
-                        st.subheader("Simulation Timeline")
-                        timeline_df = pd.DataFrame(timeline, columns=["State", "Time (hours)"])
-                        # Round the time column to 1 decimal place
-                        timeline_df["Time (hours)"] = timeline_df["Time (hours)"].round(1)
-                        st.dataframe(timeline_df)
-                        
-                        # Display a visual representation of the timeline
-                        st.subheader("Timeline Visualization")
-                        
-                        # Create a visual timeline chart
-                        fig, ax = plt.subplots(figsize=(12, 6))
-                        
-                        # Extract states and times
-                        states = [entry[0] for entry in timeline]
-                        times = [entry[1] for entry in timeline]
-                        
-                        # Create horizontal timeline
-                        y_positions = list(range(len(states)))
-                        
-                        # Plot state transitions
-                        for i in range(len(states)):
-                            # Plot state point
-                            ax.scatter(times[i], y_positions[i], s=200, zorder=5, 
-                                     color='steelblue', edgecolor='black', linewidth=2)
-                            
-                            # Add state label
-                            ax.annotate(states[i], (times[i], y_positions[i]), 
-                                       xytext=(5, 5), textcoords='offset points',
-                                       fontsize=10, fontweight='bold',
-                                       bbox=dict(boxstyle='round,pad=0.3', facecolor='lightblue', alpha=0.7))
-                            
-                            # Connect to next state if not the last one
-                            if i < len(states) - 1:
-                                ax.plot([times[i], times[i+1]], [y_positions[i], y_positions[i+1]], 
-                                       'k-', linewidth=2, alpha=0.7, zorder=1)
-                                
-                                # Add time duration on the line
-                                duration = times[i+1] - times[i]
-                                mid_time = (times[i] + times[i+1]) / 2
-                                mid_y = (y_positions[i] + y_positions[i+1]) / 2
-                                ax.annotate(f'{duration:.1f}h', (mid_time, mid_y), 
-                                           xytext=(0, -15), textcoords='offset points',
-                                           ha='center', fontsize=9, fontweight='bold',
-                                           bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8))
-                        
-                        # Customize the plot
-                        ax.set_xlabel('Time (hours)', fontsize=12, fontweight='bold')
-                        ax.set_ylabel('Disease States', fontsize=12, fontweight='bold')
-                        ax.set_title('Disease Progression Timeline', fontsize=14, fontweight='bold', pad=20)
-                        
-                        # Set y-axis to show state names
-                        ax.set_yticks(y_positions)
-                        ax.set_yticklabels(states, fontsize=10)
-                        
-                        # Add grid for better readability
-                        ax.grid(True, alpha=0.3, zorder=0)
-                        
-                        # Set x-axis limits with some padding
-                        ax.set_xlim(-5, max(times) + 5)
-                        
-                        # Add total duration annotation
-                        total_duration = times[-1]
-                        ax.text(0.02, 0.98, f'Total Duration: {total_duration:.1f} hours', 
-                               transform=ax.transAxes, fontsize=11, fontweight='bold',
-                               bbox=dict(boxstyle='round,pad=0.5', facecolor='lightgreen', alpha=0.8),
-                               verticalalignment='top')
-                        
-                        # Remove top and right spines
-                        ax.spines['top'].set_visible(False)
-                        ax.spines['right'].set_visible(False)
-                        
-                        plt.tight_layout()
-                        st.pyplot(fig)
-                        
-                        # Also show the timeline in a more compact format
-                        st.subheader("Timeline Summary")
-                        timeline_summary = []
-                        for i, (state, time) in enumerate(timeline):
-                            if i == 0:
-                                timeline_summary.append(f"**{time:.1f}h**: Start in {state}")
-                            else:
-                                prev_time = timeline[i-1][1]
-                                duration = time - prev_time
-                                timeline_summary.append(f"**{time:.1f}h**: Transition to {state} (spent {duration:.1f}h in {timeline[i-1][0]})")
-                        
-                        for summary in timeline_summary:
-                            st.markdown(summary)
+                _render_single_simulation(initial_state)
             
             with multi_tab:
-                # Multi-run analysis
-                st.write("Run multiple simulations to analyze statistical patterns and variability.")
-                
-                # Configuration for multi-run
-                col1, col2 = st.columns(2)
-                with col1:
-                    num_simulations = st.number_input(
-                        "Number of Simulations (max 10,000)",
-                        min_value=10,
-                        max_value=10000,
-                        value=100,
-                        step=10,
-                        help="Choose the number of simulations to run in this batch (maximum: 10,000)"
-                    )
-                
-                with col2:
-                    show_progress = st.checkbox("Show Progress Bar", value=True)
-                
-                # Run multi-simulation
-                if st.button("Start Multi-Run Analysis", key="multi_sim"):
-                    if not st.session_state.graph_edges:
-                        st.warning("Please add at least one edge to the state machine before running the simulation.")
-                    else:
-                        # Get the index of the selected initial state
-                        initial_state_idx = st.session_state.states.index(initial_state)
-                        
-                        # Get matrices from the graph
-                        matrices = convert_graph_to_matrices(st.session_state.states, st.session_state.graph_edges)
-                        
-                        # Run multiple simulations
-                        simulation_results = []
-                        
-                        if show_progress:
-                            progress_bar = st.progress(0)
-                            status_text = st.empty()
-                        
-                        for i in range(num_simulations):
-                            # Run single simulation
-                            timeline = run_simulation(
-                                transition_matrix=matrices["Transition Matrix"],
-                                mean_matrix=matrices["Mean Matrix"],
-                                std_dev_matrix=matrices["Standard Deviation Matrix"],
-                                min_cutoff_matrix=matrices["Min Cutoff Matrix"],
-                                max_cutoff_matrix=matrices["Max Cutoff Matrix"],
-                                distribution_matrix=matrices["Distribution Type Matrix"],
-                                initial_state_idx=initial_state_idx,
-                                states=st.session_state.states
-                            )
-                            simulation_results.append(timeline)
-                            
-                            if show_progress and (i + 1) % max(1, num_simulations // 20) == 0:
-                                progress = (i + 1) / num_simulations
-                                progress_bar.progress(progress)
-                                status_text.text(f"Running simulation {i + 1}/{num_simulations}")
-                        
-                        if show_progress:
-                            progress_bar.progress(1.0)
-                            status_text.text("Analysis complete!")
-                        
-                        # Store results in session state
-                        st.session_state.multi_run_results = simulation_results
-                        
-                        # Analyze results
-                        stats = analyze_simulation_results(simulation_results, st.session_state.states)
-                        
-                        if stats:
-                            # Display summary statistics
-                            st.subheader("📊 Analysis Summary")
-                            
-                            # Key metrics
-                            col1, col2, col3 = st.columns(3)
-                            with col1:
-                                st.metric("Total Simulations", stats['total_simulations'])
-                            with col2:
-                                st.metric("Mean Duration", f"{stats['total_duration_stats']['mean']:.1f} hours")
-                            with col3:
-                                st.metric("Duration Std Dev", f"{stats['total_duration_stats']['std']:.1f} hours")
-                            
-                            # Detailed statistics
-                            with st.expander("📈 Detailed Statistics", expanded=True):
-                                # Final state distribution
-                                st.write("**Final State Distribution:**")
-                                final_state_df = pd.DataFrame([
-                                    {"State": state, "Count": count, "Percentage": (count/stats['total_simulations'])*100}
-                                    for state, count in stats['final_state_distribution'].items()
-                                ])
-                                st.dataframe(final_state_df)
-                                
-                                # Duration statistics
-                                st.write("**Total Duration Statistics (hours):**")
-                                duration_stats = stats['total_duration_stats']
-                                duration_df = pd.DataFrame([
-                                    {"Metric": "Mean", "Value": duration_stats['mean']},
-                                    {"Metric": "Median", "Value": duration_stats['median']},
-                                    {"Metric": "Standard Deviation", "Value": duration_stats['std']},
-                                    {"Metric": "Minimum", "Value": duration_stats['min']},
-                                    {"Metric": "Maximum", "Value": duration_stats['max']},
-                                    {"Metric": "25th Percentile", "Value": duration_stats['percentiles']['25th']},
-                                    {"Metric": "75th Percentile", "Value": duration_stats['percentiles']['75th']}
-                                ])
-                                st.dataframe(duration_df)
-                                
-                                # State visit rates
-                                st.write("**State Visit Rates (% of simulations that visited each state):**")
-                                visit_rates_df = pd.DataFrame([
-                                    {"State": state, "Visit Rate (%)": rate}
-                                    for state, rate in stats['state_visit_rates'].items()
-                                ])
-                                st.dataframe(visit_rates_df)
-                                
-                                # State time statistics
-                                st.write("**Time Statistics by State (hours):**")
-                                st.info("💡 **Note**: Time spent in each state is calculated as the duration between entering and leaving the state. Final states (where simulation ends) are excluded from time calculations.")
-                                state_time_data = []
-                                for state in st.session_state.states:
-                                    state_stats = stats['state_time_stats'][state]
-                                    state_time_data.append({
-                                        "State": state,
-                                        "Mean Time": state_stats['mean_time'],
-                                        "Median Time": state_stats['median_time'],
-                                        "Std Dev": state_stats['std_time'],
-                                        "Min Time": state_stats['min_time'],
-                                        "Max Time": state_stats['max_time'],
-                                        "Total Visits": state_stats['visit_count'],
-                                        "Non-Final Visits": state_stats['non_zero_visits']
-                                    })
-                                state_time_df = pd.DataFrame(state_time_data)
-                                st.dataframe(state_time_df)
-                            
-                            # Visualizations
-                            st.subheader("📊 Visualizations")
-                            fig = create_visualizations(stats, simulation_results, st.session_state.states)
-                            if fig:
-                                st.pyplot(fig)
-                            
-                            # Sample timelines
-                            with st.expander("📋 Sample Timelines", expanded=False):
-                                st.write("**First 5 simulation timelines:**")
-                                for i, timeline in enumerate(simulation_results[:5]):
-                                    st.write(f"**Simulation {i+1}:**")
-                                    timeline_df = pd.DataFrame(timeline, columns=["State", "Time (hours)"])
-                                    timeline_df["Time (hours)"] = timeline_df["Time (hours)"].round(1)
-                                    st.dataframe(timeline_df, use_container_width=True)
-                                    st.write("---")
+                _render_multi_simulation(initial_state)
             
     else:
         st.write("No saved state machines found") 
+
+
+def _render_machine_list(db, recent_machines):
+    """Render the expander list of saved machines (Load / Export / Delete)."""
+    # Display state machines in a table format
+    for machine in recent_machines:
+        disease_name = machine[2] if machine[2] and machine[2] != "Unknown" else "Unknown Disease"
+        model_path = machine[5] if machine[5] else "default"
+
+        # Create display name with model path info
+        if model_path != "default":
+            display_name = f"{machine[1]} ({disease_name} - {model_path})"
+        else:
+            display_name = f"{machine[1]} ({disease_name} - Default Model)"
+
+        with st.expander(f"{display_name} - Created: {machine[6]}, Updated: {machine[7]})"):
+            col1, col2 = st.columns(2)
+
+            # Load demographics
+            demographics = json.loads(machine[8] or "{}")
+
+            with col1:
+                st.write("Demographics:")
+                for key, value in demographics.items():
+                    st.write(f"- {key}: {value}")
+
+            with col2:
+                col2a, col2b, col2c = st.columns(3)
+
+                with col2a:
+                    if st.button("Load", key=f"load_{machine[0]}"):
+                        machine_data = db.load_state_machine(machine[0])
+                        if machine_data:
+                            # Update session state with loaded data
+                            st.session_state.states = machine_data["states"]
+                            st.session_state.graph_edges = machine_data["edges"]
+                            st.session_state.demographics = [
+                                {"key": k, "value": v}
+                                for k, v in machine_data["demographics"].items()
+                            ]
+                            st.session_state.selected_machine = machine_data
+                            st.success(f"Loaded state machine: {machine_data['name']}")
+                            st.rerun()
+
+                with col2b:
+                    if st.button("Export JSON", key=f"export_{machine[0]}"):
+                        machine_data = db.load_state_machine(machine[0])
+                        if machine_data:
+                            # Create export data
+                            export_data = {
+                                "name": machine_data["name"],
+                                "disease_name": machine_data.get("disease_name", "Unknown"),
+                                "variant_name": machine_data.get("variant_name"),
+                                "model_path": machine_data.get("model_path", "default"),
+                                "states": machine_data["states"],
+                                "edges": machine_data["edges"],
+                                "demographics": machine_data["demographics"],
+                                "created_at": machine[6],
+                                "updated_at": machine[7]
+                            }
+
+                            # Create downloadable JSON
+                            json_str = json.dumps(export_data, indent=2)
+                            st.download_button(
+                                label="📥 Download JSON",
+                                data=json_str,
+                                file_name=f"{machine_data['name'].replace(' ', '_')}.json",
+                                mime="application/json",
+                                key=f"download_{machine[0]}"
+                            )
+
+                with col2c:
+                    if st.button("Delete", key=f"delete_{machine[0]}"):
+                        db.delete_state_machine(machine[0])
+                        st.success("State machine deleted")
+                        st.rerun()
+
+def _render_single_simulation(initial_state):
+    """Render the Single Simulation tab: run one sim and plot its timeline."""
+    # Single simulation
+    if st.button("Start Single Simulation", key="single_sim"):
+        if not st.session_state.graph_edges:
+            st.warning("Please add at least one edge to the state machine before running the simulation.")
+        else:
+            # Get the index of the selected initial state
+            initial_state_idx = st.session_state.states.index(initial_state)
+
+            # Get matrices from the graph
+            matrices = convert_graph_to_matrices(st.session_state.states, st.session_state.graph_edges)
+
+            # Run the simulation
+            timeline = run_simulation(
+                transition_matrix=matrices["Transition Matrix"],
+                mean_matrix=matrices["Mean Matrix"],
+                std_dev_matrix=matrices["Standard Deviation Matrix"],
+                min_cutoff_matrix=matrices["Min Cutoff Matrix"],
+                max_cutoff_matrix=matrices["Max Cutoff Matrix"],
+                distribution_matrix=matrices["Distribution Type Matrix"],
+                initial_state_idx=initial_state_idx,
+                states=st.session_state.states
+            )
+
+            # Display the timeline
+            st.subheader("Simulation Timeline")
+            timeline_df = pd.DataFrame(timeline, columns=["State", "Time (hours)"])
+            # Round the time column to 1 decimal place
+            timeline_df["Time (hours)"] = timeline_df["Time (hours)"].round(1)
+            st.dataframe(timeline_df)
+
+            # Display a visual representation of the timeline
+            st.subheader("Timeline Visualization")
+
+            # Create a visual timeline chart
+            fig, ax = plt.subplots(figsize=(12, 6))
+
+            # Extract states and times
+            states = [entry[0] for entry in timeline]
+            times = [entry[1] for entry in timeline]
+
+            # Create horizontal timeline
+            y_positions = list(range(len(states)))
+
+            # Plot state transitions
+            for i in range(len(states)):
+                # Plot state point
+                ax.scatter(times[i], y_positions[i], s=200, zorder=5, 
+                         color='steelblue', edgecolor='black', linewidth=2)
+
+                # Add state label
+                ax.annotate(states[i], (times[i], y_positions[i]), 
+                           xytext=(5, 5), textcoords='offset points',
+                           fontsize=10, fontweight='bold',
+                           bbox=dict(boxstyle='round,pad=0.3', facecolor='lightblue', alpha=0.7))
+
+                # Connect to next state if not the last one
+                if i < len(states) - 1:
+                    ax.plot([times[i], times[i+1]], [y_positions[i], y_positions[i+1]], 
+                           'k-', linewidth=2, alpha=0.7, zorder=1)
+
+                    # Add time duration on the line
+                    duration = times[i+1] - times[i]
+                    mid_time = (times[i] + times[i+1]) / 2
+                    mid_y = (y_positions[i] + y_positions[i+1]) / 2
+                    ax.annotate(f'{duration:.1f}h', (mid_time, mid_y), 
+                               xytext=(0, -15), textcoords='offset points',
+                               ha='center', fontsize=9, fontweight='bold',
+                               bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8))
+
+            # Customize the plot
+            ax.set_xlabel('Time (hours)', fontsize=12, fontweight='bold')
+            ax.set_ylabel('Disease States', fontsize=12, fontweight='bold')
+            ax.set_title('Disease Progression Timeline', fontsize=14, fontweight='bold', pad=20)
+
+            # Set y-axis to show state names
+            ax.set_yticks(y_positions)
+            ax.set_yticklabels(states, fontsize=10)
+
+            # Add grid for better readability
+            ax.grid(True, alpha=0.3, zorder=0)
+
+            # Set x-axis limits with some padding
+            ax.set_xlim(-5, max(times) + 5)
+
+            # Add total duration annotation
+            total_duration = times[-1]
+            ax.text(0.02, 0.98, f'Total Duration: {total_duration:.1f} hours', 
+                   transform=ax.transAxes, fontsize=11, fontweight='bold',
+                   bbox=dict(boxstyle='round,pad=0.5', facecolor='lightgreen', alpha=0.8),
+                   verticalalignment='top')
+
+            # Remove top and right spines
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+
+            plt.tight_layout()
+            st.pyplot(fig)
+
+            # Also show the timeline in a more compact format
+            st.subheader("Timeline Summary")
+            timeline_summary = []
+            for i, (state, time) in enumerate(timeline):
+                if i == 0:
+                    timeline_summary.append(f"**{time:.1f}h**: Start in {state}")
+                else:
+                    prev_time = timeline[i-1][1]
+                    duration = time - prev_time
+                    timeline_summary.append(f"**{time:.1f}h**: Transition to {state} (spent {duration:.1f}h in {timeline[i-1][0]})")
+
+            for summary in timeline_summary:
+                st.markdown(summary)
+
+def _render_multi_simulation(initial_state):
+    """Render the Multi-Run Analysis tab: run N sims and show aggregate stats."""
+    # Multi-run analysis
+    st.write("Run multiple simulations to analyze statistical patterns and variability.")
+
+    # Configuration for multi-run
+    col1, col2 = st.columns(2)
+    with col1:
+        num_simulations = st.number_input(
+            "Number of Simulations (max 10,000)",
+            min_value=10,
+            max_value=10000,
+            value=100,
+            step=10,
+            help="Choose the number of simulations to run in this batch (maximum: 10,000)"
+        )
+
+    with col2:
+        show_progress = st.checkbox("Show Progress Bar", value=True)
+
+    # Run multi-simulation
+    if st.button("Start Multi-Run Analysis", key="multi_sim"):
+        if not st.session_state.graph_edges:
+            st.warning("Please add at least one edge to the state machine before running the simulation.")
+        else:
+            # Get the index of the selected initial state
+            initial_state_idx = st.session_state.states.index(initial_state)
+
+            # Get matrices from the graph
+            matrices = convert_graph_to_matrices(st.session_state.states, st.session_state.graph_edges)
+
+            # Run multiple simulations
+            simulation_results = []
+
+            if show_progress:
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+
+            for i in range(num_simulations):
+                # Run single simulation
+                timeline = run_simulation(
+                    transition_matrix=matrices["Transition Matrix"],
+                    mean_matrix=matrices["Mean Matrix"],
+                    std_dev_matrix=matrices["Standard Deviation Matrix"],
+                    min_cutoff_matrix=matrices["Min Cutoff Matrix"],
+                    max_cutoff_matrix=matrices["Max Cutoff Matrix"],
+                    distribution_matrix=matrices["Distribution Type Matrix"],
+                    initial_state_idx=initial_state_idx,
+                    states=st.session_state.states
+                )
+                simulation_results.append(timeline)
+
+                if show_progress and (i + 1) % max(1, num_simulations // 20) == 0:
+                    progress = (i + 1) / num_simulations
+                    progress_bar.progress(progress)
+                    status_text.text(f"Running simulation {i + 1}/{num_simulations}")
+
+            if show_progress:
+                progress_bar.progress(1.0)
+                status_text.text("Analysis complete!")
+
+            # Store results in session state
+            st.session_state.multi_run_results = simulation_results
+
+            # Analyze results
+            stats = analyze_simulation_results(simulation_results, st.session_state.states)
+
+            if stats:
+                # Display summary statistics
+                st.subheader("📊 Analysis Summary")
+
+                # Key metrics
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Total Simulations", stats['total_simulations'])
+                with col2:
+                    st.metric("Mean Duration", f"{stats['total_duration_stats']['mean']:.1f} hours")
+                with col3:
+                    st.metric("Duration Std Dev", f"{stats['total_duration_stats']['std']:.1f} hours")
+
+                # Detailed statistics
+                with st.expander("📈 Detailed Statistics", expanded=True):
+                    # Final state distribution
+                    st.write("**Final State Distribution:**")
+                    final_state_df = pd.DataFrame([
+                        {"State": state, "Count": count, "Percentage": (count/stats['total_simulations'])*100}
+                        for state, count in stats['final_state_distribution'].items()
+                    ])
+                    st.dataframe(final_state_df)
+
+                    # Duration statistics
+                    st.write("**Total Duration Statistics (hours):**")
+                    duration_stats = stats['total_duration_stats']
+                    duration_df = pd.DataFrame([
+                        {"Metric": "Mean", "Value": duration_stats['mean']},
+                        {"Metric": "Median", "Value": duration_stats['median']},
+                        {"Metric": "Standard Deviation", "Value": duration_stats['std']},
+                        {"Metric": "Minimum", "Value": duration_stats['min']},
+                        {"Metric": "Maximum", "Value": duration_stats['max']},
+                        {"Metric": "25th Percentile", "Value": duration_stats['percentiles']['25th']},
+                        {"Metric": "75th Percentile", "Value": duration_stats['percentiles']['75th']}
+                    ])
+                    st.dataframe(duration_df)
+
+                    # State visit rates
+                    st.write("**State Visit Rates (% of simulations that visited each state):**")
+                    visit_rates_df = pd.DataFrame([
+                        {"State": state, "Visit Rate (%)": rate}
+                        for state, rate in stats['state_visit_rates'].items()
+                    ])
+                    st.dataframe(visit_rates_df)
+
+                    # State time statistics
+                    st.write("**Time Statistics by State (hours):**")
+                    st.info("💡 **Note**: Time spent in each state is calculated as the duration between entering and leaving the state. Final states (where simulation ends) are excluded from time calculations.")
+                    state_time_data = []
+                    for state in st.session_state.states:
+                        state_stats = stats['state_time_stats'][state]
+                        state_time_data.append({
+                            "State": state,
+                            "Mean Time": state_stats['mean_time'],
+                            "Median Time": state_stats['median_time'],
+                            "Std Dev": state_stats['std_time'],
+                            "Min Time": state_stats['min_time'],
+                            "Max Time": state_stats['max_time'],
+                            "Total Visits": state_stats['visit_count'],
+                            "Non-Final Visits": state_stats['non_zero_visits']
+                        })
+                    state_time_df = pd.DataFrame(state_time_data)
+                    st.dataframe(state_time_df)
+
+                # Visualizations
+                st.subheader("📊 Visualizations")
+                fig = create_visualizations(stats, simulation_results, st.session_state.states)
+                if fig:
+                    st.pyplot(fig)
+
+                # Sample timelines
+                with st.expander("📋 Sample Timelines", expanded=False):
+                    st.write("**First 5 simulation timelines:**")
+                    for i, timeline in enumerate(simulation_results[:5]):
+                        st.write(f"**Simulation {i+1}:**")
+                        timeline_df = pd.DataFrame(timeline, columns=["State", "Time (hours)"])
+                        timeline_df["Time (hours)"] = timeline_df["Time (hours)"].round(1)
+                        st.dataframe(timeline_df, use_container_width=True)
+                        st.write("---")
