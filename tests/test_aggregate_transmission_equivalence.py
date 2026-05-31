@@ -8,6 +8,7 @@ model's empirical infection frequency to the analytic Wells-Riley probability
 and to each other. Trials are seeded, so the assertions are deterministic.
 """
 import math
+import os
 import random
 import unittest
 
@@ -87,12 +88,21 @@ def _run_trials(aggregate, infectors, suscept_types, exposure_min, n_trials, see
 
 
 class TestAggregateTransmissionEquivalence(unittest.TestCase):
-    def test_disabled_by_default(self):
+    def test_enabled_by_default(self):
+        # Default ON (config DELINEO_AGG_TRANSMISSION defaults to "1").
+        if os.environ.get("DELINEO_AGG_TRANSMISSION", "1").lower() not in {"1", "true", "yes", "on"}:
+            self.skipTest("DELINEO_AGG_TRANSMISSION disabled in this environment")
         base = {"length": 60, "interventions": _NO_IV, "czone_id": 1}
-        self.assertFalse(normalize_simdata(base)["aggregate_transmission"])
+        self.assertTrue(normalize_simdata(base)["aggregate_transmission"])
+        self.assertTrue(SimulationRunner(base, enable_logging=False).aggregate_transmission)
+
+    def test_simdata_field_can_disable(self):
+        # The per-run field overrides the default, so the pairwise kernel stays reachable.
+        base = {"length": 60, "interventions": _NO_IV, "czone_id": 1,
+                "aggregate_transmission": False}
         self.assertFalse(SimulationRunner(base, enable_logging=False).aggregate_transmission)
 
-    def test_flag_plumbs_through_simdata(self):
+    def test_simdata_field_can_enable(self):
         base = {"length": 60, "interventions": _NO_IV, "czone_id": 1,
                 "aggregate_transmission": True}
         self.assertTrue(SimulationRunner(base, enable_logging=False).aggregate_transmission)

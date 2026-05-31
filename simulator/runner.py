@@ -864,6 +864,7 @@ class SimulationRunner:
             "disease_name": self.simdata["disease_name"],
             "variants": context.variants,
             "dmp_mode": self.simdata["dmp_mode"],
+            "aggregate_transmission": self.simdata["aggregate_transmission"],
             "model_path_by_variant": self.simdata["model_path_by_variant"],
             "initial_infected_count": self.simdata["initial_infected_count"],
             "initial_infected_ids": context.initial_infected_ids,
