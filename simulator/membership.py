@@ -113,15 +113,16 @@ class MembershipStore:
         self.person_loc[person_idx] = loc_idx
         return True
 
-    def movement_snapshot(self) -> dict:
+    def movement_snapshot(self, view: "OccupancyView | None" = None) -> dict:
         """Build the pid-string movement snapshot from person_loc (numpy gather).
 
         UI-compatible (same {homes,places: {loc_id: [pids]}} shape). The numeric
-        form (movement_snapshot_numeric) is ~50x cheaper but needs the consumer
-        to change; this keeps the engine win (vectorized movement) independent of
-        the frontend.
+        form is ~50x cheaper but needs the consumer to change; this keeps the
+        engine win (vectorized movement) independent of the frontend. Pass a
+        prebuilt OccupancyView to avoid recomputing it.
         """
-        view = self.occupancy_view()
+        if view is None:
+            view = self.occupancy_view()
         pid_arr = self._pid_arr
         counts, starts, occupants = view.counts, view.starts, view.occupants
         homes: dict = {}

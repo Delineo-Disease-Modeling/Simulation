@@ -70,6 +70,19 @@ class SimulationContext:
     last_movement_ts: int = 0
     last_interventions: Optional[dict] = None
     initial_infected_ids: list[str] = field(default_factory=list)
+    # SoA engine mode: the current-timestep OccupancyView, rebuilt after each
+    # vectorized movement and read by the snapshot + transmission kernel.
+    occupancy: object = None
+
+
+def _trivial_movement_interventions(interventions: dict) -> bool:
+    """True when no intervention redirects movement (so a pure person_loc
+    scatter equals move_people). Masking/vaccination don't move people."""
+    return (
+        float(interventions.get("capacity", 1.0)) >= 1.0
+        and float(interventions.get("lockdown", 0.0)) <= 0.0
+        and float(interventions.get("selfiso", 0.0)) <= 0.0
+    )
 
 
 def normalize_simdata(simdata: dict) -> dict:
@@ -298,6 +311,8 @@ class SimulationRunner:
             float(INFECTION_MODEL.get("area_clamp_max", 70000.0)),
         )
         self._perf_accum: dict[str, float] = {}
+        self._soa_engine: bool = False
+        self._soa_shadow: bool = False
 
     @contextlib.contextmanager
     def _timed(self, label: str):
@@ -432,8 +447,18 @@ class SimulationRunner:
                 self.simdata["initial_infected_count"],
             )
 
-        if os.environ.get("DELINEO_SOA_SHADOW"):
+        self._soa_engine = bool(os.environ.get("DELINEO_SOA_ENGINE"))
+        if self._soa_engine and (not self.aggregate_transmission or self.enable_logging):
+            raise RuntimeError(
+                "DELINEO_SOA_ENGINE requires aggregate_transmission and logging off"
+            )
+        if self._soa_engine or os.environ.get("DELINEO_SOA_SHADOW"):
             self._attach_membership_shadow(simulator, loaded.people_data)
+        if self._soa_engine:
+            store = simulator.membership
+            store.set_person_refs(simulator.get_person)
+            with self._timed("build_context/precompute_movement"):
+                store.precompute_movement(loaded.patterns_data, self.simdata["length"])
 
         return SimulationContext(
             simulator=simulator,
@@ -476,6 +501,7 @@ class SimulationRunner:
                 store.note_placement(pid, facility._loc_idx)
 
         simulator.membership = store
+        self._soa_shadow = bool(os.environ.get("DELINEO_SOA_SHADOW"))
         self._shadow_mismatches = 0
         self._shadow_checks = 0
 
@@ -557,7 +583,16 @@ class SimulationRunner:
                                 ts_str,
                             )
 
-                if isinstance(timestep_data, dict):
+                if self._soa_engine:
+                    if not _trivial_movement_interventions(interventions):
+                        raise RuntimeError(
+                            "DELINEO_SOA_ENGINE does not support movement-altering "
+                            "interventions (capacity<1 / lockdown / selfiso)"
+                        )
+                    with self._timed("run_queue/apply_movement"):
+                        if context.simulator.membership.apply_movement(ts):
+                            context.occupancy = None  # rebuilt lazily below
+                elif isinstance(timestep_data, dict):
                     if "homes" in timestep_data:
                         with self._timed("run_queue/move_people_home"):
                             move_people(
@@ -576,6 +611,10 @@ class SimulationRunner:
                                 ts_str,
                                 interventions,
                             )
+
+            if self._soa_engine and context.occupancy is None:
+                with self._timed("run_queue/build_occupancy"):
+                    context.occupancy = context.simulator.membership.occupancy_view()
 
             with self._timed("run_queue/update_variant_tracking"):
                 self.update_variant_tracking(context)
@@ -611,11 +650,14 @@ class SimulationRunner:
                 if facility.population:
                     context.simulator.logger.log_location_state(facility, ts_str)
 
-        if getattr(context.simulator, "membership", None) is not None:
+        if self._soa_shadow:
             self._shadow_validate_occupancy(context.simulator)
 
         with self._timed("write_snapshot/build_movement"):
-            movement = build_movement_snapshot(context.simulator)
+            if self._soa_engine:
+                movement = context.simulator.membership.movement_snapshot(context.occupancy)
+            else:
+                movement = build_movement_snapshot(context.simulator)
         with self._timed("write_snapshot/build_infection"):
             infection = build_infection_snapshot(context.variant_infected)
         with self._timed("write_snapshot/writer_write"):
@@ -656,10 +698,24 @@ class SimulationRunner:
             return
 
         place = context.simulator.get_location(str(poi_id), is_household)
-        if not place or not place.population:
+        if not place:
             return
 
-        snapshot = list(place.population.values())
+        if self._soa_engine:
+            store = context.simulator.membership
+            loc_idx = store.loc_to_idx.get((str(poi_id), is_household))
+            if loc_idx is None:
+                return
+            occ = context.occupancy.occupants_of(loc_idx)
+            if len(occ) == 0:
+                return
+            idx_to_person = store.idx_to_person
+            snapshot = [idx_to_person[i] for i in occ]
+        else:
+            if not place.population:
+                return
+            snapshot = list(place.population.values())
+
         infectious_people = [person for person in snapshot if person.is_infectious()]
         if not infectious_people:
             return
@@ -833,10 +889,24 @@ class SimulationRunner:
         "aggregate_transmission" field.
         """
         place = context.simulator.get_location(str(poi_id), is_household)
-        if not place or not place.population:
+        if not place:
             return
 
-        snapshot = list(place.population.values())
+        if self._soa_engine:
+            store = context.simulator.membership
+            loc_idx = store.loc_to_idx.get((str(poi_id), is_household))
+            if loc_idx is None:
+                return
+            occ = context.occupancy.occupants_of(loc_idx)
+            if len(occ) == 0:
+                return
+            idx_to_person = store.idx_to_person
+            snapshot = [idx_to_person[i] for i in occ]
+        else:
+            if not place.population:
+                return
+            snapshot = list(place.population.values())
+
         infectious_people = [person for person in snapshot if person.is_infectious()]
         if not infectious_people:
             return
