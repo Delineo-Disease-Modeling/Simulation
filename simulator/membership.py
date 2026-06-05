@@ -61,6 +61,12 @@ class MembershipStore:
         # transmission kernel map an occupancy person-index back to its Person
         # via an O(1) list index instead of a dict lookup.
         self.idx_to_person: list = [None] * n
+        # Monotonic ever-infected mask (set via mark_infected at every
+        # schedule_infection); powers the numeric per-location infected count.
+        self.infected_mask: np.ndarray = np.zeros(n, dtype=bool)
+        # Households occupy the first n_homes location indices (see how
+        # location_keys is built: households then facilities).
+        self.n_homes: int = sum(1 for _, is_hh in self.idx_to_loc if is_hh)
         # pid-string array for fast snapshot gather (idx_to_pid as object array).
         self._pid_arr: np.ndarray = np.array(self.idx_to_pid, dtype=object)
         # Per-timestep movement, precomputed from patterns (see precompute_movement):
@@ -103,6 +109,35 @@ class MembershipStore:
                 np.asarray(persons, dtype=np.int32),
                 np.asarray(locs, dtype=np.int32),
             )
+
+    def mark_infected(self, pid: str) -> None:
+        idx = self.pid_to_idx.get(str(pid))
+        if idx is not None:
+            self.infected_mask[idx] = True
+
+    def movement_snapshot_numeric(self) -> dict:
+        """Per-location [count, infected] in homes/places order, via two
+        bincounts — O(N) numpy, ~50x cheaper than materializing pid lists.
+
+        Output: {"h": [c0,i0, c1,i1, ...], "p": [...]} matching the map-cache
+        shape the Next sim-processor builds, so the frontend consumes it directly.
+        """
+        pl = self.person_loc
+        placed = pl >= 0
+        locs = pl[placed]
+        L = self.num_locations
+        counts = np.bincount(locs, minlength=L)
+        inf = np.bincount(
+            locs, weights=self.infected_mask[placed], minlength=L
+        ).astype(np.int64)
+        H = self.n_homes
+        h = np.empty(2 * H, dtype=np.int64)
+        h[0::2] = counts[:H]
+        h[1::2] = inf[:H]
+        p = np.empty(2 * (L - H), dtype=np.int64)
+        p[0::2] = counts[H:]
+        p[1::2] = inf[H:]
+        return {"h": h.tolist(), "p": p.tolist()}
 
     def apply_movement(self, ts: int) -> bool:
         """Vectorized scatter: place everyone listed at timestep ts. No-op-safe."""

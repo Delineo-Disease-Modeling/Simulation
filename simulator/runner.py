@@ -457,6 +457,10 @@ class SimulationRunner:
         if self._soa_engine:
             store = simulator.membership
             store.set_person_refs(simulator.get_person)
+            # Seed infections were scheduled before the store existed; backfill
+            # the ever-infected mask from the already-infected set.
+            for pid in infection_manager.infected:
+                store.mark_infected(pid)
             with self._timed("build_context/precompute_movement"):
                 store.precompute_movement(loaded.patterns_data, self.simdata["length"])
 
@@ -655,7 +659,9 @@ class SimulationRunner:
 
         with self._timed("write_snapshot/build_movement"):
             if self._soa_engine:
-                movement = context.simulator.membership.movement_snapshot(context.occupancy)
+                # Numeric per-location [count, infected] (map-cache shape) — the
+                # ~50x snapshot win. Consumed directly by the Next sim-processor.
+                movement = context.simulator.membership.movement_snapshot_numeric()
             else:
                 movement = build_movement_snapshot(context.simulator)
         with self._timed("write_snapshot/build_infection"):

@@ -173,6 +173,11 @@ class InfectionManager:
         # _next_transition_time was based on the old (empty or stale) timeline.
         target_person._next_transition_time = 0
         self.infected.add(person.id)
+        # Keep the SoA ever-infected mask in sync (engine mode); schedule_infection
+        # is the single chokepoint for every infection (seed + kernel).
+        store = getattr(simulator, "membership", None)
+        if store is not None:
+            store.mark_infected(person.id)
 
         if people_with_timelines is not None:
             # Store the Person ref directly (not pid string) so update_people_states
