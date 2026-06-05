@@ -488,8 +488,14 @@ class SimulationRunner:
         """
         from .membership import MembershipStore
 
-        location_keys = [(h.id, True) for h in simulator.households.values()]
-        location_keys += [(f.id, False) for f in simulator.facilities.values()]
+        # Order homes then places, each by numeric id, to match the Next
+        # sim-processor's homeIds/placeIds (sorted by Number). This makes the
+        # numeric snapshot's positional [count, infected] arrays line up with the
+        # frontend's map-cache slots without an id lookup.
+        homes = sorted(simulator.households.values(), key=lambda h: int(h.id))
+        places = sorted(simulator.facilities.values(), key=lambda f: int(f.id))
+        location_keys = [(h.id, True) for h in homes]
+        location_keys += [(f.id, False) for f in places]
         store = MembershipStore(list(people_data.keys()), location_keys)
 
         for loc_id, is_hh in location_keys:
