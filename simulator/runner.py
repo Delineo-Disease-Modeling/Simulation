@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import gc
 import logging
 import math
 import os
@@ -316,18 +317,34 @@ class SimulationRunner:
         self._seed_random()
         total_start = time.perf_counter()
 
+        # The load+build phase allocates millions of long-lived objects (the
+        # patterns person-index, ~50k Person objects, the event queue). CPython's
+        # cyclic GC repeatedly rescans that growing set mid-build, which dominates
+        # setup — ~13x on the patterns parse (50s->4s) and ~2x on ingest_patterns
+        # (52s->24s). None of it is collectable during the build, so suspend GC
+        # for the whole setup and re-enable it for the run loop (which produces
+        # transient per-timestep garbage that should still be reclaimed).
+        # DELINEO_GC_TUNE=0 disables this (baseline behavior) for ablation.
+        gc_tune = os.environ.get("DELINEO_GC_TUNE", "1") != "0"
+        gc_was_enabled = gc.isenabled()
+        if gc_tune:
+            gc.disable()
         try:
-            stage_start = time.perf_counter()
-            loaded = self.load_data()
-            _log_perf_timing("load_data", stage_start)
-        except Exception as exc:
-            logger.exception("Failed to load data")
-            return {"error": str(exc)}
+            try:
+                stage_start = time.perf_counter()
+                loaded = self.load_data()
+                _log_perf_timing("load_data", stage_start)
 
-        try:
-            stage_start = time.perf_counter()
-            context = self.build_context(loaded)
-            _log_perf_timing("build_context", stage_start)
+                stage_start = time.perf_counter()
+                context = self.build_context(loaded)
+                _log_perf_timing("build_context", stage_start)
+            except Exception as exc:
+                logger.exception("Failed to load/build simulation context")
+                return {"error": str(exc)}
+            finally:
+                if gc_was_enabled:
+                    gc.enable()
+
             stage_start = time.perf_counter()
             self.run_queue(context)
             _log_perf_timing("run_queue", stage_start)
@@ -339,6 +356,9 @@ class SimulationRunner:
         except Exception as exc:
             logger.exception("Simulation runtime failed")
             return {"error": str(exc)}
+        finally:
+            if gc_was_enabled and not gc.isenabled():
+                gc.enable()
 
     def _progress(self, current_step, max_steps, message=None) -> None:
         if self.progress_callback:
@@ -412,6 +432,9 @@ class SimulationRunner:
                 self.simdata["initial_infected_count"],
             )
 
+        if os.environ.get("DELINEO_SOA_SHADOW"):
+            self._attach_membership_shadow(simulator, loaded.people_data)
+
         return SimulationContext(
             simulator=simulator,
             event_queue=event_queue,
@@ -424,6 +447,57 @@ class SimulationRunner:
             last_movement_ts=-simulator.timestep,
             initial_infected_ids=seeded_population.initial_infected_ids,
         )
+
+    def _attach_membership_shadow(self, simulator, people_data: dict) -> None:
+        """SoA Step 1 (shadow): build a MembershipStore alongside the dicts.
+
+        Attaches the store to every Location (so add_member mirrors placements
+        into person_loc) and backfills the current post-seed occupancy. Iterating
+        each location's population dict in order stamps arrival_seq so that, within
+        a location, the array order reproduces the dict's insertion order. Gated by
+        DELINEO_SOA_SHADOW — never runs in production.
+        """
+        from .membership import MembershipStore
+
+        location_keys = [(h.id, True) for h in simulator.households.values()]
+        location_keys += [(f.id, False) for f in simulator.facilities.values()]
+        store = MembershipStore(list(people_data.keys()), location_keys)
+
+        for loc_id, is_hh in location_keys:
+            loc = simulator.get_location(loc_id, is_hh)
+            loc._loc_idx = store.loc_to_idx[(loc_id, is_hh)]
+            loc._membership = store
+
+        for household in simulator.households.values():
+            for pid in household.population:
+                store.note_placement(pid, household._loc_idx)
+        for facility in simulator.facilities.values():
+            for pid in facility.population:
+                store.note_placement(pid, facility._loc_idx)
+
+        simulator.membership = store
+        self._shadow_mismatches = 0
+        self._shadow_checks = 0
+
+    def _shadow_validate_occupancy(self, simulator) -> None:
+        """Assert the OccupancyView reproduces the dict membership (order incl.)."""
+        store = getattr(simulator, "membership", None)
+        if store is None:
+            return
+        view = store.occupancy_view()
+        self._shadow_checks += 1
+        for loc_id, is_hh in store.idx_to_loc:
+            loc = simulator.get_location(loc_id, is_hh)
+            dict_order = list(loc.population.keys())
+            loc_idx = store.loc_to_idx[(loc_id, is_hh)]
+            arr_order = [store.idx_to_pid[i] for i in view.occupants_of(loc_idx)]
+            if dict_order != arr_order:
+                self._shadow_mismatches += 1
+                logger.warning(
+                    "SOA shadow mismatch at loc %s (hh=%s): dict=%d arr=%d first_diff=%s",
+                    loc_id, is_hh, len(dict_order), len(arr_order),
+                    next((i for i, (a, b) in enumerate(zip(dict_order, arr_order)) if a != b), "len"),
+                )
 
     def run_queue(self, context: SimulationContext) -> None:
         self._progress(0, context.max_length, "Running simulation...")
@@ -536,6 +610,9 @@ class SimulationRunner:
             for facility in context.simulator.facilities.values():
                 if facility.population:
                     context.simulator.logger.log_location_state(facility, ts_str)
+
+        if getattr(context.simulator, "membership", None) is not None:
+            self._shadow_validate_occupancy(context.simulator)
 
         with self._timed("write_snapshot/build_movement"):
             movement = build_movement_snapshot(context.simulator)

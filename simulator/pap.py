@@ -60,6 +60,11 @@ class Location:
         self.location_type: str = location_type
         self.area: Optional[float] = area    # physical floor area in m^2 (None = unknown)
         self.population: dict[str, Person] = {}
+        # SoA shadow (Step 1): when a MembershipStore is attached, add_member
+        # also records the placement into person_loc. Left None in production so
+        # the hot path is a single `is not None` check. See membership.py.
+        self._membership = None              # Optional[MembershipStore]
+        self._loc_idx: int = -1              # this location's index in the store
 
     # population management
 
@@ -69,6 +74,8 @@ class Location:
 
     def add_member(self, person: Person) -> None:
         self.population[str(person.id)] = person
+        if self._membership is not None:
+            self._membership.note_placement(person.id, self._loc_idx)
 
     def remove_member(self, person_id: str) -> None:
         self.population.pop(str(person_id), None)
