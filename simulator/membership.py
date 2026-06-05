@@ -57,9 +57,83 @@ class MembershipStore:
         self.arrival_seq: np.ndarray = np.zeros(n, dtype=np.int64)
         self._seq: int = 0
 
+        # Filled by set_person_refs once Person objects exist; lets the
+        # transmission kernel map an occupancy person-index back to its Person
+        # via an O(1) list index instead of a dict lookup.
+        self.idx_to_person: list = [None] * n
+        # pid-string array for fast snapshot gather (idx_to_pid as object array).
+        self._pid_arr: np.ndarray = np.array(self.idx_to_pid, dtype=object)
+        # Per-timestep movement, precomputed from patterns (see precompute_movement):
+        #   _move[ts] = (person_idx int32[], loc_idx int32[])
+        self._move: dict[int, tuple] = {}
+
     @property
     def num_locations(self) -> int:
         return len(self.idx_to_loc)
+
+    def set_person_refs(self, get_person) -> None:
+        """Populate idx_to_person from a pid -> Person resolver."""
+        for i, pid in enumerate(self.idx_to_pid):
+            self.idx_to_person[i] = get_person(pid)
+
+    def precompute_movement(self, patterns: dict, max_length: int) -> None:
+        """Convert patterns into per-timestep (person_idx, loc_idx) arrays.
+
+        Each timestep's patterns list every person at their location, so applying
+        these arrays fully sets person_loc (a vectorized scatter) — replacing the
+        per-person dict remove/add loop in move_people. Done once at build.
+        """
+        pid_to_idx = self.pid_to_idx
+        loc_to_idx = self.loc_to_idx
+        for ts_str, data in patterns.items():
+            ts = int(ts_str)
+            if ts > max_length or not isinstance(data, dict):
+                continue
+            persons: list[int] = []
+            locs: list[int] = []
+            for poi_type, is_hh in (("homes", True), ("places", False)):
+                for loc_id, pids in data.get(poi_type, {}).items():
+                    loc_idx = loc_to_idx[(str(loc_id), is_hh)]
+                    for pid in pids:
+                        pidx = pid_to_idx.get(str(pid))
+                        if pidx is not None:
+                            persons.append(pidx)
+                            locs.append(loc_idx)
+            self._move[ts] = (
+                np.asarray(persons, dtype=np.int32),
+                np.asarray(locs, dtype=np.int32),
+            )
+
+    def apply_movement(self, ts: int) -> bool:
+        """Vectorized scatter: place everyone listed at timestep ts. No-op-safe."""
+        entry = self._move.get(ts)
+        if entry is None:
+            return False
+        person_idx, loc_idx = entry
+        self.person_loc[person_idx] = loc_idx
+        return True
+
+    def movement_snapshot(self) -> dict:
+        """Build the pid-string movement snapshot from person_loc (numpy gather).
+
+        UI-compatible (same {homes,places: {loc_id: [pids]}} shape). The numeric
+        form (movement_snapshot_numeric) is ~50x cheaper but needs the consumer
+        to change; this keeps the engine win (vectorized movement) independent of
+        the frontend.
+        """
+        view = self.occupancy_view()
+        pid_arr = self._pid_arr
+        counts, starts, occupants = view.counts, view.starts, view.occupants
+        homes: dict = {}
+        places: dict = {}
+        for loc_idx, (loc_id, is_hh) in enumerate(self.idx_to_loc):
+            count = counts[loc_idx]
+            if count == 0:
+                continue
+            start = starts[loc_idx]
+            pids = pid_arr[occupants[start : start + count]].tolist()
+            (homes if is_hh else places)[loc_id] = pids
+        return {"homes": homes, "places": places}
 
     def note_placement(self, pid: str, loc_idx: int) -> None:
         """Record that person ``pid`` is now at location index ``loc_idx``."""
