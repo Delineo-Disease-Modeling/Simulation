@@ -7,6 +7,8 @@ import math
 import os
 import random
 import time
+
+import numpy as np
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
@@ -476,6 +478,16 @@ class SimulationRunner:
                     self._mirror_person_state(store, person, mirror_variant)
             with self._timed("build_context/precompute_movement"):
                 store.precompute_movement(loaded.patterns_data, self.simdata["length"])
+            # Per-room Wells-Riley base quanta (ventilation is static), so the
+            # vectorized kernel needs no per-room work at runtime.
+            exposure_hours = simulator.timestep / 60.0
+            base_q = np.empty(store.num_locations, dtype=np.float64)
+            for loc_idx, (loc_id, is_hh) in enumerate(store.idx_to_loc):
+                place = simulator.get_location(loc_id, is_hh)
+                base_q[loc_idx] = (20.0 * 0.5 * exposure_hours) / self._ventilation_rate(
+                    place, is_hh
+                )
+            store.base_quanta = base_q
 
         return SimulationContext(
             simulator=simulator,
@@ -738,9 +750,95 @@ class SimulationRunner:
             context.snapshot_writer.write(ts_str, movement, infection)
 
     def process_infections_at_timestep(self, context: SimulationContext, timestep: int) -> None:
+        if self._soa_engine and len(context.variants) == 1:
+            # The queue still gates which timesteps have any infectious presence;
+            # drain it to advance, then run one vectorized pass over all rooms.
+            had_event = False
+            while context.event_queue and context.event_queue.peek()[0] == timestep:
+                context.event_queue.pop()
+                had_event = True
+            if had_event:
+                with self._timed("infection_event/aggregate_iteration"):
+                    self._vectorized_transmission(context, timestep)
+            return
         while context.event_queue and context.event_queue.peek()[0] == timestep:
             ts, poi_id, is_household = context.event_queue.pop()
             self.process_infection_event(context, ts, poi_id, is_household)
+
+    def _vectorized_transmission(self, context: SimulationContext, ts: int) -> None:
+        """Single-variant well-mixed Wells-Riley over all rooms at once.
+
+        Equivalent to running _aggregate_transmission_event per room, but as
+        numpy array ops: emission summed per room with bincount, then one
+        vectorized infection draw per susceptible. RNG source differs (numpy vs
+        python per-pair) -> ensemble-validated, not byte-identical.
+        """
+        store = context.simulator.membership
+        variant = context.variants[0]
+        pstate = store.pstate
+        person_loc = store.person_loc
+        masked = store.masked
+
+        INFECTIOUS = int(InfectionState.INFECTIOUS.value)
+        INVISIBLE = int(
+            (InfectionState.HOSPITALIZED | InfectionState.RECOVERED | InfectionState.REMOVED).value
+        )
+        placed = person_loc >= 0
+        infectious = placed & ((pstate & INFECTIOUS) != 0)
+        if not infectious.any():
+            return
+
+        # Emission weight per infector, summed per room (cheap O(N) numpy).
+        inf_w = np.where(masked, 0.30, 1.0) * store.vax_trans_factor
+        emit = np.where(infectious, inf_w, 0.0)
+        W = np.bincount(
+            person_loc[placed], weights=emit[placed], minlength=store.num_locations
+        )
+
+        # Restrict the expensive trials (exp + RNG + scheduling) to actually
+        # exposed susceptibles — those placed in a room with infectors. This keeps
+        # the kernel cheap at low prevalence (few eligible) and at saturation
+        # (numpy), instead of drawing for all N every timestep.
+        loc = np.where(placed, person_loc, 0)
+        room_W = W[loc]
+        eligible = placed & (pstate == 0) & ((pstate & INVISIBLE) == 0) & (room_W > 0.0)
+        elig_idx = np.nonzero(eligible)[0]
+        if elig_idx.size == 0:
+            return
+
+        intake = np.where(masked[elig_idx], 0.50, 1.0) * (
+            1.0 - store.vax_inf_protection[elig_idx]
+        )
+        mean_quanta = store.base_quanta[loc[elig_idx]] * room_W[elig_idx] * intake
+        prob = 1.0 - np.exp(-mean_quanta)
+        draws = np.random.random(elig_idx.size)
+        hits = elig_idx[draws < prob]
+        if hits.size == 0:
+            return
+
+        infection_mgr = context.infection_manager
+        infected_set = infection_mgr.infected
+        idx_to_person = store.idx_to_person
+        variant_bucket = context.variant_infected[variant]
+        infected_state_value = int(
+            (InfectionState.INFECTED | InfectionState.INFECTIOUS).value
+        )
+        for i in hits:
+            target = idx_to_person[i]
+            target_id = target.id
+            infected_set.add(target_id)
+            infection_mgr.schedule_infection(
+                context.simulator,
+                context.event_queue,
+                target,
+                variant,
+                ts,
+                context.people_with_timelines,
+            )
+            variant_bucket[target_id] = infected_state_value
+            context.simulator.log_event(
+                "log_infection_event", target, None, None, variant, ts
+            )
 
     def _ventilation_rate(self, place, is_household: bool) -> float:
         """Wells-Riley ventilation term Q (m^3/hr).
