@@ -430,17 +430,29 @@ class SimulationRunner:
             enable_logging=self.enable_logging,
             intervention_weights=self.simdata["interventions"],
         )
+        variants = self.simdata["variants"]
+        self._soa_engine = bool(os.environ.get("DELINEO_SOA_ENGINE"))
+        if self._soa_engine and (not self.aggregate_transmission or self.enable_logging):
+            raise RuntimeError(
+                "DELINEO_SOA_ENGINE requires aggregate_transmission and logging off"
+            )
+        # Single-variant engine mode derives infectious locations from occupancy,
+        # so the event queue / _person_index (build_event_queue) is unnecessary.
+        engine_no_queue = self._soa_engine and len(variants) == 1
+
         with self._timed("build_context/build_locations"):
             build_locations(simulator, loaded.homes_data, loaded.places_data)
-        with self._timed("build_context/build_event_queue"):
-            event_queue = build_event_queue(loaded.patterns_data, self.simdata["length"])
+        if engine_no_queue:
+            event_queue = None
+        else:
+            with self._timed("build_context/build_event_queue"):
+                event_queue = build_event_queue(loaded.patterns_data, self.simdata["length"])
 
         self._progress(
             0,
             1,
             f"Initializing {len(loaded.people_data)} people & seeding infections...",
         )
-        variants = self.simdata["variants"]
         infection_manager = InfectionManager(
             infected_ids=[],
             disease_name=self.simdata["disease_name"],
@@ -458,11 +470,6 @@ class SimulationRunner:
                 self.simdata["initial_infected_count"],
             )
 
-        self._soa_engine = bool(os.environ.get("DELINEO_SOA_ENGINE"))
-        if self._soa_engine and (not self.aggregate_transmission or self.enable_logging):
-            raise RuntimeError(
-                "DELINEO_SOA_ENGINE requires aggregate_transmission and logging off"
-            )
         if self._soa_engine or os.environ.get("DELINEO_SOA_SHADOW"):
             self._attach_membership_shadow(simulator, loaded.people_data)
         if self._soa_engine:
@@ -595,6 +602,9 @@ class SimulationRunner:
                 )
 
     def run_queue(self, context: SimulationContext) -> None:
+        if context.event_queue is None:
+            self._run_queue_engine(context)
+            return
         self._progress(0, context.max_length, "Running simulation...")
         logger.info(
             "Starting queue-based simulation (queue size: %d)",
@@ -624,6 +634,53 @@ class SimulationRunner:
         self._progress(context.max_length, context.max_length, "Simulation complete, writing output...")
         logger.info("SIMULATION COMPLETE (%d timesteps processed)", context.processed_count)
 
+        if _perf_timings_enabled():
+            for label in sorted(self._perf_accum):
+                print(f"[perf] {label}: {self._perf_accum[label]:.3f}s", flush=True)
+
+    def _run_queue_engine(self, context: SimulationContext) -> None:
+        """Timestep-driven loop for single-variant engine mode (no event queue).
+
+        Movement comes from the precomputed per-timestep scatter; transmission
+        runs every step (vectorized, a no-op when no one is infectious). The
+        event queue and its _person_index are not built at all.
+        """
+        sim = context.simulator
+        store = sim.membership
+        self._progress(0, context.max_length, "Running simulation...")
+        logger.info("Starting timestep-driven engine simulation")
+
+        ts = sim.timestep
+        while ts <= context.max_length:
+            self._progress(ts, context.max_length)
+            ts_str = str(ts)
+            context.processed_count += 1
+
+            if ts in store._move:
+                interventions = sim.get_interventions(ts_str)
+                with self._timed("run_queue/update_people_states"):
+                    self.update_people_states(context, ts_str)
+                if interventions is not context.last_interventions:
+                    with self._timed("run_queue/apply_interventions"):
+                        context.last_interventions = interventions
+                        for person in sim.people.values():
+                            apply_person_interventions(sim, person, interventions, ts_str)
+                with self._timed("run_queue/apply_movement"):
+                    store.apply_movement(ts)
+
+            with self._timed("run_queue/process_infections"):
+                self._vectorized_transmission(context, ts)
+            with self._timed("run_queue/update_variant_tracking"):
+                self.update_variant_tracking(context)
+            with self._timed("run_queue/write_snapshot"):
+                self.write_snapshot(context, ts_str)
+            context.last_movement_ts = ts
+            ts += sim.timestep
+
+        self._progress(
+            context.max_length, context.max_length, "Simulation complete, writing output..."
+        )
+        logger.info("SIMULATION COMPLETE (%d timesteps processed)", context.processed_count)
         if _perf_timings_enabled():
             for label in sorted(self._perf_accum):
                 print(f"[perf] {label}: {self._perf_accum[label]:.3f}s", flush=True)
@@ -711,13 +768,23 @@ class SimulationRunner:
                 person.update_state(ts_str, context.variants)
 
     def update_variant_tracking(self, context: SimulationContext) -> None:
+        susceptible = InfectionState.SUSCEPTIBLE
+        if self._soa_engine:
+            # No event queue/registry in engine mode; people_with_timelines is
+            # the ever-infected set (a superset of the registry).
+            for person in context.people_with_timelines:
+                for disease in context.variants:
+                    state = person.states.get(disease, susceptible)
+                    if state != susceptible:
+                        context.variant_infected[disease][person.id] = int(state.value)
+            return
         for pid_str in context.event_queue.registry:
             person = context.simulator.get_person(pid_str)
             if not person:
                 continue
             for disease in context.variants:
-                state = person.states.get(disease, InfectionState.SUSCEPTIBLE)
-                if state != InfectionState.SUSCEPTIBLE:
+                state = person.states.get(disease, susceptible)
+                if state != susceptible:
                     context.variant_infected[disease][pid_str] = int(state.value)
 
     def write_snapshot(self, context: SimulationContext, ts_str: str) -> None:
