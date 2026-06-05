@@ -129,6 +129,7 @@ class Person:
 
     def __init__(self, id: str, sex: int, age: int, household: Household) -> None:
         self.id: str = id
+        self._soa_idx: int = -1     # index into MembershipStore arrays (engine mode)
         self.sex: int = sex         # 0 = male, 1 = female
         self.age: int = age
         self.household: Household = household

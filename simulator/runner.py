@@ -286,6 +286,15 @@ def apply_person_interventions(
         )
         person.set_vaccinated(VaccinationState(doses))
 
+    # Keep the SoA scalar mirror in sync when masking/vaccination changed.
+    store = getattr(simulator, "membership", None)
+    if store is not None and person._soa_idx >= 0:
+        i = person._soa_idx
+        store.masked[i] = person.masked
+        if person.vaccination_status:
+            store.vax_trans_factor[i] = 1.0 - get_vaccination_protection(person, "transmission")
+            store.vax_inf_protection[i] = get_vaccination_protection(person, "infection")
+
 
 class SimulationRunner:
     def __init__(
@@ -458,9 +467,13 @@ class SimulationRunner:
             store = simulator.membership
             store.set_person_refs(simulator.get_person)
             # Seed infections were scheduled before the store existed; backfill
-            # the ever-infected mask from the already-infected set.
+            # the ever-infected mask + state mirror from the already-infected set.
+            mirror_variant = variants[0]
             for pid in infection_manager.infected:
                 store.mark_infected(pid)
+                person = simulator.people.get(pid)
+                if person is not None:
+                    self._mirror_person_state(store, person, mirror_variant)
             with self._timed("build_context/precompute_movement"):
                 store.precompute_movement(loaded.patterns_data, self.simdata["length"])
 
@@ -514,6 +527,40 @@ class SimulationRunner:
         self._soa_shadow = bool(os.environ.get("DELINEO_SOA_SHADOW"))
         self._shadow_mismatches = 0
         self._shadow_checks = 0
+
+    def _mirror_person_state(self, store, person, variant: str) -> None:
+        """Mirror one person's hot scalars (state, masked, vax factors) into the
+        store arrays. The vectorized kernel (stage 2) reads these instead of the
+        Person objects. Single-variant; multidisease keeps the per-person kernel.
+        """
+        i = person._soa_idx
+        if i < 0:
+            return
+        store.pstate[i] = int(person.states.get(variant, InfectionState.SUSCEPTIBLE).value)
+        store.masked[i] = person.masked
+        if person.vaccination_status:
+            store.vax_trans_factor[i] = 1.0 - get_vaccination_protection(person, "transmission")
+            store.vax_inf_protection[i] = get_vaccination_protection(person, "infection")
+        else:
+            store.vax_trans_factor[i] = 1.0
+            store.vax_inf_protection[i] = 0.0
+
+    def _shadow_validate_state_mirror(self, context) -> None:
+        """Assert the mirrored arrays still match the Person objects (debug)."""
+        store = context.simulator.membership
+        variant = context.variants[0]
+        susceptible = InfectionState.SUSCEPTIBLE
+        self._shadow_checks += 1
+        for person in context.simulator.people.values():
+            i = person._soa_idx
+            want = int(person.states.get(variant, susceptible).value)
+            if store.pstate[i] != want or bool(store.masked[i]) != bool(person.masked):
+                self._shadow_mismatches += 1
+                logger.warning(
+                    "SOA state-mirror mismatch pid=%s: pstate=%d want=%d masked=%s/%s",
+                    person.id, store.pstate[i], want, bool(store.masked[i]), person.masked,
+                )
+                return
 
     def _shadow_validate_occupancy(self, simulator) -> None:
         """Assert the OccupancyView reproduces the dict membership (order incl.)."""
@@ -638,8 +685,18 @@ class SimulationRunner:
     def update_people_states(self, context: SimulationContext, ts_str: str) -> None:
         # people_with_timelines holds Person refs directly (see PopulationBuildResult);
         # iterate them without a simulator.get_person(pid) lookup per call.
-        for person in context.people_with_timelines:
-            person.update_state(ts_str, context.variants)
+        if self._soa_engine:
+            pstate = context.simulator.membership.pstate
+            variant = context.variants[0]
+            susceptible = InfectionState.SUSCEPTIBLE
+            for person in context.people_with_timelines:
+                person.update_state(ts_str, context.variants)
+                pstate[person._soa_idx] = int(
+                    person.states.get(variant, susceptible).value
+                )
+        else:
+            for person in context.people_with_timelines:
+                person.update_state(ts_str, context.variants)
 
     def update_variant_tracking(self, context: SimulationContext) -> None:
         for pid_str in context.event_queue.registry:
@@ -661,7 +718,12 @@ class SimulationRunner:
                     context.simulator.logger.log_location_state(facility, ts_str)
 
         if self._soa_shadow:
-            self._shadow_validate_occupancy(context.simulator)
+            if self._soa_engine:
+                # Engine mode drives movement via arrays (dicts are stale), so
+                # validate the state mirror, not the dict-vs-occupancy match.
+                self._shadow_validate_state_mirror(context)
+            else:
+                self._shadow_validate_occupancy(context.simulator)
 
         with self._timed("write_snapshot/build_movement"):
             if self._soa_engine:

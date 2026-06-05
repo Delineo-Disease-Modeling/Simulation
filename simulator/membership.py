@@ -64,6 +64,14 @@ class MembershipStore:
         # Monotonic ever-infected mask (set via mark_infected at every
         # schedule_infection); powers the numeric per-location infected count.
         self.infected_mask: np.ndarray = np.zeros(n, dtype=bool)
+        # Hot per-person scalars mirrored for the (future) vectorized kernel.
+        # pstate holds the single-variant InfectionState value (0 = SUSCEPTIBLE);
+        # maintained in update_people_states. masked / vax factors default to the
+        # no-intervention case and are updated when interventions apply.
+        self.pstate: np.ndarray = np.zeros(n, dtype=np.int8)
+        self.masked: np.ndarray = np.zeros(n, dtype=bool)
+        self.vax_trans_factor: np.ndarray = np.ones(n, dtype=np.float32)
+        self.vax_inf_protection: np.ndarray = np.zeros(n, dtype=np.float32)
         # Households occupy the first n_homes location indices (see how
         # location_keys is built: households then facilities).
         self.n_homes: int = sum(1 for _, is_hh in self.idx_to_loc if is_hh)
@@ -78,9 +86,12 @@ class MembershipStore:
         return len(self.idx_to_loc)
 
     def set_person_refs(self, get_person) -> None:
-        """Populate idx_to_person from a pid -> Person resolver."""
+        """Populate idx_to_person and stamp each Person with its store index."""
         for i, pid in enumerate(self.idx_to_pid):
-            self.idx_to_person[i] = get_person(pid)
+            person = get_person(pid)
+            self.idx_to_person[i] = person
+            if person is not None:
+                person._soa_idx = i
 
     def precompute_movement(self, patterns: dict, max_length: int) -> None:
         """Convert patterns into per-timestep (person_idx, loc_idx) arrays.
