@@ -34,6 +34,18 @@ class SimulationSnapshotWriter:
         self._patterns_json[ts_str] = movement
         self._simdata_json[ts_str] = result
 
+    def write_meta(self, meta: dict) -> None:
+        """Write a one-time, non-timestep ``meta`` entry into the patterns file.
+
+        Timestep consumers key by numeric timestep and skip non-numeric keys, so
+        this rides alongside the per-timestep snapshots in the same file. Used by
+        the SoA engine to ship the per-person ``loc`` decode tables (see
+        ``MembershipStore.movement_meta``)."""
+        if self._patterns_writer:
+            self._patterns_writer.add("meta", meta)
+        elif self._patterns_json is not None:
+            self._patterns_json["meta"] = meta
+
     def close(self) -> None:
         if self._simdata_writer:
             self._simdata_writer.close()

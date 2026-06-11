@@ -650,6 +650,10 @@ class SimulationRunner:
         self._progress(0, context.max_length, "Running simulation...")
         logger.info("Starting timestep-driven engine simulation")
 
+        # Ship the per-person decode tables once, before any timestep, so the
+        # streaming per-person map routes (person-path) read `meta` first.
+        context.snapshot_writer.write_meta(store.movement_meta())
+
         ts = sim.timestep
         while ts <= context.max_length:
             self._progress(ts, context.max_length)
@@ -808,7 +812,13 @@ class SimulationRunner:
             if self._soa_engine:
                 # Numeric per-location [count, infected] (map-cache shape) — the
                 # ~50x snapshot win. Consumed directly by the Next sim-processor.
-                movement = context.simulator.membership.movement_snapshot_numeric()
+                store = context.simulator.membership
+                movement = store.movement_snapshot_numeric()
+                # Per-person current location (person index -> location index).
+                # Decoded via the one-time `meta` entry so the per-person map
+                # views (people-map, person-path) can reconstruct who-is-where
+                # without the engine ever materializing pid lists.
+                movement["loc"] = store.person_loc.tolist()
             else:
                 movement = build_movement_snapshot(context.simulator)
         with self._timed("write_snapshot/build_infection"):

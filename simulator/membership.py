@@ -150,6 +150,23 @@ class MembershipStore:
         p[1::2] = inf[H:]
         return {"h": h.tolist(), "p": p.tolist()}
 
+    def movement_meta(self) -> dict:
+        """One-time decode tables for the per-person ``loc`` stream.
+
+        The numeric snapshot's per-timestep ``loc`` is ``person_loc`` (person
+        index -> location index). These tables let a consumer turn that back into
+        per-location pid lists without the engine ever materializing them:
+          - ``pids[person_idx]``  -> person id
+          - ``loc_ids[loc_idx]``  -> location id (homes first, then places)
+          - ``n_homes``           -> split point; ``loc_idx < n_homes`` is a home
+        Written once per run (non-numeric key, so timestep consumers skip it).
+        """
+        return {
+            "pids": list(self.idx_to_pid),
+            "loc_ids": [loc_id for loc_id, _ in self.idx_to_loc],
+            "n_homes": int(self.n_homes),
+        }
+
     def apply_movement(self, ts: int) -> bool:
         """Vectorized scatter: place everyone listed at timestep ts. No-op-safe."""
         entry = self._move.get(ts)
