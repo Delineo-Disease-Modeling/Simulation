@@ -23,6 +23,8 @@ from typing import NamedTuple
 
 import numpy as np
 
+from simulator.patterns_codec import BinaryPatterns
+
 
 class OccupancyView(NamedTuple):
     """People grouped by location for one timestep.
@@ -99,7 +101,14 @@ class MembershipStore:
         Each timestep's patterns list every person at their location, so applying
         these arrays fully sets person_loc (a vectorized scatter) — replacing the
         per-person dict remove/add loop in move_people. Done once at build.
+
+        Accepts either the legacy ``{ts: {homes, places}}`` dict (the per-person
+        Python loop below) or a decoded ``BinaryPatterns`` (a vectorized fast path
+        that skips both json.loads and this loop — see patterns_codec).
         """
+        if isinstance(patterns, BinaryPatterns):
+            self._precompute_movement_binary(patterns, max_length)
+            return
         pid_to_idx = self.pid_to_idx
         loc_to_idx = self.loc_to_idx
         for ts_str, data in patterns.items():
@@ -120,6 +129,47 @@ class MembershipStore:
                 np.asarray(persons, dtype=np.int32),
                 np.asarray(locs, dtype=np.int32),
             )
+
+    def _precompute_movement_binary(self, bp: BinaryPatterns, max_length: int) -> None:
+        """Vectorized precompute from a dense location matrix.
+
+        The producer's column/location enumeration may differ from ours, so we
+        remap its id tables through our own pid_to_idx / loc_to_idx (once), then
+        each timestep is a single numpy gather. Columns whose pid isn't in our
+        population are dropped — matching the legacy loop's ``pid_to_idx.get``.
+        """
+        # Producer location index -> our location index, by (id, is_home) key.
+        # Tolerant (-1 = absent from this run's locations); we only fail if such a
+        # location is actually referenced within max_length — mirroring the legacy
+        # loop, which never looks up unreferenced / beyond-window locations.
+        loc_remap = np.fromiter(
+            (
+                self.loc_to_idx.get((bp.loc_ids[j], j < bp.n_homes), -1)
+                for j in range(len(bp.loc_ids))
+            ),
+            dtype=np.int64,
+            count=len(bp.loc_ids),
+        )
+        # Producer column -> our person index (-1 = not in our population; dropped,
+        # matching the legacy loop's pid_to_idx.get).
+        person_remap = np.fromiter(
+            (self.pid_to_idx.get(pid, -1) for pid in bp.pids),
+            dtype=np.int64,
+            count=len(bp.pids),
+        )
+        valid = person_remap >= 0
+        person_idx = person_remap[valid].astype(np.int32)
+        for row, minute in enumerate(bp.ts_minutes):
+            if minute > max_length:
+                continue
+            loc_idx = loc_remap[bp.loc_matrix[row]][valid]
+            if (loc_idx < 0).any():
+                bad = np.unique(bp.loc_matrix[row][valid][loc_idx < 0])[:5]
+                raise ValueError(
+                    f"patterns timestep {minute} references locations "
+                    f"{[bp.loc_ids[b] for b in bad]} absent from this run's papdata"
+                )
+            self._move[minute] = (person_idx, loc_idx.astype(np.int32))
 
     def mark_infected(self, pid: str) -> None:
         idx = self.pid_to_idx.get(str(pid))

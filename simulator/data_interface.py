@@ -1,12 +1,21 @@
-import requests 
+import requests
 import json
 import logging
 import sys
 import os
 from typing import Dict, Any, Generator, Optional
 from simulator.config import DELINEO
+from simulator.patterns_codec import is_binary_patterns, decode_patterns_binary
 
 BASE_URL = DELINEO['DB_URL']
+
+
+def _decode_patterns_body(body: bytes):
+    """Decode the patterns half of a bulk response: binary if it carries the
+    DLNOPAT magic, else the legacy UTF-8 JSON object."""
+    if is_binary_patterns(body):
+        return decode_patterns_binary(body)
+    return json.loads(body.decode('utf-8'))
 
 def stream_data(url = f"{BASE_URL}patterns/1?stream=true"):
     with requests.get(url, stream=True) as response:
@@ -85,30 +94,35 @@ class StreamDataLoader:
     @staticmethod
     def load_bulk(url: str, timeout: int = 360) -> tuple:
         """
-        Fetch bulk data: first line is papdata JSON, remainder is raw patterns JSON.
-        Returns (papdata_dict, patterns_dict).
+        Fetch bulk data: first line is papdata JSON, remainder is the patterns
+        body (legacy JSON, or the DLNOPAT binary format — auto-detected).
+        Returns (papdata_dict, patterns) where patterns is a dict (JSON) or a
+        BinaryPatterns (binary).
         """
         logging.info(f"Fetching bulk data from: {url}")
         headers = {
-            'Accept': 'application/json, text/plain, */*',
+            'Accept': 'application/json, text/plain, */*, application/octet-stream',
             'Cache-Control': 'no-cache',
         }
         with requests.get(url, stream=True, headers=headers, timeout=timeout) as response:
             response.raise_for_status()
             it = response.iter_content(chunk_size=1024 * 1024)
             buf = b''
+            newline_pos = -1
             # Read chunks until we find the first newline (end of papdata)
             for chunk in it:
                 buf += chunk
                 newline_pos = buf.find(b'\n')
                 if newline_pos != -1:
                     break
+            if newline_pos == -1:
+                raise ValueError("bulk response missing papdata newline delimiter")
             papdata = json.loads(buf[:newline_pos].decode('utf-8'))
-            # Collect the rest as patterns JSON
+            # Collect the rest as the patterns body, then sniff its format.
             chunks = [buf[newline_pos + 1:]]
             for chunk in it:
                 chunks.append(chunk)
-            patterns = json.loads(b''.join(chunks).decode('utf-8'))
+            patterns = _decode_patterns_body(b''.join(chunks))
             return papdata, patterns
 
     @staticmethod
