@@ -40,15 +40,16 @@ def _perf_timings_enabled() -> bool:
     return os.getenv("DELINEO_PERF_TIMINGS", "").lower() in {"1", "true", "yes", "on"}
 
 
-def _engine_requested() -> bool:
-    """Whether the vectorized SoA engine is requested via env.
+def _engine_disabled() -> bool:
+    """Whether the vectorized SoA engine is explicitly turned OFF via env.
 
-    Parsed like every other boolean flag so ``DELINEO_SOA_ENGINE=0`` disables it
-    (the old ``bool(os.environ.get(...))`` was truthy-on-presence, so ``=0``
-    wrongly turned it ON). Requesting the engine does not force it: eligibility
-    (`SimulationRunner._engine_eligibility`) still decides whether it can run
-    this config safely, falling back to the non-engine path otherwise."""
-    return os.getenv("DELINEO_SOA_ENGINE", "").lower() in {"1", "true", "yes", "on"}
+    The engine is ON BY DEFAULT; ``DELINEO_SOA_ENGINE=0`` (or false/no/off) is
+    the kill switch that forces the legacy non-engine path for every run. Enabling
+    it is never a force: eligibility (`SimulationRunner._engine_eligibility`) still
+    decides whether the engine can run a given config correctly, falling back to
+    the non-engine path otherwise. (Any other value, including unset or ``1``,
+    leaves the default-on behavior in place.)"""
+    return os.getenv("DELINEO_SOA_ENGINE", "").lower() in {"0", "false", "no", "off"}
 
 
 def _log_perf_timing(label: str, started_at: float) -> None:
@@ -477,23 +478,25 @@ class SimulationRunner:
             intervention_weights=self.simdata["interventions"],
         )
         variants = self.simdata["variants"]
-        # The engine is REQUESTED via env, but only ENGAGED when it can run this
+        # The engine is ON BY DEFAULT, but only ENGAGED when it can run this
         # config correctly. Ineligible configs (movement interventions,
         # multi-variant, logging/agg constraints) transparently fall back to the
         # non-engine path instead of silently producing wrong results.
-        if _engine_requested():
+        # DELINEO_SOA_ENGINE=0 is the kill switch (forces non-engine everywhere).
+        if _engine_disabled():
+            self._soa_engine = False
+            logger.info("SoA engine disabled via DELINEO_SOA_ENGINE=0.")
+        else:
             eligible, reason = self._engine_eligibility(variants)
             self._soa_engine = eligible
             if not eligible:
                 logger.info(
-                    "SoA engine requested but not eligible (%s); falling back to "
-                    "the non-engine path for correct results.",
+                    "SoA engine not eligible (%s); falling back to the "
+                    "non-engine path for correct results.",
                     reason,
                 )
             else:
                 logger.info("SoA engine engaged (eligible config).")
-        else:
-            self._soa_engine = False
         # Single-variant engine mode derives infectious locations from occupancy,
         # so the event queue / _person_index (build_event_queue) is unnecessary.
         engine_no_queue = self._soa_engine and len(variants) == 1

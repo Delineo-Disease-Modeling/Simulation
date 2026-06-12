@@ -8,7 +8,7 @@ back to the non-engine path) instead of silently producing wrong results.
 import unittest
 from unittest import mock
 
-from simulator.runner import SimulationRunner, _engine_requested
+from simulator.runner import SimulationRunner, _engine_disabled
 
 
 def _iv(time=0, mask=0.0, vaccine=0.0, capacity=1.0, lockdown=0.0, selfiso=0.0):
@@ -79,20 +79,23 @@ class EngineEligibilityTest(unittest.TestCase):
         self.assertIn("aggregate", reason)
 
 
-class EngineRequestedEnvParseTest(unittest.TestCase):
-    def test_truthy_values_request_engine(self):
-        for val in ("1", "true", "TRUE", "yes", "on"):
+class EngineKillSwitchEnvParseTest(unittest.TestCase):
+    """The engine is ON BY DEFAULT; DELINEO_SOA_ENGINE=0/false/off is the kill
+    switch. _engine_disabled() is True only for those explicit-off values."""
+
+    def test_off_values_disable_engine(self):
+        for val in ("0", "false", "FALSE", "no", "off"):
             with mock.patch.dict("os.environ", {"DELINEO_SOA_ENGINE": val}):
-                self.assertTrue(_engine_requested(), val)
+                self.assertTrue(_engine_disabled(), val)
 
-    def test_zero_disables_engine(self):
-        # the old bool(os.environ.get(...)) was truthy-on-presence: "0" wrongly ON
-        with mock.patch.dict("os.environ", {"DELINEO_SOA_ENGINE": "0"}):
-            self.assertFalse(_engine_requested())
-
-    def test_unset_disables_engine(self):
+    def test_unset_leaves_engine_on_by_default(self):
         with mock.patch.dict("os.environ", {}, clear=True):
-            self.assertFalse(_engine_requested())
+            self.assertFalse(_engine_disabled())
+
+    def test_on_values_leave_engine_enabled(self):
+        for val in ("1", "true", "yes", "on", ""):
+            with mock.patch.dict("os.environ", {"DELINEO_SOA_ENGINE": val}):
+                self.assertFalse(_engine_disabled(), val)
 
 
 if __name__ == "__main__":
