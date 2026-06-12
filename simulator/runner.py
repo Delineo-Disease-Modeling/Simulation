@@ -40,6 +40,17 @@ def _perf_timings_enabled() -> bool:
     return os.getenv("DELINEO_PERF_TIMINGS", "").lower() in {"1", "true", "yes", "on"}
 
 
+def _engine_requested() -> bool:
+    """Whether the vectorized SoA engine is requested via env.
+
+    Parsed like every other boolean flag so ``DELINEO_SOA_ENGINE=0`` disables it
+    (the old ``bool(os.environ.get(...))`` was truthy-on-presence, so ``=0``
+    wrongly turned it ON). Requesting the engine does not force it: eligibility
+    (`SimulationRunner._engine_eligibility`) still decides whether it can run
+    this config safely, falling back to the non-engine path otherwise."""
+    return os.getenv("DELINEO_SOA_ENGINE", "").lower() in {"1", "true", "yes", "on"}
+
+
 def _log_perf_timing(label: str, started_at: float) -> None:
     if _perf_timings_enabled():
         # Emit via print so the line is visible even when the simulator logger
@@ -419,6 +430,41 @@ class SimulationRunner:
             patterns_data=patterns_data,
         )
 
+    def _engine_eligibility(self, variants: list) -> tuple[bool, str]:
+        """Decide whether the vectorized engine can run this config *correctly*.
+
+        Engine mode replaces the per-Person ``move_people`` path with a fixed
+        precomputed location scatter, so it cannot apply movement-altering
+        interventions (capacity<1 / lockdown / selfiso reroute people home — see
+        ``move_people``) and is only vectorized for a single variant. Rather than
+        run those configs and silently drop the intervention (or read stale
+        Person/Location dicts for multi-variant), we report them ineligible and
+        fall back to the correct non-engine path. Returns ``(eligible, reason)``;
+        ``reason`` is empty when eligible.
+
+        Interventions are scanned across ALL scheduled time points, not just
+        t=0, since a movement intervention can be scheduled to start mid-run.
+        """
+        if not self.aggregate_transmission:
+            return False, "aggregate_transmission is off"
+        if self.enable_logging:
+            return False, "per-contact logging is on"
+        if len(variants) != 1:
+            return False, f"multi-variant run ({len(variants)} variants)"
+        non_trivial = [
+            iv
+            for iv in (self.simdata.get("interventions") or [])
+            if not _trivial_movement_interventions(iv)
+        ]
+        if non_trivial:
+            times = sorted({int(iv.get("time", 0)) for iv in non_trivial})
+            return (
+                False,
+                f"movement-altering interventions (capacity<1 / lockdown / "
+                f"selfiso) scheduled at t={times}",
+            )
+        return True, ""
+
     def build_context(self, loaded: LoadedSimulationData) -> SimulationContext:
         self._progress(
             0,
@@ -431,11 +477,23 @@ class SimulationRunner:
             intervention_weights=self.simdata["interventions"],
         )
         variants = self.simdata["variants"]
-        self._soa_engine = bool(os.environ.get("DELINEO_SOA_ENGINE"))
-        if self._soa_engine and (not self.aggregate_transmission or self.enable_logging):
-            raise RuntimeError(
-                "DELINEO_SOA_ENGINE requires aggregate_transmission and logging off"
-            )
+        # The engine is REQUESTED via env, but only ENGAGED when it can run this
+        # config correctly. Ineligible configs (movement interventions,
+        # multi-variant, logging/agg constraints) transparently fall back to the
+        # non-engine path instead of silently producing wrong results.
+        if _engine_requested():
+            eligible, reason = self._engine_eligibility(variants)
+            self._soa_engine = eligible
+            if not eligible:
+                logger.info(
+                    "SoA engine requested but not eligible (%s); falling back to "
+                    "the non-engine path for correct results.",
+                    reason,
+                )
+            else:
+                logger.info("SoA engine engaged (eligible config).")
+        else:
+            self._soa_engine = False
         # Single-variant engine mode derives infectious locations from occupancy,
         # so the event queue / _person_index (build_event_queue) is unnecessary.
         engine_no_queue = self._soa_engine and len(variants) == 1
@@ -714,10 +772,17 @@ class SimulationRunner:
                             )
 
                 if self._soa_engine:
+                    # Defensive net: _engine_eligibility already excludes
+                    # movement interventions before the engine is engaged, and an
+                    # eligible (single-variant) engine run never reaches this
+                    # queue path (it uses _run_queue_engine). If this ever fires,
+                    # eligibility has a bug — fail loudly rather than silently drop
+                    # the intervention.
                     if not _trivial_movement_interventions(interventions):
                         raise RuntimeError(
-                            "DELINEO_SOA_ENGINE does not support movement-altering "
-                            "interventions (capacity<1 / lockdown / selfiso)"
+                            "SoA engine reached a movement-altering intervention "
+                            "despite eligibility gating (capacity<1 / lockdown / "
+                            "selfiso) — this is a bug in _engine_eligibility"
                         )
                     with self._timed("run_queue/apply_movement"):
                         if context.simulator.membership.apply_movement(ts):
