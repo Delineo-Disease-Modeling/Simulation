@@ -79,3 +79,9 @@ wcwidth==0.2.14
 Werkzeug==3.1.3
 xyzservices==2025.4.0
 zstandard==0.25.0
+
+# 2026-06-12 hotfix: bump to force a clean prod image rebuild so the
+# zstandard wheel (binary movement-patterns decoder) is installed. The
+# running prod image predated this dependency, so decode failed silently
+# -> empty patterns -> zero infections. No dependency change here; this
+# comment only busts the Docker pip-layer cache to guarantee a reinstall.
