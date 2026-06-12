@@ -87,6 +87,10 @@ class SimulationContext:
     # SoA engine mode: the current-timestep OccupancyView, rebuilt after each
     # vectorized movement and read by the snapshot + transmission kernel.
     occupancy: object = None
+    # SoA engine mode: person indices whose state value changed in this step's
+    # update_people_states. update_variant_tracking consumes it to update only
+    # the changed entries instead of rewriting the whole infected map each step.
+    states_changed_idx: list = field(default_factory=list)
 
 
 def _trivial_movement_interventions(interventions: dict) -> bool:
@@ -531,19 +535,31 @@ class SimulationRunner:
                 self.simdata["initial_infected_count"],
             )
 
+        # variant_infected accumulates the per-variant {pid: state} map that is
+        # snapshotted each step. In engine mode it is maintained incrementally
+        # (update_variant_tracking only touches people who changed this step), so
+        # the initial seeds must be written here at build — the incremental path
+        # would otherwise miss seeds that don't transition by the first timestep.
+        susceptible = InfectionState.SUSCEPTIBLE
+        variant_infected = {variant: {} for variant in variants}
         if self._soa_engine or os.environ.get("DELINEO_SOA_SHADOW"):
             self._attach_membership_shadow(simulator, loaded.people_data)
         if self._soa_engine:
             store = simulator.membership
             store.set_person_refs(simulator.get_person)
             # Seed infections were scheduled before the store existed; backfill
-            # the ever-infected mask + state mirror from the already-infected set.
+            # the ever-infected mask + state mirror from the already-infected set,
+            # and seed variant_infected with their build-time (t=0) states.
             mirror_variant = variants[0]
             for pid in infection_manager.infected:
                 store.mark_infected(pid)
                 person = simulator.people.get(pid)
                 if person is not None:
                     self._mirror_person_state(store, person, mirror_variant)
+                    for disease in variants:
+                        state = person.states.get(disease, susceptible)
+                        if state != susceptible:
+                            variant_infected[disease][person.id] = int(state.value)
             with self._timed("build_context/precompute_movement"):
                 store.precompute_movement(loaded.patterns_data, self.simdata["length"])
             # Per-room Wells-Riley base quanta (ventilation is static), so the
@@ -563,7 +579,7 @@ class SimulationRunner:
             infection_manager=infection_manager,
             snapshot_writer=SimulationSnapshotWriter(self.output_dir),
             variants=variants,
-            variant_infected={variant: {} for variant in variants},
+            variant_infected=variant_infected,
             people_with_timelines=seeded_population.people_with_timelines,
             max_length=self.simdata["length"],
             last_movement_ts=-simulator.timestep,
@@ -830,11 +846,23 @@ class SimulationRunner:
             pstate = context.simulator.membership.pstate
             variant = context.variants[0]
             susceptible = InfectionState.SUSCEPTIBLE
+            time = int(ts_str)
+            changed = context.states_changed_idx
+            changed.clear()
             for person in context.people_with_timelines:
+                # update_state itself early-exits between timeline boundaries; do
+                # the same check here so non-transitioning people cost nothing and
+                # the per-person numpy scalar write (the bulk of this stage at
+                # saturation) is skipped unless the state value actually changed.
+                # Byte-identical to calling update_state + writing pstate for all.
+                if time < person._next_transition_time:
+                    continue
                 person.update_state(ts_str, context.variants)
-                pstate[person._soa_idx] = int(
-                    person.states.get(variant, susceptible).value
-                )
+                idx = person._soa_idx
+                value = int(person.states.get(variant, susceptible).value)
+                if value != pstate[idx]:
+                    pstate[idx] = value
+                    changed.append(idx)
         else:
             for person in context.people_with_timelines:
                 person.update_state(ts_str, context.variants)
@@ -842,13 +870,22 @@ class SimulationRunner:
     def update_variant_tracking(self, context: SimulationContext) -> None:
         susceptible = InfectionState.SUSCEPTIBLE
         if self._soa_engine:
-            # No event queue/registry in engine mode; people_with_timelines is
-            # the ever-infected set (a superset of the registry).
-            for person in context.people_with_timelines:
-                for disease in context.variants:
+            # Incremental: only people whose state value changed in this step's
+            # update_people_states need their variant_infected entry refreshed.
+            # Unchanged entries are already correct from the step they last
+            # changed, and newly-infected people are written directly by the
+            # transmission kernel (variant_bucket[...]). Byte-identical to
+            # rewriting the whole ever-infected map every step, but O(changed)
+            # instead of O(ever-infected).
+            idx_to_person = context.simulator.membership.idx_to_person
+            variant_infected = context.variant_infected
+            variants = context.variants
+            for idx in context.states_changed_idx:
+                person = idx_to_person[idx]
+                for disease in variants:
                     state = person.states.get(disease, susceptible)
                     if state != susceptible:
-                        context.variant_infected[disease][person.id] = int(state.value)
+                        variant_infected[disease][person.id] = int(state.value)
             return
         for pid_str in context.event_queue.registry:
             person = context.simulator.get_person(pid_str)
