@@ -71,6 +71,14 @@ class MembershipStore:
         # maintained in update_people_states. masked / vax factors default to the
         # no-intervention case and are updated when interventions apply.
         self.pstate: np.ndarray = np.zeros(n, dtype=np.int8)
+        # Per-person SNAPSHOT state, mirroring variant_infected (the per-step
+        # infection map): 0 where never-infected, else the last recorded state
+        # value. Differs from pstate for just-infected (variant_infected is
+        # written by the transmission kernel a step before pstate updates) and
+        # for waned-to-susceptible (variant_infected keeps the last non-zero
+        # value). Powers the per-place dot counts so the frontend doesn't
+        # reconstruct them per person. Maintained wherever variant_infected is.
+        self.snap_state: np.ndarray = np.zeros(n, dtype=np.int8)
         self.masked: np.ndarray = np.zeros(n, dtype=bool)
         self.vax_trans_factor: np.ndarray = np.ones(n, dtype=np.float32)
         self.vax_inf_protection: np.ndarray = np.zeros(n, dtype=np.float32)
@@ -199,6 +207,35 @@ class MembershipStore:
         p[0::2] = counts[H:]
         p[1::2] = inf[H:]
         return {"h": h.tolist(), "p": p.tolist()}
+
+    # State-bit groups for the dot view (mirror the frontend's masks):
+    # recovered takes precedence over an active infection.
+    _DOT_RECOVERED = 16  # InfectionState.RECOVERED
+    _DOT_ACTIVE = 1 | 2 | 4 | 8  # INFECTED|INFECTIOUS|SYMPTOMATIC|HOSPITALIZED
+
+    def place_dot_counts(self) -> list:
+        """Per-place ``[infected, recovered]`` (places only, in places order),
+        from ``snap_state`` so it equals the frontend's per-person dot bake.
+
+        Recovered takes precedence over active infection (matching the dots
+        view). ``O(N)`` numpy (two bincounts) — lets the frontend read per-place
+        dot counts directly instead of reconstructing them from the per-person
+        ``loc`` stream.
+        """
+        pl = self.person_loc
+        placed = pl >= 0
+        loc = pl[placed]
+        s = self.snap_state[placed]
+        rec = (s & self._DOT_RECOVERED) != 0
+        inf = (~rec) & ((s & self._DOT_ACTIVE) != 0)
+        L = self.num_locations
+        rec_counts = np.bincount(loc, weights=rec, minlength=L)
+        inf_counts = np.bincount(loc, weights=inf, minlength=L)
+        H = self.n_homes
+        out = np.empty(2 * (L - H), dtype=np.int64)
+        out[0::2] = inf_counts[H:].astype(np.int64)
+        out[1::2] = rec_counts[H:].astype(np.int64)
+        return out.tolist()
 
     def movement_meta(self) -> dict:
         """One-time decode tables for the per-person ``loc`` stream.

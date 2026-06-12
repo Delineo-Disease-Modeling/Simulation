@@ -560,6 +560,7 @@ class SimulationRunner:
                         state = person.states.get(disease, susceptible)
                         if state != susceptible:
                             variant_infected[disease][person.id] = int(state.value)
+                            store.snap_state[person._soa_idx] = int(state.value)
             with self._timed("build_context/precompute_movement"):
                 store.precompute_movement(loaded.patterns_data, self.simdata["length"])
             # Per-room Wells-Riley base quanta (ventilation is static), so the
@@ -880,12 +881,14 @@ class SimulationRunner:
             idx_to_person = context.simulator.membership.idx_to_person
             variant_infected = context.variant_infected
             variants = context.variants
+            snap_state = context.simulator.membership.snap_state
             for idx in context.states_changed_idx:
                 person = idx_to_person[idx]
                 for disease in variants:
                     state = person.states.get(disease, susceptible)
                     if state != susceptible:
                         variant_infected[disease][person.id] = int(state.value)
+                        snap_state[idx] = int(state.value)
             return
         for pid_str in context.event_queue.registry:
             person = context.simulator.get_person(pid_str)
@@ -924,6 +927,10 @@ class SimulationRunner:
                 # views (people-map, person-path) can reconstruct who-is-where
                 # without the engine ever materializing pid lists.
                 movement["loc"] = store.person_loc.tolist()
+                # Per-place [infected, recovered] dot counts (places order), so
+                # the Cases-map dot bake reads them directly instead of
+                # reconstructing per person from `loc` + the sim snapshot.
+                movement["pdots"] = store.place_dot_counts()
             else:
                 movement = build_movement_snapshot(context.simulator)
         with self._timed("write_snapshot/build_infection"):
@@ -1018,6 +1025,7 @@ class SimulationRunner:
                 context.people_with_timelines,
             )
             variant_bucket[target_id] = infected_state_value
+            store.snap_state[i] = infected_state_value
             context.simulator.log_event(
                 "log_infection_event", target, None, None, variant, ts
             )
