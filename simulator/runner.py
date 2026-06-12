@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import contextlib
+import gc
 import logging
 import math
 import os
 import random
 import time
+
+import numpy as np
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
@@ -35,6 +38,18 @@ DETERMINISTIC_RANDOM_SEED = 0
 
 def _perf_timings_enabled() -> bool:
     return os.getenv("DELINEO_PERF_TIMINGS", "").lower() in {"1", "true", "yes", "on"}
+
+
+def _engine_disabled() -> bool:
+    """Whether the vectorized SoA engine is explicitly turned OFF via env.
+
+    The engine is ON BY DEFAULT; ``DELINEO_SOA_ENGINE=0`` (or false/no/off) is
+    the kill switch that forces the legacy non-engine path for every run. Enabling
+    it is never a force: eligibility (`SimulationRunner._engine_eligibility`) still
+    decides whether the engine can run a given config correctly, falling back to
+    the non-engine path otherwise. (Any other value, including unset or ``1``,
+    leaves the default-on behavior in place.)"""
+    return os.getenv("DELINEO_SOA_ENGINE", "").lower() in {"0", "false", "no", "off"}
 
 
 def _log_perf_timing(label: str, started_at: float) -> None:
@@ -69,6 +84,23 @@ class SimulationContext:
     last_movement_ts: int = 0
     last_interventions: Optional[dict] = None
     initial_infected_ids: list[str] = field(default_factory=list)
+    # SoA engine mode: the current-timestep OccupancyView, rebuilt after each
+    # vectorized movement and read by the snapshot + transmission kernel.
+    occupancy: object = None
+    # SoA engine mode: person indices whose state value changed in this step's
+    # update_people_states. update_variant_tracking consumes it to update only
+    # the changed entries instead of rewriting the whole infected map each step.
+    states_changed_idx: list = field(default_factory=list)
+
+
+def _trivial_movement_interventions(interventions: dict) -> bool:
+    """True when no intervention redirects movement (so a pure person_loc
+    scatter equals move_people). Masking/vaccination don't move people."""
+    return (
+        float(interventions.get("capacity", 1.0)) >= 1.0
+        and float(interventions.get("lockdown", 0.0)) <= 0.0
+        and float(interventions.get("selfiso", 0.0)) <= 0.0
+    )
 
 
 def normalize_simdata(simdata: dict) -> dict:
@@ -272,6 +304,15 @@ def apply_person_interventions(
         )
         person.set_vaccinated(VaccinationState(doses))
 
+    # Keep the SoA scalar mirror in sync when masking/vaccination changed.
+    store = getattr(simulator, "membership", None)
+    if store is not None and person._soa_idx >= 0:
+        i = person._soa_idx
+        store.masked[i] = person.masked
+        if person.vaccination_status:
+            store.vax_trans_factor[i] = 1.0 - get_vaccination_protection(person, "transmission")
+            store.vax_inf_protection[i] = get_vaccination_protection(person, "infection")
+
 
 class SimulationRunner:
     def __init__(
@@ -297,6 +338,8 @@ class SimulationRunner:
             float(INFECTION_MODEL.get("area_clamp_max", 70000.0)),
         )
         self._perf_accum: dict[str, float] = {}
+        self._soa_engine: bool = False
+        self._soa_shadow: bool = False
 
     @contextlib.contextmanager
     def _timed(self, label: str):
@@ -316,18 +359,34 @@ class SimulationRunner:
         self._seed_random()
         total_start = time.perf_counter()
 
+        # The load+build phase allocates millions of long-lived objects (the
+        # patterns person-index, ~50k Person objects, the event queue). CPython's
+        # cyclic GC repeatedly rescans that growing set mid-build, which dominates
+        # setup — ~13x on the patterns parse (50s->4s) and ~2x on ingest_patterns
+        # (52s->24s). None of it is collectable during the build, so suspend GC
+        # for the whole setup and re-enable it for the run loop (which produces
+        # transient per-timestep garbage that should still be reclaimed).
+        # DELINEO_GC_TUNE=0 disables this (baseline behavior) for ablation.
+        gc_tune = os.environ.get("DELINEO_GC_TUNE", "1") != "0"
+        gc_was_enabled = gc.isenabled()
+        if gc_tune:
+            gc.disable()
         try:
-            stage_start = time.perf_counter()
-            loaded = self.load_data()
-            _log_perf_timing("load_data", stage_start)
-        except Exception as exc:
-            logger.exception("Failed to load data")
-            return {"error": str(exc)}
+            try:
+                stage_start = time.perf_counter()
+                loaded = self.load_data()
+                _log_perf_timing("load_data", stage_start)
 
-        try:
-            stage_start = time.perf_counter()
-            context = self.build_context(loaded)
-            _log_perf_timing("build_context", stage_start)
+                stage_start = time.perf_counter()
+                context = self.build_context(loaded)
+                _log_perf_timing("build_context", stage_start)
+            except Exception as exc:
+                logger.exception("Failed to load/build simulation context")
+                return {"error": str(exc)}
+            finally:
+                if gc_was_enabled:
+                    gc.enable()
+
             stage_start = time.perf_counter()
             self.run_queue(context)
             _log_perf_timing("run_queue", stage_start)
@@ -339,6 +398,9 @@ class SimulationRunner:
         except Exception as exc:
             logger.exception("Simulation runtime failed")
             return {"error": str(exc)}
+        finally:
+            if gc_was_enabled and not gc.isenabled():
+                gc.enable()
 
     def _progress(self, current_step, max_steps, message=None) -> None:
         if self.progress_callback:
@@ -373,6 +435,41 @@ class SimulationRunner:
             patterns_data=patterns_data,
         )
 
+    def _engine_eligibility(self, variants: list) -> tuple[bool, str]:
+        """Decide whether the vectorized engine can run this config *correctly*.
+
+        Engine mode replaces the per-Person ``move_people`` path with a fixed
+        precomputed location scatter, so it cannot apply movement-altering
+        interventions (capacity<1 / lockdown / selfiso reroute people home — see
+        ``move_people``) and is only vectorized for a single variant. Rather than
+        run those configs and silently drop the intervention (or read stale
+        Person/Location dicts for multi-variant), we report them ineligible and
+        fall back to the correct non-engine path. Returns ``(eligible, reason)``;
+        ``reason`` is empty when eligible.
+
+        Interventions are scanned across ALL scheduled time points, not just
+        t=0, since a movement intervention can be scheduled to start mid-run.
+        """
+        if not self.aggregate_transmission:
+            return False, "aggregate_transmission is off"
+        if self.enable_logging:
+            return False, "per-contact logging is on"
+        if len(variants) != 1:
+            return False, f"multi-variant run ({len(variants)} variants)"
+        non_trivial = [
+            iv
+            for iv in (self.simdata.get("interventions") or [])
+            if not _trivial_movement_interventions(iv)
+        ]
+        if non_trivial:
+            times = sorted({int(iv.get("time", 0)) for iv in non_trivial})
+            return (
+                False,
+                f"movement-altering interventions (capacity<1 / lockdown / "
+                f"selfiso) scheduled at t={times}",
+            )
+        return True, ""
+
     def build_context(self, loaded: LoadedSimulationData) -> SimulationContext:
         self._progress(
             0,
@@ -384,17 +481,43 @@ class SimulationRunner:
             enable_logging=self.enable_logging,
             intervention_weights=self.simdata["interventions"],
         )
+        variants = self.simdata["variants"]
+        # The engine is ON BY DEFAULT, but only ENGAGED when it can run this
+        # config correctly. Ineligible configs (movement interventions,
+        # multi-variant, logging/agg constraints) transparently fall back to the
+        # non-engine path instead of silently producing wrong results.
+        # DELINEO_SOA_ENGINE=0 is the kill switch (forces non-engine everywhere).
+        if _engine_disabled():
+            self._soa_engine = False
+            logger.info("SoA engine disabled via DELINEO_SOA_ENGINE=0.")
+        else:
+            eligible, reason = self._engine_eligibility(variants)
+            self._soa_engine = eligible
+            if not eligible:
+                logger.info(
+                    "SoA engine not eligible (%s); falling back to the "
+                    "non-engine path for correct results.",
+                    reason,
+                )
+            else:
+                logger.info("SoA engine engaged (eligible config).")
+        # Single-variant engine mode derives infectious locations from occupancy,
+        # so the event queue / _person_index (build_event_queue) is unnecessary.
+        engine_no_queue = self._soa_engine and len(variants) == 1
+
         with self._timed("build_context/build_locations"):
             build_locations(simulator, loaded.homes_data, loaded.places_data)
-        with self._timed("build_context/build_event_queue"):
-            event_queue = build_event_queue(loaded.patterns_data, self.simdata["length"])
+        if engine_no_queue:
+            event_queue = None
+        else:
+            with self._timed("build_context/build_event_queue"):
+                event_queue = build_event_queue(loaded.patterns_data, self.simdata["length"])
 
         self._progress(
             0,
             1,
             f"Initializing {len(loaded.people_data)} people & seeding infections...",
         )
-        variants = self.simdata["variants"]
         infection_manager = InfectionManager(
             infected_ids=[],
             disease_name=self.simdata["disease_name"],
@@ -412,20 +535,154 @@ class SimulationRunner:
                 self.simdata["initial_infected_count"],
             )
 
+        # variant_infected accumulates the per-variant {pid: state} map that is
+        # snapshotted each step. In engine mode it is maintained incrementally
+        # (update_variant_tracking only touches people who changed this step), so
+        # the initial seeds must be written here at build — the incremental path
+        # would otherwise miss seeds that don't transition by the first timestep.
+        susceptible = InfectionState.SUSCEPTIBLE
+        variant_infected = {variant: {} for variant in variants}
+        if self._soa_engine or os.environ.get("DELINEO_SOA_SHADOW"):
+            self._attach_membership_shadow(simulator, loaded.people_data)
+        if self._soa_engine:
+            store = simulator.membership
+            store.set_person_refs(simulator.get_person)
+            # Seed infections were scheduled before the store existed; backfill
+            # the ever-infected mask + state mirror from the already-infected set,
+            # and seed variant_infected with their build-time (t=0) states.
+            mirror_variant = variants[0]
+            for pid in infection_manager.infected:
+                store.mark_infected(pid)
+                person = simulator.people.get(pid)
+                if person is not None:
+                    self._mirror_person_state(store, person, mirror_variant)
+                    for disease in variants:
+                        state = person.states.get(disease, susceptible)
+                        if state != susceptible:
+                            variant_infected[disease][person.id] = int(state.value)
+                            store.snap_state[person._soa_idx] = int(state.value)
+            with self._timed("build_context/precompute_movement"):
+                store.precompute_movement(loaded.patterns_data, self.simdata["length"])
+            # Per-room Wells-Riley base quanta (ventilation is static), so the
+            # vectorized kernel needs no per-room work at runtime.
+            exposure_hours = simulator.timestep / 60.0
+            base_q = np.empty(store.num_locations, dtype=np.float64)
+            for loc_idx, (loc_id, is_hh) in enumerate(store.idx_to_loc):
+                place = simulator.get_location(loc_id, is_hh)
+                base_q[loc_idx] = (20.0 * 0.5 * exposure_hours) / self._ventilation_rate(
+                    place, is_hh
+                )
+            store.base_quanta = base_q
+
         return SimulationContext(
             simulator=simulator,
             event_queue=event_queue,
             infection_manager=infection_manager,
             snapshot_writer=SimulationSnapshotWriter(self.output_dir),
             variants=variants,
-            variant_infected={variant: {} for variant in variants},
+            variant_infected=variant_infected,
             people_with_timelines=seeded_population.people_with_timelines,
             max_length=self.simdata["length"],
             last_movement_ts=-simulator.timestep,
             initial_infected_ids=seeded_population.initial_infected_ids,
         )
 
+    def _attach_membership_shadow(self, simulator, people_data: dict) -> None:
+        """SoA Step 1 (shadow): build a MembershipStore alongside the dicts.
+
+        Attaches the store to every Location (so add_member mirrors placements
+        into person_loc) and backfills the current post-seed occupancy. Iterating
+        each location's population dict in order stamps arrival_seq so that, within
+        a location, the array order reproduces the dict's insertion order. Gated by
+        DELINEO_SOA_SHADOW — never runs in production.
+        """
+        from .membership import MembershipStore
+
+        # Order homes then places, each by numeric id, to match the Next
+        # sim-processor's homeIds/placeIds (sorted by Number). This makes the
+        # numeric snapshot's positional [count, infected] arrays line up with the
+        # frontend's map-cache slots without an id lookup.
+        homes = sorted(simulator.households.values(), key=lambda h: int(h.id))
+        places = sorted(simulator.facilities.values(), key=lambda f: int(f.id))
+        location_keys = [(h.id, True) for h in homes]
+        location_keys += [(f.id, False) for f in places]
+        store = MembershipStore(list(people_data.keys()), location_keys)
+
+        for loc_id, is_hh in location_keys:
+            loc = simulator.get_location(loc_id, is_hh)
+            loc._loc_idx = store.loc_to_idx[(loc_id, is_hh)]
+            loc._membership = store
+
+        for household in simulator.households.values():
+            for pid in household.population:
+                store.note_placement(pid, household._loc_idx)
+        for facility in simulator.facilities.values():
+            for pid in facility.population:
+                store.note_placement(pid, facility._loc_idx)
+
+        simulator.membership = store
+        self._soa_shadow = bool(os.environ.get("DELINEO_SOA_SHADOW"))
+        self._shadow_mismatches = 0
+        self._shadow_checks = 0
+
+    def _mirror_person_state(self, store, person, variant: str) -> None:
+        """Mirror one person's hot scalars (state, masked, vax factors) into the
+        store arrays. The vectorized kernel (stage 2) reads these instead of the
+        Person objects. Single-variant; multidisease keeps the per-person kernel.
+        """
+        i = person._soa_idx
+        if i < 0:
+            return
+        store.pstate[i] = int(person.states.get(variant, InfectionState.SUSCEPTIBLE).value)
+        store.masked[i] = person.masked
+        if person.vaccination_status:
+            store.vax_trans_factor[i] = 1.0 - get_vaccination_protection(person, "transmission")
+            store.vax_inf_protection[i] = get_vaccination_protection(person, "infection")
+        else:
+            store.vax_trans_factor[i] = 1.0
+            store.vax_inf_protection[i] = 0.0
+
+    def _shadow_validate_state_mirror(self, context) -> None:
+        """Assert the mirrored arrays still match the Person objects (debug)."""
+        store = context.simulator.membership
+        variant = context.variants[0]
+        susceptible = InfectionState.SUSCEPTIBLE
+        self._shadow_checks += 1
+        for person in context.simulator.people.values():
+            i = person._soa_idx
+            want = int(person.states.get(variant, susceptible).value)
+            if store.pstate[i] != want or bool(store.masked[i]) != bool(person.masked):
+                self._shadow_mismatches += 1
+                logger.warning(
+                    "SOA state-mirror mismatch pid=%s: pstate=%d want=%d masked=%s/%s",
+                    person.id, store.pstate[i], want, bool(store.masked[i]), person.masked,
+                )
+                return
+
+    def _shadow_validate_occupancy(self, simulator) -> None:
+        """Assert the OccupancyView reproduces the dict membership (order incl.)."""
+        store = getattr(simulator, "membership", None)
+        if store is None:
+            return
+        view = store.occupancy_view()
+        self._shadow_checks += 1
+        for loc_id, is_hh in store.idx_to_loc:
+            loc = simulator.get_location(loc_id, is_hh)
+            dict_order = list(loc.population.keys())
+            loc_idx = store.loc_to_idx[(loc_id, is_hh)]
+            arr_order = [store.idx_to_pid[i] for i in view.occupants_of(loc_idx)]
+            if dict_order != arr_order:
+                self._shadow_mismatches += 1
+                logger.warning(
+                    "SOA shadow mismatch at loc %s (hh=%s): dict=%d arr=%d first_diff=%s",
+                    loc_id, is_hh, len(dict_order), len(arr_order),
+                    next((i for i, (a, b) in enumerate(zip(dict_order, arr_order)) if a != b), "len"),
+                )
+
     def run_queue(self, context: SimulationContext) -> None:
+        if context.event_queue is None:
+            self._run_queue_engine(context)
+            return
         self._progress(0, context.max_length, "Running simulation...")
         logger.info(
             "Starting queue-based simulation (queue size: %d)",
@@ -459,6 +716,57 @@ class SimulationRunner:
             for label in sorted(self._perf_accum):
                 print(f"[perf] {label}: {self._perf_accum[label]:.3f}s", flush=True)
 
+    def _run_queue_engine(self, context: SimulationContext) -> None:
+        """Timestep-driven loop for single-variant engine mode (no event queue).
+
+        Movement comes from the precomputed per-timestep scatter; transmission
+        runs every step (vectorized, a no-op when no one is infectious). The
+        event queue and its _person_index are not built at all.
+        """
+        sim = context.simulator
+        store = sim.membership
+        self._progress(0, context.max_length, "Running simulation...")
+        logger.info("Starting timestep-driven engine simulation")
+
+        # Ship the per-person decode tables once, before any timestep, so the
+        # streaming per-person map routes (person-path) read `meta` first.
+        context.snapshot_writer.write_meta(store.movement_meta())
+
+        ts = sim.timestep
+        while ts <= context.max_length:
+            self._progress(ts, context.max_length)
+            ts_str = str(ts)
+            context.processed_count += 1
+
+            if ts in store._move:
+                interventions = sim.get_interventions(ts_str)
+                with self._timed("run_queue/update_people_states"):
+                    self.update_people_states(context, ts_str)
+                if interventions is not context.last_interventions:
+                    with self._timed("run_queue/apply_interventions"):
+                        context.last_interventions = interventions
+                        for person in sim.people.values():
+                            apply_person_interventions(sim, person, interventions, ts_str)
+                with self._timed("run_queue/apply_movement"):
+                    store.apply_movement(ts)
+
+            with self._timed("run_queue/process_infections"):
+                self._vectorized_transmission(context, ts)
+            with self._timed("run_queue/update_variant_tracking"):
+                self.update_variant_tracking(context)
+            with self._timed("run_queue/write_snapshot"):
+                self.write_snapshot(context, ts_str)
+            context.last_movement_ts = ts
+            ts += sim.timestep
+
+        self._progress(
+            context.max_length, context.max_length, "Simulation complete, writing output..."
+        )
+        logger.info("SIMULATION COMPLETE (%d timesteps processed)", context.processed_count)
+        if _perf_timings_enabled():
+            for label in sorted(self._perf_accum):
+                print(f"[perf] {label}: {self._perf_accum[label]:.3f}s", flush=True)
+
     def process_movement_up_to(self, context: SimulationContext, target_ts: int) -> None:
         ts = context.last_movement_ts + context.simulator.timestep
         while ts <= target_ts:
@@ -483,7 +791,23 @@ class SimulationRunner:
                                 ts_str,
                             )
 
-                if isinstance(timestep_data, dict):
+                if self._soa_engine:
+                    # Defensive net: _engine_eligibility already excludes
+                    # movement interventions before the engine is engaged, and an
+                    # eligible (single-variant) engine run never reaches this
+                    # queue path (it uses _run_queue_engine). If this ever fires,
+                    # eligibility has a bug — fail loudly rather than silently drop
+                    # the intervention.
+                    if not _trivial_movement_interventions(interventions):
+                        raise RuntimeError(
+                            "SoA engine reached a movement-altering intervention "
+                            "despite eligibility gating (capacity<1 / lockdown / "
+                            "selfiso) — this is a bug in _engine_eligibility"
+                        )
+                    with self._timed("run_queue/apply_movement"):
+                        if context.simulator.membership.apply_movement(ts):
+                            context.occupancy = None  # rebuilt lazily below
+                elif isinstance(timestep_data, dict):
                     if "homes" in timestep_data:
                         with self._timed("run_queue/move_people_home"):
                             move_people(
@@ -503,6 +827,10 @@ class SimulationRunner:
                                 interventions,
                             )
 
+            if self._soa_engine and context.occupancy is None:
+                with self._timed("run_queue/build_occupancy"):
+                    context.occupancy = context.simulator.membership.occupancy_view()
+
             with self._timed("run_queue/update_variant_tracking"):
                 self.update_variant_tracking(context)
             with self._timed("run_queue/write_snapshot"):
@@ -515,17 +843,60 @@ class SimulationRunner:
     def update_people_states(self, context: SimulationContext, ts_str: str) -> None:
         # people_with_timelines holds Person refs directly (see PopulationBuildResult);
         # iterate them without a simulator.get_person(pid) lookup per call.
-        for person in context.people_with_timelines:
-            person.update_state(ts_str, context.variants)
+        if self._soa_engine:
+            pstate = context.simulator.membership.pstate
+            variant = context.variants[0]
+            susceptible = InfectionState.SUSCEPTIBLE
+            time = int(ts_str)
+            changed = context.states_changed_idx
+            changed.clear()
+            for person in context.people_with_timelines:
+                # update_state itself early-exits between timeline boundaries; do
+                # the same check here so non-transitioning people cost nothing and
+                # the per-person numpy scalar write (the bulk of this stage at
+                # saturation) is skipped unless the state value actually changed.
+                # Byte-identical to calling update_state + writing pstate for all.
+                if time < person._next_transition_time:
+                    continue
+                person.update_state(ts_str, context.variants)
+                idx = person._soa_idx
+                value = int(person.states.get(variant, susceptible).value)
+                if value != pstate[idx]:
+                    pstate[idx] = value
+                    changed.append(idx)
+        else:
+            for person in context.people_with_timelines:
+                person.update_state(ts_str, context.variants)
 
     def update_variant_tracking(self, context: SimulationContext) -> None:
+        susceptible = InfectionState.SUSCEPTIBLE
+        if self._soa_engine:
+            # Incremental: only people whose state value changed in this step's
+            # update_people_states need their variant_infected entry refreshed.
+            # Unchanged entries are already correct from the step they last
+            # changed, and newly-infected people are written directly by the
+            # transmission kernel (variant_bucket[...]). Byte-identical to
+            # rewriting the whole ever-infected map every step, but O(changed)
+            # instead of O(ever-infected).
+            idx_to_person = context.simulator.membership.idx_to_person
+            variant_infected = context.variant_infected
+            variants = context.variants
+            snap_state = context.simulator.membership.snap_state
+            for idx in context.states_changed_idx:
+                person = idx_to_person[idx]
+                for disease in variants:
+                    state = person.states.get(disease, susceptible)
+                    if state != susceptible:
+                        variant_infected[disease][person.id] = int(state.value)
+                        snap_state[idx] = int(state.value)
+            return
         for pid_str in context.event_queue.registry:
             person = context.simulator.get_person(pid_str)
             if not person:
                 continue
             for disease in context.variants:
-                state = person.states.get(disease, InfectionState.SUSCEPTIBLE)
-                if state != InfectionState.SUSCEPTIBLE:
+                state = person.states.get(disease, susceptible)
+                if state != susceptible:
                     context.variant_infected[disease][pid_str] = int(state.value)
 
     def write_snapshot(self, context: SimulationContext, ts_str: str) -> None:
@@ -537,17 +908,127 @@ class SimulationRunner:
                 if facility.population:
                     context.simulator.logger.log_location_state(facility, ts_str)
 
+        if self._soa_shadow:
+            if self._soa_engine:
+                # Engine mode drives movement via arrays (dicts are stale), so
+                # validate the state mirror, not the dict-vs-occupancy match.
+                self._shadow_validate_state_mirror(context)
+            else:
+                self._shadow_validate_occupancy(context.simulator)
+
         with self._timed("write_snapshot/build_movement"):
-            movement = build_movement_snapshot(context.simulator)
+            if self._soa_engine:
+                # Numeric per-location [count, infected] (map-cache shape) — the
+                # ~50x snapshot win. Consumed directly by the Next sim-processor.
+                store = context.simulator.membership
+                movement = store.movement_snapshot_numeric()
+                # Per-person current location (person index -> location index).
+                # Decoded via the one-time `meta` entry so the per-person map
+                # views (people-map, person-path) can reconstruct who-is-where
+                # without the engine ever materializing pid lists.
+                movement["loc"] = store.person_loc.tolist()
+                # Per-place [infected, recovered] dot counts (places order), so
+                # the Cases-map dot bake reads them directly instead of
+                # reconstructing per person from `loc` + the sim snapshot.
+                movement["pdots"] = store.place_dot_counts()
+            else:
+                movement = build_movement_snapshot(context.simulator)
         with self._timed("write_snapshot/build_infection"):
             infection = build_infection_snapshot(context.variant_infected)
         with self._timed("write_snapshot/writer_write"):
             context.snapshot_writer.write(ts_str, movement, infection)
 
     def process_infections_at_timestep(self, context: SimulationContext, timestep: int) -> None:
+        if self._soa_engine and len(context.variants) == 1:
+            # The queue still gates which timesteps have any infectious presence;
+            # drain it to advance, then run one vectorized pass over all rooms.
+            had_event = False
+            while context.event_queue and context.event_queue.peek()[0] == timestep:
+                context.event_queue.pop()
+                had_event = True
+            if had_event:
+                with self._timed("infection_event/aggregate_iteration"):
+                    self._vectorized_transmission(context, timestep)
+            return
         while context.event_queue and context.event_queue.peek()[0] == timestep:
             ts, poi_id, is_household = context.event_queue.pop()
             self.process_infection_event(context, ts, poi_id, is_household)
+
+    def _vectorized_transmission(self, context: SimulationContext, ts: int) -> None:
+        """Single-variant well-mixed Wells-Riley over all rooms at once.
+
+        Equivalent to running _aggregate_transmission_event per room, but as
+        numpy array ops: emission summed per room with bincount, then one
+        vectorized infection draw per susceptible. RNG source differs (numpy vs
+        python per-pair) -> ensemble-validated, not byte-identical.
+        """
+        store = context.simulator.membership
+        variant = context.variants[0]
+        pstate = store.pstate
+        person_loc = store.person_loc
+        masked = store.masked
+
+        INFECTIOUS = int(InfectionState.INFECTIOUS.value)
+        INVISIBLE = int(
+            (InfectionState.HOSPITALIZED | InfectionState.RECOVERED | InfectionState.REMOVED).value
+        )
+        placed = person_loc >= 0
+        infectious = placed & ((pstate & INFECTIOUS) != 0)
+        if not infectious.any():
+            return
+
+        # Emission weight per infector, summed per room (cheap O(N) numpy).
+        inf_w = np.where(masked, 0.30, 1.0) * store.vax_trans_factor
+        emit = np.where(infectious, inf_w, 0.0)
+        W = np.bincount(
+            person_loc[placed], weights=emit[placed], minlength=store.num_locations
+        )
+
+        # Restrict the expensive trials (exp + RNG + scheduling) to actually
+        # exposed susceptibles — those placed in a room with infectors. This keeps
+        # the kernel cheap at low prevalence (few eligible) and at saturation
+        # (numpy), instead of drawing for all N every timestep.
+        loc = np.where(placed, person_loc, 0)
+        room_W = W[loc]
+        eligible = placed & (pstate == 0) & ((pstate & INVISIBLE) == 0) & (room_W > 0.0)
+        elig_idx = np.nonzero(eligible)[0]
+        if elig_idx.size == 0:
+            return
+
+        intake = np.where(masked[elig_idx], 0.50, 1.0) * (
+            1.0 - store.vax_inf_protection[elig_idx]
+        )
+        mean_quanta = store.base_quanta[loc[elig_idx]] * room_W[elig_idx] * intake
+        prob = 1.0 - np.exp(-mean_quanta)
+        draws = np.random.random(elig_idx.size)
+        hits = elig_idx[draws < prob]
+        if hits.size == 0:
+            return
+
+        infection_mgr = context.infection_manager
+        infected_set = infection_mgr.infected
+        idx_to_person = store.idx_to_person
+        variant_bucket = context.variant_infected[variant]
+        infected_state_value = int(
+            (InfectionState.INFECTED | InfectionState.INFECTIOUS).value
+        )
+        for i in hits:
+            target = idx_to_person[i]
+            target_id = target.id
+            infected_set.add(target_id)
+            infection_mgr.schedule_infection(
+                context.simulator,
+                context.event_queue,
+                target,
+                variant,
+                ts,
+                context.people_with_timelines,
+            )
+            variant_bucket[target_id] = infected_state_value
+            store.snap_state[i] = infected_state_value
+            context.simulator.log_event(
+                "log_infection_event", target, None, None, variant, ts
+            )
 
     def _ventilation_rate(self, place, is_household: bool) -> float:
         """Wells-Riley ventilation term Q (m^3/hr).
@@ -579,10 +1060,24 @@ class SimulationRunner:
             return
 
         place = context.simulator.get_location(str(poi_id), is_household)
-        if not place or not place.population:
+        if not place:
             return
 
-        snapshot = list(place.population.values())
+        if self._soa_engine:
+            store = context.simulator.membership
+            loc_idx = store.loc_to_idx.get((str(poi_id), is_household))
+            if loc_idx is None:
+                return
+            occ = context.occupancy.occupants_of(loc_idx)
+            if len(occ) == 0:
+                return
+            idx_to_person = store.idx_to_person
+            snapshot = [idx_to_person[i] for i in occ]
+        else:
+            if not place.population:
+                return
+            snapshot = list(place.population.values())
+
         infectious_people = [person for person in snapshot if person.is_infectious()]
         if not infectious_people:
             return
@@ -756,10 +1251,24 @@ class SimulationRunner:
         "aggregate_transmission" field.
         """
         place = context.simulator.get_location(str(poi_id), is_household)
-        if not place or not place.population:
+        if not place:
             return
 
-        snapshot = list(place.population.values())
+        if self._soa_engine:
+            store = context.simulator.membership
+            loc_idx = store.loc_to_idx.get((str(poi_id), is_household))
+            if loc_idx is None:
+                return
+            occ = context.occupancy.occupants_of(loc_idx)
+            if len(occ) == 0:
+                return
+            idx_to_person = store.idx_to_person
+            snapshot = [idx_to_person[i] for i in occ]
+        else:
+            if not place.population:
+                return
+            snapshot = list(place.population.values())
+
         infectious_people = [person for person in snapshot if person.is_infectious()]
         if not infectious_people:
             return

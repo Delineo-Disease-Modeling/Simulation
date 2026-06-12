@@ -78,3 +78,4 @@ waitress==3.0.2
 wcwidth==0.2.14
 Werkzeug==3.1.3
 xyzservices==2025.4.0
+zstandard==0.25.0
