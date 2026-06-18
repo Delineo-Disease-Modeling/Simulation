@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import numpy as np
 import requests
 
 from simulator.event_queue import EventQueue
@@ -16,7 +17,9 @@ from simulator.runner import (
     apply_person_interventions,
     move_people,
     normalize_simdata,
+    reroute_disabled_poi_visits,
 )
+from simulator.patterns_codec import BinaryPatterns
 from simulator.snapshots import SimulationSnapshotWriter, build_movement_snapshot
 from simulator.world import DiseaseSimulator, build_locations, seed_population
 from simulator.infection_models.v6_wells_riley import CAT, get_vaccination_protection
@@ -396,6 +399,156 @@ class TestSimulatorRefactor(unittest.TestCase):
         self.assertEqual(normalized["disease_name"], "COVID-19")
         self.assertEqual(normalized["variants"], ["Delta"])
         self.assertEqual(normalized["dmp_mode"], "auto")
+        self.assertEqual(normalized["disabled_poi_ids"], [])
+
+    def test_normalize_simdata_deduplicates_disabled_poi_ids(self):
+        normalized = normalize_simdata({
+            "czone_id": 1,
+            "length": 60,
+            "interventions": [],
+            "disabled_poi_ids": ["poi-2", 1, "poi-2", "", None],
+        })
+
+        self.assertEqual(normalized["disabled_poi_ids"], ["1", "poi-2"])
+
+    def test_reroute_disabled_poi_visits_moves_people_home(self):
+        patterns = {
+            "60": {
+                "homes": {"h1": ["p0", "p1"], "h2": []},
+                "places": {
+                    "poi-a": ["p1", "p2", "missing"],
+                    "poi-b": ["p3"],
+                },
+                "unchanged": True,
+            },
+        }
+        people = {
+            "p0": {"home": "h1"},
+            "p1": {"home": "h1"},
+            "p2": {"home": "h2"},
+            "p3": {"home": "h3"},
+        }
+
+        rerouted = reroute_disabled_poi_visits(patterns, people, ["poi-a"])
+
+        self.assertEqual(
+            rerouted["60"],
+            {
+                "homes": {"h1": ["p0", "p1"], "h2": ["p2"]},
+                "places": {"poi-b": ["p3"]},
+                "unchanged": True,
+            },
+        )
+        # input is not mutated in place
+        self.assertIn("poi-a", patterns["60"]["places"])
+
+    def test_reroute_disabled_poi_visits_handles_binary_patterns(self):
+        # loc indices: 0,1 are homes (n_homes=2); 2,3 are places.
+        # Layout per timestep row: [p0, p1, p2] columns.
+        # row0: p0@h0, p1@place2(disabled), p2@place3 -> p1 should go to its home (h1=idx1)
+        loc_matrix = np.array(
+            [
+                [0, 2, 3],
+                [2, 2, 0],
+            ],
+            dtype=np.uint16,
+        )
+        binary = BinaryPatterns(
+            loc_matrix=loc_matrix.copy(),
+            ts_minutes=[60, 120],
+            pids=["p0", "p1", "p2"],
+            loc_ids=["h0", "h1", "place2", "place3"],
+            n_homes=2,
+        )
+        people = {
+            "p0": {"home": "h0"},
+            "p1": {"home": "h1"},
+            "p2": {"home": "place3-resident-home"},  # home absent from loc_ids -> leave in place
+        }
+
+        rerouted = reroute_disabled_poi_visits(binary, people, ["place2"])
+
+        # p1 (col 1) rerouted from place2(2) to its home h1(1) wherever it was at place2.
+        # p0 (col 0) at place2 in row1 -> rerouted to its home h0(0).
+        # p2 (col 2) has no mappable home -> untouched even though it never visits place2 here.
+        self.assertTrue(np.array_equal(
+            rerouted.loc_matrix,
+            np.array(
+                [
+                    [0, 1, 3],
+                    [0, 1, 0],
+                ],
+                dtype=np.uint16,
+            ),
+        ))
+
+    def test_reroute_binary_disambiguates_colliding_home_place_ids(self):
+        # Real fixtures share an id space between homes and places (person home
+        # "1" AND place "1" both exist). loc_ids: idx 0,1 = homes "1","2";
+        # idx 2,3 = places "1","3". The disabled PLACE "1" (idx 2) must be
+        # disabled without touching HOME "1" (idx 0).
+        binary = BinaryPatterns(
+            loc_matrix=np.array(
+                [
+                    [2, 3],  # pA @ place"1"(idx2, disabled), pB @ place"3"(idx3)
+                    [0, 2],  # pA @ home"1"(idx0, NOT disabled), pB @ place"1"(idx2)
+                ],
+                dtype=np.uint16,
+            ),
+            ts_minutes=[60, 120],
+            pids=["pA", "pB"],
+            loc_ids=["1", "2", "1", "3"],
+            n_homes=2,
+        )
+        people = {"pA": {"home": "1"}, "pB": {"home": "2"}}
+
+        rerouted = reroute_disabled_poi_visits(binary, people, ["1"])
+
+        # pA's place"1" visit -> home idx 0; pA's home"1" stay (idx0) untouched;
+        # pB's place"1" visit -> home idx 1.
+        self.assertTrue(np.array_equal(
+            rerouted.loc_matrix,
+            np.array(
+                [
+                    [0, 3],
+                    [0, 1],
+                ],
+                dtype=np.uint16,
+            ),
+        ))
+
+    def test_load_data_applies_reroute_so_engine_sees_disabling(self):
+        # Guards the silent-bypass failure mode: the reroute must land on the
+        # engine-facing patterns (the dense loc_matrix), not just the legacy dict.
+        papdata = {
+            "people": {"p0": {"home": "h0"}, "p1": {"home": "h1"}},
+            "homes": {"h0": {}, "h1": {}},
+            "places": {"shop": {}},
+        }
+        binary = BinaryPatterns(
+            loc_matrix=np.array([[2, 2]], dtype=np.uint16),  # both at "shop" (idx 2)
+            ts_minutes=[60],
+            pids=["p0", "p1"],
+            loc_ids=["h0", "h1", "shop"],
+            n_homes=2,
+        )
+
+        def fake_loader(url, timeout=None):
+            return papdata, binary
+
+        runner = SimulationRunner(
+            {"czone_id": 1, "length": 60, "interventions": [], "disabled_poi_ids": ["shop"]},
+            enable_logging=False,
+            data_loader=fake_loader,
+        )
+        loaded = runner.load_data()
+
+        # both visitors to the disabled "shop" are sent to their homes (idx 0, 1)
+        self.assertIsInstance(loaded.patterns_data, BinaryPatterns)
+        self.assertTrue(np.array_equal(
+            loaded.patterns_data.loc_matrix,
+            np.array([[0, 1]], dtype=np.uint16),
+        ))
 
     def test_runner_uses_runtime_variants_and_records_provenance(self):
         simdata = {
@@ -407,6 +560,7 @@ class TestSimulatorRefactor(unittest.TestCase):
             "variants": ["H1N1", "H3N2", "Victoria"],
             "dmp_mode": "off",
             "model_path_by_variant": {"H1N1": "flu.h1n1.general"},
+            "disabled_poi_ids": ["clinic"],
             "interventions": [
                 {
                     "time": 0,
@@ -448,6 +602,7 @@ class TestSimulatorRefactor(unittest.TestCase):
         self.assertEqual(result["metadata"]["initial_infected_count"], 4)
         self.assertEqual(result["metadata"]["timeline_source_counts"]["fallback"], 4)
         self.assertEqual(result["metadata"]["random_seed_behavior"], "deterministic:0")
+        self.assertEqual(result["metadata"]["disabled_poi_ids"], ["clinic"])
 
 
 if __name__ == "__main__":

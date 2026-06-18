@@ -50,6 +50,15 @@ simulation_schema = {
                 ]
             }
         },
+        "disabled_poi_ids": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    { "type": "string", "minLength": 1 },
+                    { "type": "integer" }
+                ]
+            }
+        },
         "interventions": {
             "type": "array",
             "items": {
