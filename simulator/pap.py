@@ -52,6 +52,7 @@ class Location:
         capacity: int = -1,
         location_type: str = "unknown",
         area: Optional[float] = None,
+        catchment_fj: Optional[float] = None,
     ) -> None:
         self.id: str = str(id)
         self.cbg: Optional[str] = cbg
@@ -59,6 +60,10 @@ class Location:
         self.capacity: int = capacity        # -1 = unlimited
         self.location_type: str = location_type
         self.area: Optional[float] = area    # physical floor area in m^2 (None = unknown)
+        # In-cluster visitor share f_j (popgen catchment_fj). Drives the external
+        # force-of-infection term: external occupancy = internal x (1 - f_j)/f_j.
+        # None = unknown (no external term applied). See config.external_foi.
+        self.catchment_fj: Optional[float] = catchment_fj
         self.population: dict[str, Person] = {}
         # SoA shadow (Step 1): when a MembershipStore is attached, add_member
         # also records the placement into person_loc. Left None in production so
@@ -117,8 +122,10 @@ class Facility(Location):
         capacity: int = -1,
         street_address: Optional[str] = None,
         area: Optional[float] = None,
+        catchment_fj: Optional[float] = None,
     ) -> None:
-        super().__init__(id=id, cbg=cbg, label=label, capacity=capacity, location_type="facility", area=area)
+        super().__init__(id=id, cbg=cbg, label=label, capacity=capacity,
+                         location_type="facility", area=area, catchment_fj=catchment_fj)
         self.street_address: Optional[str] = street_address
 
 

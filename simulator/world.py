@@ -82,6 +82,7 @@ def parse_cbg(data) -> Optional[str]:
 
 def parse_facility(fid: str, data) -> Facility:
     area = None
+    catchment_fj = None
     if isinstance(data, list) and len(data) >= 2:
         cbg = data[0] if data else None
         label = data[1] if len(data) > 1 else None
@@ -93,6 +94,7 @@ def parse_facility(fid: str, data) -> Facility:
         capacity = data.get("capacity", -1)
         street_address = data.get("street_address")
         area = data.get("area")
+        catchment_fj = data.get("catchment_fj")
     else:
         cbg = data
         label = f"Place_{fid}"
@@ -113,7 +115,16 @@ def parse_facility(fid: str, data) -> Facility:
         except (TypeError, ValueError):
             area = None
 
-    return Facility(str(fid), cbg, label, capacity, street_address=street_address, area=area)
+    if catchment_fj is not None:
+        try:
+            catchment_fj = float(catchment_fj)
+            if not (0.0 < catchment_fj <= 1.0):
+                catchment_fj = None
+        except (TypeError, ValueError):
+            catchment_fj = None
+
+    return Facility(str(fid), cbg, label, capacity, street_address=street_address,
+                    area=area, catchment_fj=catchment_fj)
 
 
 def build_locations(simulator: DiseaseSimulator, homes_data: dict, places_data: dict) -> None:

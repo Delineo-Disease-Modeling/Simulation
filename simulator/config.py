@@ -85,6 +85,27 @@ INFECTION_MODEL = {
     # the observed footprint distribution.
     "area_clamp_min": float(os.environ.get("DELINEO_AREA_CLAMP_MIN", "65.0")),
     "area_clamp_max": float(os.environ.get("DELINEO_AREA_CLAMP_MAX", "70000.0")),
+    # External force-of-infection term (open-system coupling). ~85% of a POI's
+    # real visitors live outside the simulated cluster; rather than simulate them,
+    # they contribute a one-way background quanta source at each POI. The external
+    # headcount is reconstructed from the already-simulated internal occupancy:
+    # external = n_internal x (1 - f_j)/f_j, where f_j (catchment_fj, emitted by
+    # popgen) is the in-cluster visitor share. Those externals act as extra
+    # well-mixed infectors with probability external_prevalence of being infectious
+    # (one-way: never simulated as agents, never susceptible, never rendered).
+    # See docs/MOVEMENT_MODEL_REDESIGN.md (Algorithms) §10.
+    # DEFAULT OFF (and external_prevalence defaults to 0, so even flagged-on it is
+    # inert) -> golden run bit-identical until deliberately calibrated. Override
+    # per run via the simdata "external_foi" / "external_prevalence" fields.
+    "external_foi": os.environ.get("DELINEO_EXTERNAL_FOI", "0").lower()
+    in {"1", "true", "yes", "on"},
+    # P_ext: exogenous probability a given external visitor is infectious. A scalar
+    # for now (calibrate against real case data; can grow into a time series). NOT
+    # tied to the sim's own prevalence (that re-closes the system / feeds back).
+    "external_prevalence": float(os.environ.get("DELINEO_EXTERNAL_PREVALENCE", "0.0")),
+    # Average emission factor of an external visitor relative to an unmasked,
+    # unvaccinated internal infector (community masking / behaviour). 1.0 = same.
+    "external_emit_factor": float(os.environ.get("DELINEO_EXTERNAL_EMIT_FACTOR", "1.0")),
     # Fallback timeline values used only when DMP API fails to provide a timeline
     "fallback_timeline": {
         "infected_duration": 1440,      # 24 hours in minutes (fallback value)
