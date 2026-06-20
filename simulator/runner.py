@@ -523,6 +523,20 @@ class SimulationRunner:
                 )
             else:
                 logger.info("SoA engine engaged (eligible config).")
+        # The external-FOI term is implemented in the SoA engine kernel only
+        # (the default-on path). Warn loudly rather than silently no-op if a run
+        # asks for it but won't use the engine.
+        if (
+            self.external_foi
+            and self.external_prevalence > 0.0
+            and not self._soa_engine
+        ):
+            logger.warning(
+                "external_foi is ON (external_prevalence=%.4g) but this run is not "
+                "using the SoA engine — the external term will have NO effect. It is "
+                "currently implemented in _vectorized_transmission only.",
+                self.external_prevalence,
+            )
         # Single-variant engine mode derives infectious locations from occupancy,
         # so the event queue / _person_index (build_event_queue) is unnecessary.
         engine_no_queue = self._soa_engine and len(variants) == 1
