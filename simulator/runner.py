@@ -148,6 +148,20 @@ def normalize_simdata(simdata: dict) -> dict:
         )
     )
 
+    normalized["external_foi"] = bool(
+        normalized.get("external_foi", INFECTION_MODEL.get("external_foi", False))
+    )
+    normalized["external_prevalence"] = float(
+        normalized.get(
+            "external_prevalence", INFECTION_MODEL.get("external_prevalence", 0.0)
+        )
+    )
+    normalized["external_emit_factor"] = float(
+        normalized.get(
+            "external_emit_factor", INFECTION_MODEL.get("external_emit_factor", 1.0)
+        )
+    )
+
     raw_model_paths = normalized.get("model_path_by_variant") or {}
     model_path_by_variant = {}
     if isinstance(raw_model_paths, dict):
@@ -337,6 +351,14 @@ class SimulationRunner:
             float(INFECTION_MODEL.get("area_clamp_min", 65.0)),
             float(INFECTION_MODEL.get("area_clamp_max", 70000.0)),
         )
+        # External force-of-infection term (default off → golden preserved). When
+        # on, each facility gets a one-way background quanta source from its
+        # external (out-of-cluster) visitors; see _external_emission_per_loc and
+        # _vectorized_transmission. external_prevalence (P_ext) defaults to 0, so
+        # the term is inert until calibrated even when the flag is on.
+        self.external_foi = self.simdata["external_foi"]
+        self.external_prevalence = float(self.simdata["external_prevalence"])
+        self.external_emit_factor = float(self.simdata["external_emit_factor"])
         self._perf_accum: dict[str, float] = {}
         self._soa_engine: bool = False
         self._soa_shadow: bool = False
@@ -501,6 +523,20 @@ class SimulationRunner:
                 )
             else:
                 logger.info("SoA engine engaged (eligible config).")
+        # The external-FOI term is implemented in the SoA engine kernel only
+        # (the default-on path). Warn loudly rather than silently no-op if a run
+        # asks for it but won't use the engine.
+        if (
+            self.external_foi
+            and self.external_prevalence > 0.0
+            and not self._soa_engine
+        ):
+            logger.warning(
+                "external_foi is ON (external_prevalence=%.4g) but this run is not "
+                "using the SoA engine — the external term will have NO effect. It is "
+                "currently implemented in _vectorized_transmission only.",
+                self.external_prevalence,
+            )
         # Single-variant engine mode derives infectious locations from occupancy,
         # so the event queue / _person_index (build_event_queue) is unnecessary.
         engine_no_queue = self._soa_engine and len(variants) == 1
@@ -567,12 +603,27 @@ class SimulationRunner:
             # vectorized kernel needs no per-room work at runtime.
             exposure_hours = simulator.timestep / 60.0
             base_q = np.empty(store.num_locations, dtype=np.float64)
+            # Static external-FOI coefficient per location: (1 - f_j)/f_j * emit
+            # factor. At runtime W_external[loc] = n_internal[loc] * ext_ratio[loc]
+            # * P_ext, so the externals act as extra well-mixed infectors. 0 for
+            # households and for facilities with unknown f_j (no term applied).
+            build_ext = self.external_foi
+            ext_ratio = (
+                np.zeros(store.num_locations, dtype=np.float64) if build_ext else None
+            )
             for loc_idx, (loc_id, is_hh) in enumerate(store.idx_to_loc):
                 place = simulator.get_location(loc_id, is_hh)
                 base_q[loc_idx] = (20.0 * 0.5 * exposure_hours) / self._ventilation_rate(
                     place, is_hh
                 )
+                if build_ext and not is_hh:
+                    fj = getattr(place, "catchment_fj", None)
+                    if fj is not None and 0.0 < fj <= 1.0:
+                        ext_ratio[loc_idx] = (
+                            (1.0 - fj) / fj * self.external_emit_factor
+                        )
             store.base_quanta = base_q
+            store.ext_ratio = ext_ratio
 
         return SimulationContext(
             simulator=simulator,
@@ -974,7 +1025,21 @@ class SimulationRunner:
         )
         placed = person_loc >= 0
         infectious = placed & ((pstate & INFECTIOUS) != 0)
-        if not infectious.any():
+
+        # External force-of-infection: out-of-cluster visitors add a one-way
+        # background emission to each room, W_ext[loc] = n_internal[loc]
+        # * ext_ratio[loc] * P_ext, where ext_ratio = (1 - f_j)/f_j * emit_factor.
+        # The externals are never agents (not in pstate / never susceptible /
+        # never rendered), so this can seed or sustain transmission with zero
+        # internal infectors present — which is exactly why we must NOT early-return
+        # on infectious.any() when the term is active. Inert by default (flag off,
+        # or external_prevalence 0, or ext_ratio unbuilt) -> golden path preserved.
+        ext_on = (
+            self.external_foi
+            and self.external_prevalence > 0.0
+            and store.ext_ratio is not None
+        )
+        if not infectious.any() and not ext_on:
             return
 
         # Emission weight per infector, summed per room (cheap O(N) numpy).
@@ -983,11 +1048,15 @@ class SimulationRunner:
         W = np.bincount(
             person_loc[placed], weights=emit[placed], minlength=store.num_locations
         )
+        if ext_on:
+            # n_internal = realized internal occupancy per room (all placed people).
+            n_internal = np.bincount(person_loc[placed], minlength=store.num_locations)
+            W = W + store.ext_ratio * n_internal * self.external_prevalence
 
         # Restrict the expensive trials (exp + RNG + scheduling) to actually
-        # exposed susceptibles — those placed in a room with infectors. This keeps
-        # the kernel cheap at low prevalence (few eligible) and at saturation
-        # (numpy), instead of drawing for all N every timestep.
+        # exposed susceptibles — those placed in a room with infectors (or external
+        # pressure). This keeps the kernel cheap at low prevalence (few eligible)
+        # and at saturation (numpy), instead of drawing for all N every timestep.
         loc = np.where(placed, person_loc, 0)
         room_W = W[loc]
         eligible = placed & (pstate == 0) & ((pstate & INVISIBLE) == 0) & (room_W > 0.0)
