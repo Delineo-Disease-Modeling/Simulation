@@ -15,7 +15,7 @@ from typing import Callable, Optional
 from .config import DELINEO, DMP_API, INFECTION_MODEL, SIMULATION
 from .data_interface import StreamDataLoader
 from .event_queue import EventQueue
-from .infection_models.v6_wells_riley import CAT, get_vaccination_protection
+from .infection_models.v6_wells_riley import get_vaccination_protection
 from .infectionmgr import InfectionManager
 from .pap import InfectionState, Person, VaccinationState
 from .patterns_codec import BinaryPatterns

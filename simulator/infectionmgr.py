@@ -6,7 +6,6 @@ from typing import Optional, TextIO, TYPE_CHECKING
 import requests
 
 from .pap import Person, InfectionState, InfectionTimeline, VaccinationState
-from .infection_models.v6_wells_riley import CAT
 from .config import DMP_API, INFECTION_MODEL
 
 if TYPE_CHECKING:
@@ -74,87 +73,6 @@ class InfectionManager:
                 logger.warning("In-process DMP unavailable (%s); using HTTP API", exc)
                 self._inprocess = None
 
-    def run_model(
-        self,
-        simulator,
-        curtime: int,
-        variant_infected: dict[str, dict[str, int]],
-        newly_infected: dict[str, dict[str, list[str]]],
-        file: Optional[TextIO] = None,
-    ) -> None:
-        """Run one timestep of infection spread across all locations with infected people."""
-        if file is not None:
-            self._write_timestep_header(file, curtime, variant_infected)
-
-        # Update variant tracking
-        for person_id in self.infected:
-            person = simulator.people.get(person_id)
-            if person is None:
-                continue
-            for disease in variant_infected:
-                state = person.states.get(disease, InfectionState.SUSCEPTIBLE)
-                if state != InfectionState.SUSCEPTIBLE:
-                    variant_infected[disease][person_id] = int(state.value)
-
-        # Attempt transmission from each infected person to co-located susceptibles
-        exposure_hours = simulator.timestep / 60.0
-
-        for person_id in self.infected:
-            infector = simulator.people.get(person_id)
-            if infector is None or infector.invisible:
-                continue
-
-            for target in infector.location.population.values():
-                if infector.id == target.id:
-                    continue
-
-                for disease, state in infector.states.items():
-                    if InfectionState.INFECTIOUS not in state:
-                        continue
-
-                    if target.states.get(disease, InfectionState.SUSCEPTIBLE) != InfectionState.SUSCEPTIBLE:
-                        continue
-
-                    if not self.multidisease and any(
-                        s != InfectionState.SUSCEPTIBLE for s in target.states.values()
-                    ):
-                        continue
-
-                    # Wells-Riley transmission check
-                    if not CAT(
-                        target,
-                        indoor=True,
-                        exposure_hours=exposure_hours,
-                        infector=infector,
-                        infector_masked=infector.is_masked(),
-                        susceptible_masked=target.is_masked(),
-                    ):
-                        continue
-
-                    logger.info(
-                        "Infection: %s -> %s (masked: %s/%s)",
-                        infector.id, target.id, infector.is_masked(), target.is_masked(),
-                    )
-
-                    if target.id not in self.infected:
-                        self.infected.add(target.id)
-                    elif not self.multidisease:
-                        continue
-
-                    timeline = self.schedule_infection(
-                        simulator,
-                        None,
-                        target,
-                        disease,
-                        curtime,
-                    )
-
-                    if file is not None:
-                        file.write(f'{infector.id} infected {target.id} @ location {target.location.id} w/ {disease}\n')
-
-                    # Track newly infected
-                    newly_infected.setdefault(disease, {})
-                    newly_infected[disease].setdefault(str(infector.id), []).append(str(target.id))
 
     def schedule_infection(
         self,
@@ -386,12 +304,3 @@ class InfectionManager:
         }
 
     # Private helpers
-
-    def _write_timestep_header(
-        self, file: TextIO, curtime: int, variant_infected: dict[str, dict]
-    ) -> None:
-        file.write(f'====== TIMESTEP {curtime} ======\n')
-        for variant in variant_infected:
-            ids = [pid for pid, val in variant_infected[variant].items() if val != 0]
-            file.write(f'{variant}: {ids}\n')
-            file.write(f"{variant} count: {len(ids)}\n")
