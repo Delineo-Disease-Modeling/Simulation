@@ -304,21 +304,7 @@ class TransmissionMixin:
                             ts,
                         )
 
-        # The contact-pair loop is O(n^2) over place population. log_event is
-        # a no-op when enable_logging is False, but the iteration still runs.
-        # Skip it entirely when logging is off — saves ~8s per simulation at
-        # ZIP 74002 / 168h.
-        if not is_household and context.simulator.enable_logging:
-            with self._timed("infection_event/contact_pair_logging"):
-                for index, person_one in enumerate(snapshot):
-                    for person_two in snapshot[index + 1:]:
-                        context.simulator.log_event(
-                            "log_contact_event",
-                            person_one,
-                            person_two,
-                            place,
-                            ts,
-                        )
+        self._log_contact_pairs(context, snapshot, place, ts, is_household)
 
     def _aggregate_transmission_event(
         self,
@@ -479,8 +465,15 @@ class TransmissionMixin:
                         # timestep, mirroring the pairwise infected_set guard.
                         break
 
-        # Contact-pair logging is O(n^2) and a no-op when logging is off; skip
-        # the iteration entirely in that case (identical to the pairwise path).
+        self._log_contact_pairs(context, snapshot, place, ts, is_household)
+
+
+    def _log_contact_pairs(self, context, snapshot, place, ts, is_household) -> None:
+        """Emit pairwise contact-log events for a place (shared by both non-engine
+        kernels). O(n^2) over the place population and a no-op when logging is off,
+        so it is skipped entirely in that case (the prod default). Logging only --
+        does not touch infection outcomes or RNG.
+        """
         if not is_household and context.simulator.enable_logging:
             with self._timed("infection_event/contact_pair_logging"):
                 for index, person_one in enumerate(snapshot):
