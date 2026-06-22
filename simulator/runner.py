@@ -288,39 +288,7 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
             intervention_weights=self.simdata["interventions"],
         )
         variants = self.simdata["variants"]
-        # The engine is ON BY DEFAULT, but only ENGAGED when it can run this
-        # config correctly. Ineligible configs (movement interventions,
-        # multi-variant, logging/agg constraints) transparently fall back to the
-        # non-engine path instead of silently producing wrong results.
-        # DELINEO_SOA_ENGINE=0 is the kill switch (forces non-engine everywhere).
-        if _engine_disabled():
-            self._soa_engine = False
-            logger.info("SoA engine disabled via DELINEO_SOA_ENGINE=0.")
-        else:
-            eligible, reason = self._engine_eligibility(variants)
-            self._soa_engine = eligible
-            if not eligible:
-                logger.info(
-                    "SoA engine not eligible (%s); falling back to the "
-                    "non-engine path for correct results.",
-                    reason,
-                )
-            else:
-                logger.info("SoA engine engaged (eligible config).")
-        # The external-FOI term is implemented in the SoA engine kernel only
-        # (the default-on path). Warn loudly rather than silently no-op if a run
-        # asks for it but won't use the engine.
-        if (
-            self.external_foi
-            and self.external_prevalence > 0.0
-            and not self._soa_engine
-        ):
-            logger.warning(
-                "external_foi is ON (external_prevalence=%.4g) but this run is not "
-                "using the SoA engine — the external term will have NO effect. It is "
-                "currently implemented in _vectorized_transmission only.",
-                self.external_prevalence,
-            )
+        self._decide_engine_mode(variants)
         # Single-variant engine mode derives infectious locations from occupancy,
         # so the event queue / _person_index (build_event_queue) is unnecessary.
         engine_no_queue = self._soa_engine and len(variants) == 1
@@ -383,31 +351,7 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
                             store.snap_state[person._soa_idx] = int(state.value)
             with self._timed("build_context/precompute_movement"):
                 store.precompute_movement(loaded.patterns_data, self.simdata["length"])
-            # Per-room Wells-Riley base quanta (ventilation is static), so the
-            # vectorized kernel needs no per-room work at runtime.
-            exposure_hours = simulator.timestep / 60.0
-            base_q = np.empty(store.num_locations, dtype=np.float64)
-            # Static external-FOI coefficient per location: (1 - f_j)/f_j * emit
-            # factor. At runtime W_external[loc] = n_internal[loc] * ext_ratio[loc]
-            # * P_ext, so the externals act as extra well-mixed infectors. 0 for
-            # households and for facilities with unknown f_j (no term applied).
-            build_ext = self.external_foi
-            ext_ratio = (
-                np.zeros(store.num_locations, dtype=np.float64) if build_ext else None
-            )
-            for loc_idx, (loc_id, is_hh) in enumerate(store.idx_to_loc):
-                place = simulator.get_location(loc_id, is_hh)
-                base_q[loc_idx] = (20.0 * 0.5 * exposure_hours) / self._ventilation_rate(
-                    place, is_hh
-                )
-                if build_ext and not is_hh:
-                    fj = getattr(place, "catchment_fj", None)
-                    if fj is not None and 0.0 < fj <= 1.0:
-                        ext_ratio[loc_idx] = (
-                            (1.0 - fj) / fj * self.external_emit_factor
-                        )
-            store.base_quanta = base_q
-            store.ext_ratio = ext_ratio
+            self._precompute_location_quanta(simulator, store)
 
         return SimulationContext(
             simulator=simulator,
@@ -421,6 +365,62 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
             last_movement_ts=-simulator.timestep,
             initial_infected_ids=seeded_population.initial_infected_ids,
         )
+
+    def _decide_engine_mode(self, variants: list) -> None:
+        """Set self._soa_engine: ON by default, but only when this config is
+        eligible (the kill switch DELINEO_SOA_ENGINE=0 forces it off). Ineligible
+        configs fall back to the non-engine path for correct results. Warns if an
+        external-FOI run won't use the engine (where that term lives)."""
+        if _engine_disabled():
+            self._soa_engine = False
+            logger.info("SoA engine disabled via DELINEO_SOA_ENGINE=0.")
+        else:
+            eligible, reason = self._engine_eligibility(variants)
+            self._soa_engine = eligible
+            if not eligible:
+                logger.info(
+                    "SoA engine not eligible (%s); falling back to the "
+                    "non-engine path for correct results.",
+                    reason,
+                )
+            else:
+                logger.info("SoA engine engaged (eligible config).")
+        if (
+            self.external_foi
+            and self.external_prevalence > 0.0
+            and not self._soa_engine
+        ):
+            logger.warning(
+                "external_foi is ON (external_prevalence=%.4g) but this run is not "
+                "using the SoA engine — the external term will have NO effect. It is "
+                "currently implemented in _vectorized_transmission only.",
+                self.external_prevalence,
+            )
+
+    def _precompute_location_quanta(self, simulator, store) -> None:
+        """Per-room Wells-Riley base quanta + static external-FOI coefficients.
+
+        Ventilation is static, so the vectorized kernel needs no per-room work at
+        runtime: base_quanta[loc] = quanta_emission / ventilation, and (when
+        external_foi is on) ext_ratio[loc] = (1 - f_j)/f_j * emit_factor for
+        facilities with known f_j (0 for households / unknown f_j)."""
+        exposure_hours = simulator.timestep / 60.0
+        base_q = np.empty(store.num_locations, dtype=np.float64)
+        build_ext = self.external_foi
+        ext_ratio = (
+            np.zeros(store.num_locations, dtype=np.float64) if build_ext else None
+        )
+        for loc_idx, (loc_id, is_hh) in enumerate(store.idx_to_loc):
+            place = simulator.get_location(loc_id, is_hh)
+            base_q[loc_idx] = (20.0 * 0.5 * exposure_hours) / self._ventilation_rate(
+                place, is_hh
+            )
+            if build_ext and not is_hh:
+                fj = getattr(place, "catchment_fj", None)
+                if fj is not None and 0.0 < fj <= 1.0:
+                    ext_ratio[loc_idx] = (1.0 - fj) / fj * self.external_emit_factor
+        store.base_quanta = base_q
+        store.ext_ratio = ext_ratio
 
     def run_queue(self, context: SimulationContext) -> None:
         if context.event_queue is None:
