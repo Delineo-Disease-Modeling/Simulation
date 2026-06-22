@@ -22,6 +22,7 @@ sys.path.append(parent_dir)
 from app.state_machine.state_machine_db import StateMachineDB
 from core.simulation_functions import run_simulation
 from app.state_machine.utils.graph_utils import convert_graph_to_matrices
+from app.state_machine.state_machine_matching import find_matching_state_machine as _shared_find_matching_state_machine
 
 class DMPLocal:
     """Local access to the Disease Modeling Platform database."""
@@ -57,135 +58,22 @@ class DMPLocal:
             print(f"Error getting variants for {disease_name}: {e}")
             return []
     
-    def find_matching_state_machine(self, disease_name: str, demographics: Dict[str, str], 
-                                  model_path: Optional[str] = None) -> Optional[Dict]:
-        """Find a matching state machine using new model_path logic with specificity prioritization."""
+    def find_matching_state_machine(self, disease_name: str, demographics: Dict[str, str],
+                                    model_path: Optional[str] = None) -> Optional[Dict]:
+        """Find a matching state machine using model_path logic with specificity prioritization.
+
+        Delegates to the shared matcher (state_machine.state_machine_matching) so the
+        in-process path and the HTTP API stay in lockstep. Errors are swallowed to
+        None here, preserving this path's historical behavior.
+        """
         try:
-            # Import the disease configuration functions
-            from app.state_machine.disease_configurations import (
-                get_parent_model_path, get_default_model_path
+            return _shared_find_matching_state_machine(
+                self.db, disease_name, demographics, model_path
             )
-            
-            saved_machines = self.db.list_state_machines()
-            
-            # Determine the model path to search for
-            search_paths = []
-            
-            if model_path:
-                # Start with the exact model path
-                search_paths.append(model_path)
-                
-                # Add parent paths for fallback (e.g., variant.Delta if variant.Delta.general not found)
-                current_path = model_path
-                while True:
-                    parent_path = get_parent_model_path(disease_name, current_path)
-                    if parent_path:
-                        search_paths.append(parent_path)
-                        current_path = parent_path
-                    else:
-                        break
-            
-            # Add default model path as final fallback
-            default_path = get_default_model_path(disease_name)
-            if default_path and default_path not in search_paths:
-                search_paths.append(default_path)
-            
-            print(f"Search paths (in order): {search_paths}")
-            
-            # Search for matching state machines using simple rules
-            for search_path in search_paths:
-                compatible_machines = []
-                
-                # First, collect all compatible machines for this search path
-                for machine in saved_machines:
-                    machine_data = self.db.load_state_machine(machine[0])
-                    if not machine_data:
-                        continue
-                    
-                    # Check disease name
-                    if machine_data["disease_name"] != disease_name:
-                        continue
-                    
-                    # Check if this machine matches the current search path
-                    machine_model_path = machine_data.get("model_path", "default")
-                    if machine_model_path != search_path:
-                        continue
-                    
-                    # Simple demographic matching rules:
-                    # 1. If machine has a demographic defined and it doesn't match request, skip this machine
-                    # 2. If machine doesn't have a demographic defined, it's OK (wildcard)
-                    # 3. If all demographics are compatible, use this machine
-                    
-                    machine_demographics = machine_data["demographics"]
-                    demographics_compatible = True
-                    
-                    for key, value in demographics.items():
-                        if key in machine_demographics:
-                            # Machine has this demographic defined - must match
-                            if key == "Age":
-                                # Special handling for age range matching
-                                if not self._age_in_range(str(value), machine_demographics[key]):
-                                    demographics_compatible = False
-                                    break
-                            else:
-                                # Normal demographic matching
-                                if machine_demographics[key] != str(value):
-                                    demographics_compatible = False
-                                    break
-                        # If machine doesn't have this demographic defined, it's OK (wildcard)
-                    
-                    if demographics_compatible:
-                        compatible_machines.append(machine_data)
-                
-                # If we found compatible machines, pick the most specific one
-                if compatible_machines:
-                    # Sort by specificity: machines with more defined demographics are more specific
-                    compatible_machines.sort(
-                        key=lambda m: len([k for k in m["demographics"].keys() if m["demographics"][k] != "*"]),
-                        reverse=True
-                    )
-                    
-                    matching_machine = compatible_machines[0]
-                    print(f"Found matching machine: {matching_machine['name']} with path: {search_path}")
-                    print(f"Demographics: {matching_machine['demographics']}")
-                    return matching_machine
-            
-            # No matching machine found
-            print(f"No matching state machine found for {disease_name} with demographics {demographics}")
-            return None
-            
         except Exception as e:
             print(f"Error finding matching state machine: {e}")
             return None
-    
-    def _age_in_range(self, age_value: str, age_range: str) -> bool:
-        """Check if a single age value falls within an age range"""
-        try:
-            # Convert age value to integer
-            age = int(age_value)
-            
-            # Parse age range (e.g., "5-14", "65+", "0-18")
-            if age_range == "*":
-                return True
-            
-            if "+" in age_range:
-                # Handle ranges like "65+"
-                min_age = int(age_range.replace("+", ""))
-                return age >= min_age
-            
-            if "-" in age_range:
-                # Handle ranges like "5-14", "0-18"
-                min_age, max_age = map(int, age_range.split("-"))
-                return min_age <= age <= max_age
-            
-            # Single age value (e.g., "25")
-            range_age = int(age_range)
-            return age == range_age
-            
-        except (ValueError, TypeError):
-            # If parsing fails, fall back to exact string matching
-            return age_value == age_range
-    
+
     def run_simulation(self, disease_name: str, demographics: Dict[str, str], 
                       model_path: Optional[str] = None,
                       initial_state: Optional[str] = None) -> Optional[Dict]:
