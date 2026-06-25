@@ -123,6 +123,28 @@ class TimelineWindowTest(unittest.TestCase):
                 (InfectionState.RECOVERED, 600),
             ])
 
+    def test_symptomatic_infection_sets_infectious_and_symptomatic(self):
+        # Infectious_Symptomatic must set BOTH bits so the SYMPTOMATIC compartment,
+        # self-isolation, and case-ascertainment are real (not collapsed to INFECTIOUS).
+        person = self._timeline_person(
+            [("Infected", 0), ("Infectious_Symptomatic", 48), ("Recovered", 240)]
+        )
+        person.update_state(100 * 60, [self.DISEASE])  # mid symptomatic-infectious window
+        self.assertIn(InfectionState.INFECTIOUS, person.states[self.DISEASE])
+        self.assertIn(
+            InfectionState.SYMPTOMATIC,
+            person.states[self.DISEASE],
+            "Infectious_Symptomatic did not set the SYMPTOMATIC bit",
+        )
+
+    def test_asymptomatic_infection_is_infectious_not_symptomatic(self):
+        person = self._timeline_person(
+            [("Infected", 0), ("Infectious_Asymptomatic", 48), ("Recovered", 240)]
+        )
+        person.update_state(100 * 60, [self.DISEASE])
+        self.assertIn(InfectionState.INFECTIOUS, person.states[self.DISEASE])
+        self.assertNotIn(InfectionState.SYMPTOMATIC, person.states[self.DISEASE])
+
 
 # --- Phase 2 target: vectorized-kernel guards ------------------------------
 

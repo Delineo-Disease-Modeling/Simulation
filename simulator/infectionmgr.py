@@ -273,17 +273,37 @@ class InfectionManager:
         return result
 
     @staticmethod
+    def _resolve_state_map() -> dict:
+        """DMP status string -> combined InfectionState flag.
+
+        A mapping value may be a single state name or a list of names that are
+        OR-combined: e.g. ``Infectious_Symptomatic`` -> ["INFECTIOUS",
+        "SYMPTOMATIC"] sets BOTH bits (infectious AND symptomatic), while
+        ``Infectious_Asymptomatic`` -> "INFECTIOUS" sets only the infectious bit.
+        Names absent from InfectionState are skipped; a status resolving to no
+        known state is dropped.
+        """
+        resolved: dict = {}
+        for status, names in DMP_API["state_mapping"].items():
+            if isinstance(names, str):
+                names = [names]
+            flag = None
+            for name in names:
+                if hasattr(InfectionState, name):
+                    bit = getattr(InfectionState, name)
+                    flag = bit if flag is None else (flag | bit)
+            if flag is not None:
+                resolved[status] = flag
+        return resolved
+
+    @staticmethod
     def _build_timeline_from_csv_result(
         csv_timeline: list,
         disease: str,
         curtime: int,
     ) -> dict[str, dict[InfectionState, InfectionTimeline]]:
         """Convert CSV simulation output (hours) into an absolute-time InfectionTimeline."""
-        state_map = {
-            k: getattr(InfectionState, v)
-            for k, v in DMP_API["state_mapping"].items()
-            if hasattr(InfectionState, v)
-        }
+        state_map = InfectionManager._resolve_state_map()
         if not csv_timeline:
             return InfectionManager._fallback_timeline(disease, curtime)
 
@@ -311,11 +331,7 @@ class InfectionManager:
     ) -> dict[str, dict[InfectionState, InfectionTimeline]]:
         """Convert a cached DMP API response into an absolute-time timeline."""
         time_factor = DMP_API["time_conversion_factor"]
-        state_map = {
-            k: getattr(InfectionState, v)
-            for k, v in DMP_API["state_mapping"].items()
-            if hasattr(InfectionState, v)
-        }
+        state_map = InfectionManager._resolve_state_map()
 
         events: list[tuple[InfectionState, int]] = []
         for status, time in timeline_data["timeline"]:
