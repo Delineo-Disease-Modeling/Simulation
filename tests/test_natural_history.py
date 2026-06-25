@@ -27,7 +27,8 @@ import unittest
 import numpy as np
 
 from simulator.infectionmgr import InfectionManager
-from simulator.pap import Household, InfectionState, Person
+from simulator.interventions import apply_person_interventions
+from simulator.pap import Household, InfectionState, Person, VaccinationState
 from simulator.runner import LoadedSimulationData, SimulationRunner
 
 
@@ -108,6 +109,19 @@ class TimelineWindowTest(unittest.TestCase):
             InfectionState.SUSCEPTIBLE,
             "fallback recovered agent reverted to susceptible",
         )
+
+    def test_non_monotonic_timeline_raises(self):
+        # A mapped state that re-enters after an intervening different state
+        # cannot be represented (one window per state). Stretching it across the
+        # intervening window would recreate the over-emission bug, so the builder
+        # must fail loudly rather than silently drop or merge.
+        with self.assertRaises(ValueError):
+            InfectionManager._build_sequential_timeline([
+                (InfectionState.INFECTIOUS, 120),
+                (InfectionState.HOSPITALIZED, 300),
+                (InfectionState.INFECTIOUS, 400),
+                (InfectionState.RECOVERED, 600),
+            ])
 
 
 # --- Phase 2 target: vectorized-kernel guards ------------------------------
@@ -208,6 +222,93 @@ class KernelNumericTest(unittest.TestCase):
         infected_fraction = len(context.infection_manager.infected) / n_susceptible
         expected = 1.0 - math.exp(-base)  # ~0.3935
         self.assertAlmostEqual(infected_fraction, expected, delta=0.04)
+
+
+# --- Phase 3: intervention baseline + reproducibility ----------------------
+
+class _StubSim:
+    """Minimal stand-in for apply_person_interventions (no logging, no store)."""
+    enable_logging = False
+
+    def log_event(self, *args, **kwargs):
+        pass
+
+
+_ZERO_IV = {"mask": 0.0, "vaccine": 0.0, "capacity": 1.0, "lockdown": 0.0, "selfiso": 0.0}
+
+
+class InterventionBaselineTest(unittest.TestCase):
+    def test_zero_intervention_baseline_is_clean(self):
+        # iv_threshold==0.0 is the boundary agent the inclusive '<=' gate masked
+        # and vaccinated even in a no-intervention run. A 0.0 policy must touch
+        # no one.
+        person = _person()
+        person.iv_threshold = 0.0
+        apply_person_interventions(_StubSim(), person, _ZERO_IV, "60")
+        self.assertFalse(person.is_masked(), "0.0 mask policy still masked an agent")
+        self.assertEqual(
+            person.get_vaccinated(),
+            VaccinationState.NONE,
+            "0.0 vaccine policy still vaccinated an agent",
+        )
+
+
+def _facility_loaded(n):
+    # Everyone goes to one facility every hour so transmission actually spreads
+    # (facility Q=150 vs household 3000) and the kernel's numpy draws matter.
+    pids = [str(i) for i in range(n)]
+    patterns = {
+        str(t): {"homes": {}, "places": {"1001": pids}} for t in range(60, 661, 60)
+    }
+    return LoadedSimulationData(
+        people_data={p: {"sex": int(p) % 2, "age": 30, "home": "1"} for p in pids},
+        homes_data={"1": {"cbg": "cbg-home"}},
+        places_data={"1001": {"cbg": "cbg-f1", "label": "Shop"}},
+        patterns_data=patterns,
+    )
+
+
+def _facility_simdata():
+    return {
+        "czone_id": 1, "length": 660, "randseed": False,
+        "initial_infected_count": 2, "disease_name": "COVID-19",
+        "variants": ["Delta"], "dmp_mode": "off",
+        "interventions": [{"time": 0, "mask": 0.0, "vaccine": 0.0,
+                           "capacity": 1.0, "lockdown": 0.0, "selfiso": 0.0}],
+    }
+
+
+def _run_facility():
+    runner = SimulationRunner(_facility_simdata(), enable_logging=False)
+    runner._seed_random()
+    context = runner.build_context(_facility_loaded(60))
+    runner.run_queue(context)
+    return runner.finalize(context), set(context.infection_manager.infected)
+
+
+class ReproducibilityTest(unittest.TestCase):
+    def test_seed_random_seeds_numpy(self):
+        # The live kernel draws from numpy's global RNG; _seed_random must reset
+        # it so deterministic mode is actually reproducible.
+        runner = SimulationRunner(_facility_simdata(), enable_logging=False)
+        runner._seed_random()
+        a = np.random.random(8)
+        runner._seed_random()
+        b = np.random.random(8)
+        np.testing.assert_array_equal(a, b)
+
+    def test_engine_run_is_reproducible(self):
+        res_a, inf_a = _run_facility()
+        res_b, inf_b = _run_facility()
+        self.assertGreater(len(inf_a), 2, "no transmission occurred — test is vacuous")
+        self.assertEqual(
+            inf_a, inf_b,
+            "two randseed=False engine runs diverged (RNG not fully seeded)",
+        )
+        self.assertEqual(
+            res_a["result"], res_b["result"],
+            "per-timestep infection snapshots diverged between identical runs",
+        )
 
 
 if __name__ == "__main__":

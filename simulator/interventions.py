@@ -121,7 +121,9 @@ def apply_person_interventions(
     ts_str: str,
 ) -> None:
     # Masking is reversible: lowering the policy unmasks previously compliant people.
-    should_mask = person.iv_threshold <= interventions["mask"]
+    # Strict '<' so a 0.0 policy (no intervention) leaves everyone untouched — the
+    # threshold set includes an exact 0.0 (ceil(0)/100), which '<=' would compel.
+    should_mask = person.iv_threshold < interventions["mask"]
     if should_mask and not person.is_masked():
         simulator.log_event("log_intervention_effect", person, "mask", "complied", ts_str)
         person.set_masked(True)
@@ -131,7 +133,7 @@ def apply_person_interventions(
 
     # Vaccination is permanent and dose count is locked at first inoculation.
     if (
-        person.iv_threshold <= interventions["vaccine"]
+        person.iv_threshold < interventions["vaccine"]
         and person.get_vaccinated() == VaccinationState.NONE
     ):
         min_doses = SIMULATION["vaccination_options"]["min_doses"]

@@ -203,6 +203,11 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
     def _seed_random(self) -> None:
         if not self.simdata["randseed"]:
             random.seed(DETERMINISTIC_RANDOM_SEED)
+            # The live vectorized kernel (np.random.random) and all DMP
+            # progression sampling (np.random.*) draw from numpy's global RNG,
+            # so seeding only Python's random left deterministic runs
+            # irreproducible on the engine path. Seed both.
+            np.random.seed(DETERMINISTIC_RANDOM_SEED)
 
     def load_data(self) -> LoadedSimulationData:
         self._progress(0, 1, "Loading population data from server...")
@@ -727,4 +732,16 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
             "disabled_poi_ids": self.simdata["disabled_poi_ids"],
             "interventions": self.simdata["interventions"],
         }
+        # Validation guard: under dmp_mode='auto' a DMP miss silently substitutes
+        # the degraded fallback timeline (no hospitalization/death). Surface it
+        # loudly so a degraded run isn't mistaken for validation-grade output;
+        # run with dmp_mode='required' to turn the miss into a hard error.
+        fallback_n = context.infection_manager.timeline_source_counts.get("fallback", 0)
+        if fallback_n and self.simdata["dmp_mode"] != "off":
+            logger.warning(
+                "%d infection(s) used the DEGRADED fallback timeline "
+                "(no hospitalization/death) — DMP matching missed. Results are "
+                "not validation-grade; rerun with dmp_mode='required'.",
+                fallback_n,
+            )
         return result
