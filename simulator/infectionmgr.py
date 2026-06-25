@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 _dmp_session = requests.Session()
 
 VALID_DMP_MODES = {"auto", "required", "off"}
+ABSORBING_TIMELINE_END = 2 ** 62
 
 
 try:
@@ -220,6 +221,38 @@ class InfectionManager:
             return self._fallback_timeline(disease, curtime)
 
     @staticmethod
+    def _build_sequential_timeline(
+        events: list[tuple[InfectionState, int]],
+    ) -> dict[InfectionState, InfectionTimeline]:
+        """Build non-overlapping state windows from ordered transition events.
+
+        DMP emits transitions ("state starts at t"). ``update_state`` expects
+        active windows and treats the end timestamp as inclusive, so each state
+        must end one minute before the next state starts. The final state is
+        absorbing for the rest of the simulation.
+        """
+        ordered = sorted(
+            ((state, int(start)) for state, start in events),
+            key=lambda item: item[1],
+        )
+        coalesced: list[tuple[InfectionState, int]] = []
+        for state, start in ordered:
+            if coalesced and coalesced[-1][0] == state:
+                continue
+            coalesced.append((state, start))
+
+        result: dict[InfectionState, InfectionTimeline] = {}
+        for idx, (state, start) in enumerate(coalesced):
+            if idx + 1 < len(coalesced):
+                end = coalesced[idx + 1][1] - 1
+                if end < start:
+                    continue
+            else:
+                end = ABSORBING_TIMELINE_END
+            result[state] = InfectionTimeline(start, end)
+        return result
+
+    @staticmethod
     def _build_timeline_from_csv_result(
         csv_timeline: list,
         disease: str,
@@ -234,22 +267,15 @@ class InfectionManager:
         if not csv_timeline:
             return InfectionManager._fallback_timeline(disease, curtime)
 
-        max_time_hours = max(t for _, t in csv_timeline)
-        end_ts = curtime + int(max_time_hours * 60)
-
-        result: dict[InfectionState, InfectionTimeline] = {}
+        events: list[tuple[InfectionState, int]] = []
         for status, time_hours in csv_timeline:
             if status not in state_map:
                 continue
-            inf_state = state_map[status]
-            start_ts = curtime + int(time_hours * 60)
-            if inf_state in result:
-                result[inf_state] = InfectionTimeline(
-                    min(result[inf_state].start, start_ts), end_ts
-                )
-            else:
-                result[inf_state] = InfectionTimeline(start_ts, end_ts)
+            events.append((state_map[status], curtime + int(time_hours * 60)))
 
+        result = InfectionManager._build_sequential_timeline(events)
+        if not result:
+            return InfectionManager._fallback_timeline(disease, curtime)
         return {disease: result}
 
     def _model_path_for_variant(self, disease: str) -> Optional[str]:
@@ -265,42 +291,32 @@ class InfectionManager:
     ) -> dict[str, dict[InfectionState, InfectionTimeline]]:
         """Convert a cached DMP API response into an absolute-time timeline."""
         time_factor = DMP_API["time_conversion_factor"]
-        state_map = {k: getattr(InfectionState, v) for k, v in DMP_API["state_mapping"].items()}
-        max_time = max(time for _, time in timeline_data["timeline"])
-        end_ts = curtime + max_time / time_factor
+        state_map = {
+            k: getattr(InfectionState, v)
+            for k, v in DMP_API["state_mapping"].items()
+            if hasattr(InfectionState, v)
+        }
 
-        result: dict[InfectionState, InfectionTimeline] = {}
+        events: list[tuple[InfectionState, int]] = []
         for status, time in timeline_data["timeline"]:
             if status not in state_map:
                 continue
-            inf_state = state_map[status]
-            start_ts = curtime + time / time_factor
+            events.append((state_map[status], curtime + int(time / time_factor)))
 
-            if inf_state in result:
-                result[inf_state] = InfectionTimeline(
-                    min(result[inf_state].start, start_ts), end_ts
-                )
-            else:
-                result[inf_state] = InfectionTimeline(start_ts, end_ts)
-
+        result = InfectionManager._build_sequential_timeline(events)
+        if not result:
+            return InfectionManager._fallback_timeline(disease, curtime)
         return {disease: result}
 
     @staticmethod
     def _fallback_timeline(disease: str, curtime: int) -> dict[str, dict[InfectionState, InfectionTimeline]]:
         """Config-driven default timeline when the DMP API is unavailable."""
         fb = INFECTION_MODEL["fallback_timeline"]
-        return {
-            disease: {
-                InfectionState.INFECTED: InfectionTimeline(
-                    curtime, curtime + fb["infected_duration"]
-                ),
-                InfectionState.INFECTIOUS: InfectionTimeline(
-                    curtime + fb["infectious_delay"], curtime + fb["infected_duration"]
-                ),
-                InfectionState.RECOVERED: InfectionTimeline(
-                    curtime + fb["infected_duration"], curtime + fb["recovery_duration"]
-                ),
-            }
-        }
+        events = [
+            (InfectionState.INFECTED, curtime),
+            (InfectionState.INFECTIOUS, curtime + fb["infectious_delay"]),
+            (InfectionState.RECOVERED, curtime + fb["infected_duration"]),
+        ]
+        return {disease: InfectionManager._build_sequential_timeline(events)}
 
     # Private helpers

@@ -56,7 +56,7 @@ class TransmissionMixin:
             (InfectionState.HOSPITALIZED | InfectionState.RECOVERED | InfectionState.REMOVED).value
         )
         placed = person_loc >= 0
-        infectious = placed & ((pstate & INFECTIOUS) != 0)
+        infectious = placed & ((pstate & INFECTIOUS) != 0) & ((pstate & INVISIBLE) == 0)
 
         # External force-of-infection: out-of-cluster visitors add a one-way
         # background emission to each room, W_ext[loc] = n_internal[loc]
@@ -91,7 +91,13 @@ class TransmissionMixin:
         # and at saturation (numpy), instead of drawing for all N every timestep.
         loc = np.where(placed, person_loc, 0)
         room_W = W[loc]
-        eligible = placed & (pstate == 0) & ((pstate & INVISIBLE) == 0) & (room_W > 0.0)
+        eligible = (
+            placed
+            & ~store.infected_mask
+            & (pstate == 0)
+            & ((pstate & INVISIBLE) == 0)
+            & (room_W > 0.0)
+        )
         elig_idx = np.nonzero(eligible)[0]
         if elig_idx.size == 0:
             return
