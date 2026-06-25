@@ -252,6 +252,22 @@ class InterventionBaselineTest(unittest.TestCase):
             "0.0 vaccine policy still vaccinated an agent",
         )
 
+    def test_full_intervention_covers_threshold_one_agent(self):
+        # 100% must mean everyone, including the iv_threshold==1.0 agent(s) that a
+        # strict '<' gate would have missed (large populations have thresholds ==
+        # 1.0). The level>0 & '<=' gate keeps 1.0 fully covering.
+        person = _person()
+        person.iv_threshold = 1.0
+        full = {"mask": 1.0, "vaccine": 1.0, "capacity": 1.0,
+                "lockdown": 0.0, "selfiso": 0.0}
+        apply_person_interventions(_StubSim(), person, full, "60")
+        self.assertTrue(person.is_masked(), "100% mask policy missed a threshold==1.0 agent")
+        self.assertNotEqual(
+            person.get_vaccinated(),
+            VaccinationState.NONE,
+            "100% vaccine policy missed a threshold==1.0 agent",
+        )
+
 
 def _facility_loaded(n):
     # Everyone goes to one facility every hour so transmission actually spreads
