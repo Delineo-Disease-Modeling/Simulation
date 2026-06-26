@@ -118,7 +118,14 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
         # Area-aware Wells-Riley ventilation (default off → fixed Q, golden
         # preserved). When on, facility Q scales with physical floor area.
         self.area_aware_ventilation = self.simdata["area_aware_ventilation"]
-        self.ventilation_coeff = float(INFECTION_MODEL.get("ventilation_coeff", 9.0))
+        # Per-run ventilation_coeff (transmission level) when supplied in simdata,
+        # else the import-time INFECTION_MODEL/env default. The simdata override
+        # lets a calibration sweep vary it without re-importing config.
+        _vent_coeff = self.simdata.get("ventilation_coeff")
+        self.ventilation_coeff = float(
+            _vent_coeff if _vent_coeff is not None
+            else INFECTION_MODEL.get("ventilation_coeff", 9.0)
+        )
         self.area_clamp = (
             float(INFECTION_MODEL.get("area_clamp_min", 65.0)),
             float(INFECTION_MODEL.get("area_clamp_max", 70000.0)),
@@ -201,12 +208,19 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
             self.progress_callback(current_step, max_steps, message)
 
     def _seed_random(self) -> None:
-        if not self.simdata["randseed"]:
+        # An explicit random_seed takes precedence: seed both RNGs with it for a
+        # reproducible-but-distinct run (the basis for reproducible ensembles —
+        # each replicate passes a different random_seed). Otherwise fall back to
+        # the randseed gate. The live vectorized kernel (np.random.random) and all
+        # DMP progression sampling (np.random.*) draw from numpy's global RNG, so
+        # both Python and NumPy must be seeded — seeding only Python left the
+        # engine path irreproducible.
+        seed = self.simdata.get("random_seed")
+        if seed is not None:
+            random.seed(seed)
+            np.random.seed(seed)
+        elif not self.simdata["randseed"]:
             random.seed(DETERMINISTIC_RANDOM_SEED)
-            # The live vectorized kernel (np.random.random) and all DMP
-            # progression sampling (np.random.*) draw from numpy's global RNG,
-            # so seeding only Python's random left deterministic runs
-            # irreproducible on the engine path. Seed both.
             np.random.seed(DETERMINISTIC_RANDOM_SEED)
 
     def load_data(self) -> LoadedSimulationData:

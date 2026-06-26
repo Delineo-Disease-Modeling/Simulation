@@ -28,6 +28,12 @@ def normalize_simdata(simdata: dict) -> dict:
     normalized["randseed"] = bool(
         normalized.get("randseed", SIMULATION["default_interventions"]["randseed"])
     )
+    # Explicit per-run seed for reproducible ensemble replicates: when set, the
+    # runner seeds BOTH Python and NumPy with it (the live kernel + DMP sampling
+    # draw from NumPy), so each replicate is reproducible-but-distinct. None falls
+    # back to the randseed gate (deterministic seed 0, or fully stochastic).
+    raw_seed = normalized.get("random_seed")
+    normalized["random_seed"] = int(raw_seed) if raw_seed is not None else None
     normalized["initial_infected_count"] = max(
         0,
         int(
@@ -65,6 +71,14 @@ def normalize_simdata(simdata: dict) -> dict:
             "area_aware_ventilation",
             INFECTION_MODEL.get("area_aware_ventilation", False),
         )
+    )
+    # Per-run override of the Wells-Riley ventilation coefficient (transmission
+    # level). None -> use the import-time INFECTION_MODEL/env default. Lets a
+    # calibration sweep vary it per run (e.g. the movement×ventilation ridge
+    # diagnostic) without relying on the import-time env read.
+    raw_vent_coeff = normalized.get("ventilation_coeff")
+    normalized["ventilation_coeff"] = (
+        float(raw_vent_coeff) if raw_vent_coeff is not None else None
     )
 
     normalized["external_foi"] = bool(
