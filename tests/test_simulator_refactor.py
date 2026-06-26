@@ -287,7 +287,13 @@ class TestSimulatorRefactor(unittest.TestCase):
         # DMP timeline (not the fallback).
         post.assert_not_called()
         self.assertIn("Delta", timeline)
-        self.assertIn(InfectionState.INFECTIOUS, timeline["Delta"])
+        # The infectious window may be keyed INFECTIOUS or INFECTIOUS|SYMPTOMATIC
+        # (a symptomatic course now sets both bits), so assert the bit is present
+        # in some window rather than the exact flag.
+        self.assertTrue(
+            any(InfectionState.INFECTIOUS in state for state in timeline["Delta"]),
+            f"no infectious window in timeline {timeline['Delta']}",
+        )
         self.assertEqual(manager.timeline_source_counts["dmp"], 1)
         self.assertEqual(manager.timeline_source_counts["fallback"], 0)
 

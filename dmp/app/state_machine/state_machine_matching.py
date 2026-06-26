@@ -77,21 +77,51 @@ def _build_search_paths(disease_name: str, model_path: Optional[str]) -> List[st
     return search_paths
 
 
+# Demographic schema reconciliation. The state-machine DB mixes two authoring
+# conventions: newer machines key on "Vaccination Status" (values
+# "Vaccinated"/"Unvaccinated"); legacy age/sex machines key on "Vaccination" and
+# Sex "Male"/"Female", while the engine request emits Sex "M"/"F". Left as-is, a
+# legacy machine's constraint silently degrades to a wildcard (different key) or
+# never matches (different value) — so age/sex stratification never engages AND a
+# vaccinated agent can leak into an unvaccinated machine. Canonicalize BOTH sides
+# before comparison so every constraint is actually enforced regardless of which
+# convention authored it.
+_KEY_ALIASES = {"Vaccination": "Vaccination Status"}
+_SEX_VALUE_CANON = {"M": "Male", "F": "Female", "MALE": "Male", "FEMALE": "Female"}
+
+
+def _canonicalize_demographics(demographics: Dict[str, str]) -> Dict[str, str]:
+    """Normalize legacy/alternate demographic keys and Sex values to one schema."""
+    canon: Dict[str, str] = {}
+    for key, value in demographics.items():
+        ckey = _KEY_ALIASES.get(key, key)
+        cval = value
+        if ckey == "Sex" and isinstance(value, str):
+            cval = _SEX_VALUE_CANON.get(value.strip().upper(), value)
+        canon[ckey] = cval
+    return canon
+
+
 def _demographics_compatible(request_demographics: Dict[str, str],
                              machine_demographics: Dict[str, str]) -> bool:
     """A machine is compatible if every demographic it defines matches the request.
 
     Demographics the machine does not define are treated as wildcards. ``Age`` keys
-    use range matching; all others use exact string equality.
+    use range matching; all others use exact string equality. Both sides are
+    canonicalized first (see ``_canonicalize_demographics``) so legacy "Vaccination"
+    / "Male"/"Female" machines are matched against the request's "Vaccination
+    Status" / "M"/"F" without silently dropping the constraint.
     """
-    for key, value in request_demographics.items():
-        if key in machine_demographics:
+    request = _canonicalize_demographics(request_demographics)
+    machine = _canonicalize_demographics(machine_demographics)
+    for key, value in request.items():
+        if key in machine:
             # Machine has this demographic defined - must match
             if key == "Age":
-                if not age_in_range(str(value), machine_demographics[key]):
+                if not age_in_range(str(value), machine[key]):
                     return False
             else:
-                if machine_demographics[key] != str(value):
+                if machine[key] != str(value):
                     return False
         # If machine doesn't have this demographic defined, it's OK (wildcard)
     return True

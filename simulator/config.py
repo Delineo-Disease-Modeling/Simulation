@@ -36,7 +36,10 @@ DMP_API = {
     "state_mapping": {
         "Infected": "INFECTED",
         "Infectious_Asymptomatic": "INFECTIOUS",
-        "Infectious_Symptomatic": "INFECTIOUS",
+        # Symptomatic infection sets BOTH bits (infectious AND symptomatic) so the
+        # SYMPTOMATIC compartment, self-isolation, and case-ascertainment work;
+        # asymptomatic stays INFECTIOUS-only. A list value is OR-combined.
+        "Infectious_Symptomatic": ["INFECTIOUS", "SYMPTOMATIC"],
         "Hospitalized": "HOSPITALIZED",
         "ICU": "HOSPITALIZED",
         "Recovered": "RECOVERED",
