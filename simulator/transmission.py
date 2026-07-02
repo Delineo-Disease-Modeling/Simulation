@@ -112,6 +112,10 @@ class TransmissionMixin:
         if hits.size == 0:
             return
 
+        # Attribute each infection to the room it happened in (home vs POI split
+        # + true-incidence rankings). loc[hits] is the location index per infectee.
+        store.add_incidence(loc[hits])
+
         infection_mgr = context.infection_manager
         infected_set = infection_mgr.infected
         idx_to_person = store.idx_to_person
@@ -140,14 +144,14 @@ class TransmissionMixin:
     def _ventilation_rate(self, place, is_household: bool) -> float:
         """Wells-Riley ventilation term Q (m^3/hr).
 
-        Households use a fixed 3000; facilities use a fixed 150 unless
+        Households use the same fixed 150 fallback as facilities unless
         area-aware ventilation is enabled, in which case Q scales with the
         facility's physical floor area (Q = ventilation_coeff * clamp(area)),
         making per-contact risk inversely proportional to area. Facilities with
         no known area fall back to 150, so flag-off behaviour is bit-identical.
         """
         if is_household:
-            return 3000.0
+            return 150.0
         if self.area_aware_ventilation:
             area = getattr(place, "area", None)
             if area is not None and area > 0:
@@ -301,6 +305,8 @@ class TransmissionMixin:
                             context.people_with_timelines,
                         )
                         variant_bucket[target_id] = infected_state_value
+                        if self._soa_engine:
+                            store.incidence[loc_idx] += 1
                         context.simulator.log_event(
                             "log_infection_event",
                             target,
@@ -457,6 +463,8 @@ class TransmissionMixin:
                         context.people_with_timelines,
                     )
                     context.variant_infected[variant][target_id] = infected_state_value
+                    if self._soa_engine:
+                        store.incidence[loc_idx] += 1
                     context.simulator.log_event(
                         "log_infection_event",
                         target,

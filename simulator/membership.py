@@ -85,6 +85,13 @@ class MembershipStore:
         # Households occupy the first n_homes location indices (see how
         # location_keys is built: households then facilities).
         self.n_homes: int = sum(1 for _, is_hh in self.idx_to_loc if is_hh)
+        # Cumulative infection *incidence* per location: how many people were
+        # actually infected AT this room over the run (transmission events),
+        # NOT how many infected people are currently present. Incremented by the
+        # transmission kernels; powers the "infections at home vs POI" split and
+        # true-incidence POI rankings on the frontend. Seeds (t=0 index cases)
+        # are never counted here — they weren't caught anywhere in the sim.
+        self.incidence: np.ndarray = np.zeros(len(self.idx_to_loc), dtype=np.int64)
         # pid-string array for fast snapshot gather (idx_to_pid as object array).
         self._pid_arr: np.ndarray = np.array(self.idx_to_pid, dtype=object)
         # Per-timestep movement, precomputed from patterns (see precompute_movement):
@@ -236,6 +243,27 @@ class MembershipStore:
         out[0::2] = inf_counts[H:].astype(np.int64)
         out[1::2] = rec_counts[H:].astype(np.int64)
         return out.tolist()
+
+    def add_incidence(self, loc_indices: np.ndarray) -> None:
+        """Tally infection events by the location index where they occurred.
+
+        ``loc_indices`` are the location indices of the people infected this
+        timestep (>= 0). O(hits) via bincount into the cumulative counter."""
+        if len(loc_indices):
+            self.incidence += np.bincount(
+                loc_indices, minlength=self.num_locations
+            ).astype(np.int64)
+
+    def incidence_snapshot(self) -> dict:
+        """Cumulative infections attributed to WHERE they occurred: a home
+        total (scalar ``hinc``) plus per-place counts (``pinc``, places order —
+        matching the numeric ``p`` array). Lets the frontend split home vs POI
+        infections and rank POIs by true incidence instead of peak presence."""
+        H = self.n_homes
+        return {
+            "hinc": int(self.incidence[:H].sum()),
+            "pinc": self.incidence[H:].tolist(),
+        }
 
     def movement_meta(self) -> dict:
         """One-time decode tables for the per-person ``loc`` stream.

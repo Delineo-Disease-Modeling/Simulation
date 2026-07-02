@@ -340,6 +340,8 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
                 event_queue,
                 infection_manager,
                 self.simdata["initial_infected_count"],
+                seed_age_spread_days=self.simdata["seed_age_spread_days"],
+                initial_infected_ids=self.simdata["initial_infected_ids"] or None,
             )
 
         # variant_infected accumulates the per-variant {pid: state} map that is
@@ -414,6 +416,13 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
                 "using the SoA engine — the external term will have NO effect. It is "
                 "currently implemented in _vectorized_transmission only.",
                 self.external_prevalence,
+            )
+        if self.simdata["seed_age_spread_days"] > 0 and not self._soa_engine:
+            logger.warning(
+                "seed_age_spread_days=%.4g (past-dated seeding) has only been "
+                "validated under the SoA engine; the non-SoA path's handling of "
+                "infectious events that start before t=0 is unverified.",
+                self.simdata["seed_age_spread_days"],
             )
 
     def _precompute_location_quanta(self, simulator, store) -> None:
@@ -693,6 +702,13 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
                 # the Cases-map dot bake reads them directly instead of
                 # reconstructing per person from `loc` + the sim snapshot.
                 movement["pdots"] = store.place_dot_counts()
+                # Cumulative infection incidence attributed to where it happened:
+                # home total (hinc) + per-place counts (pinc, places order). The
+                # frontend reads the final frame's values for the home-vs-POI
+                # split and true-incidence POI rankings.
+                inc = store.incidence_snapshot()
+                movement["hinc"] = inc["hinc"]
+                movement["pinc"] = inc["pinc"]
             else:
                 movement = build_movement_snapshot(context.simulator)
         with self._timed("write_snapshot/build_infection"):
@@ -735,6 +751,7 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
             "area_aware_ventilation": self.simdata["area_aware_ventilation"],
             "model_path_by_variant": self.simdata["model_path_by_variant"],
             "initial_infected_count": self.simdata["initial_infected_count"],
+            "seed_age_spread_days": self.simdata["seed_age_spread_days"],
             "initial_infected_ids": context.initial_infected_ids,
             "timeline_source_counts": context.infection_manager.timeline_source_counts,
             "randseed": self.simdata["randseed"],

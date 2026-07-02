@@ -293,7 +293,7 @@ class InterventionBaselineTest(unittest.TestCase):
 
 def _facility_loaded(n):
     # Everyone goes to one facility every hour so transmission actually spreads
-    # (facility Q=150 vs household 3000) and the kernel's numpy draws matter.
+    # (facility fallback Q=150) and the kernel's numpy draws matter.
     pids = [str(i) for i in range(n)]
     patterns = {
         str(t): {"homes": {}, "places": {"1001": pids}} for t in range(60, 661, 60)

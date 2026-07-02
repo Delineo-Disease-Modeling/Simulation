@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import random
 from dataclasses import dataclass
 from math import ceil
@@ -153,6 +154,8 @@ def seed_population(
     event_queue: EventQueue,
     infection_manager,
     initial_infected_count: int,
+    seed_age_spread_days: Optional[float] = None,
+    initial_infected_ids: Optional[list[str]] = None,
 ) -> PopulationBuildResult:
     # Threshold-to-person assignment is a uniform-without-replacement bijection
     # whose only role is labeling — the threshold *distribution* is uniform
@@ -192,18 +195,40 @@ def seed_population(
             initial_infected_ids=[],
         )
 
-    seed_count = min(max(int(initial_infected_count), 0), len(eligible_ids))
-    seed_ids = random.sample(eligible_ids, seed_count) if seed_count else []
+    if initial_infected_ids:
+        eligible_set = set(eligible_ids)
+        seen_seed_ids = set()
+        seed_ids = []
+        for raw_pid in initial_infected_ids:
+            pid = str(raw_pid).strip()
+            if pid in eligible_set and pid not in seen_seed_ids:
+                seed_ids.append(pid)
+                seen_seed_ids.add(pid)
+    else:
+        seed_count = min(max(int(initial_infected_count), 0), len(eligible_ids))
+        seed_ids = random.sample(eligible_ids, seed_count) if seed_count else []
+
+    # Optional age-distributed seeding (initial-state reconstruction). With the
+    # default 0, all seeds start their infection at t=0 — a synchronized
+    # incubating cohort that suppresses week-1 transmission. With N>0 each seed's
+    # infection start is spread uniformly over the past N days, so at t=0 a
+    # realistic fraction are already infectious (or recovered → immune),
+    # reconstructing a mid-wave prevalent pool instead of a single cohort.
+    # Source priority: explicit arg (from simdata) > env var > 0.
+    if seed_age_spread_days is None:
+        seed_age_spread_days = os.environ.get("DELINEO_SEED_AGE_SPREAD_DAYS", "0")
+    spread_days = float(seed_age_spread_days or 0)
 
     for index, pid in enumerate(seed_ids):
         person = simulator.people[pid]
         variant = variants[index % len(variants)]
+        curtime = -int(random.uniform(0.0, spread_days) * 1440) if spread_days > 0 else 0
         infection_manager.schedule_infection(
             simulator,
             event_queue,
             person,
             variant,
-            0,
+            curtime,
             people_with_timelines,
         )
         person.update_state(0, variants)
