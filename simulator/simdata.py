@@ -7,6 +7,8 @@ runner.py (pure code-motion).
 """
 from __future__ import annotations
 
+import os
+
 from .config import DMP_API, INFECTION_MODEL, SIMULATION
 from .infectionmgr import VALID_DMP_MODES
 from .location_ids import normalize_location_id
@@ -41,6 +43,35 @@ def normalize_simdata(simdata: dict) -> dict:
                 "initial_infected_count",
                 SIMULATION["default_initial_infected_count"],
             )
+        ),
+    )
+
+    raw_initial_infected_ids = normalized.get("initial_infected_ids") or []
+    if isinstance(raw_initial_infected_ids, (str, int, float)):
+        raw_initial_infected_ids = [raw_initial_infected_ids]
+    if not isinstance(raw_initial_infected_ids, (list, tuple, set)):
+        raw_initial_infected_ids = []
+    initial_infected_ids = []
+    seen_initial_infected_ids = set()
+    for value in raw_initial_infected_ids:
+        if value is None:
+            continue
+        normalized_id = str(value).strip()
+        if normalized_id and normalized_id not in seen_initial_infected_ids:
+            initial_infected_ids.append(normalized_id)
+            seen_initial_infected_ids.add(normalized_id)
+    normalized["initial_infected_ids"] = initial_infected_ids
+
+    # Age-distributed seeding spread (days). Config takes precedence; falls back
+    # to the DELINEO_SEED_AGE_SPREAD_DAYS env var, then 0 (synchronized t=0 cohort).
+    normalized["seed_age_spread_days"] = max(
+        0.0,
+        float(
+            normalized.get(
+                "seed_age_spread_days",
+                os.environ.get("DELINEO_SEED_AGE_SPREAD_DAYS", "0"),
+            )
+            or 0.0
         ),
     )
     normalized["disease_name"] = str(

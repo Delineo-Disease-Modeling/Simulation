@@ -209,6 +209,33 @@ class TestSimulatorRefactor(unittest.TestCase):
         ]
         self.assertEqual(seeded_variants, ["Delta", "Omicron", "Delta", "Omicron", "Delta"])
 
+    def test_seed_population_honors_explicit_initial_infected_ids(self):
+        simulator = make_simulator()
+        people_data = {
+            str(i): {"sex": i % 2, "age": 30 + i, "home": "home"}
+            for i in range(6)
+        }
+        build_locations(simulator, {"home": {"cbg": "cbg-home"}}, {})
+        event_queue = EventQueue(iter(()))
+        manager = InfectionManager(infected_ids=[], dmp_mode="off")
+
+        result = seed_population(
+            simulator,
+            people_data,
+            ["Delta", "Omicron"],
+            event_queue,
+            manager,
+            5,
+            initial_infected_ids=["4", "2", "4", "missing"],
+        )
+
+        self.assertEqual(result.initial_infected_ids, ["4", "2"])
+        seeded_variants = [
+            next(iter(simulator.people[pid].timeline.keys()))
+            for pid in result.initial_infected_ids
+        ]
+        self.assertEqual(seeded_variants, ["Delta", "Omicron"])
+
     def test_dmp_off_uses_fallback_without_calling_api(self):
         home = Household("cbg-home", "home")
         person = Person("p1", 0, 30, home)
@@ -405,7 +432,18 @@ class TestSimulatorRefactor(unittest.TestCase):
         self.assertEqual(normalized["disease_name"], "COVID-19")
         self.assertEqual(normalized["variants"], ["Delta"])
         self.assertEqual(normalized["dmp_mode"], "auto")
+        self.assertEqual(normalized["initial_infected_ids"], [])
         self.assertEqual(normalized["disabled_poi_ids"], [])
+
+    def test_normalize_simdata_deduplicates_initial_infected_ids_in_order(self):
+        normalized = normalize_simdata({
+            "czone_id": 1,
+            "length": 60,
+            "interventions": [],
+            "initial_infected_ids": [" 4 ", 2, "4", "", None, "1"],
+        })
+
+        self.assertEqual(normalized["initial_infected_ids"], ["4", "2", "1"])
 
     def test_normalize_simdata_deduplicates_disabled_poi_ids(self):
         normalized = normalize_simdata({

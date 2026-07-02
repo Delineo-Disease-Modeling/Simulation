@@ -83,7 +83,7 @@ def _suscept_intake(masked: bool, vax: VaccinationState) -> float:
 
 
 def analytic_prob(infectors, suscept, is_household: bool, exposure_min: int) -> float:
-    ventilation = 3000.0 if is_household else 150.0
+    ventilation = 150.0
     base = (20.0 * 0.5 * (exposure_min / 60.0)) / ventilation
     w_sum = sum(_infector_weight(m, v) for (m, v) in infectors)
     u = _suscept_intake(*suscept)

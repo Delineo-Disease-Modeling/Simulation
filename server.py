@@ -25,6 +25,15 @@ simulation_schema = {
         "length": { "type": "integer", "minimum": 1 },
         "randseed": { "type": "boolean" },
         "initial_infected_count": { "type": "integer", "minimum": 0 },
+        "initial_infected_ids": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    { "type": "string", "minLength": 1 },
+                    { "type": "integer" }
+                ]
+            }
+        },
         "disease_name": { "type": "string", "minLength": 1 },
         "variants": {
             "type": "array",
