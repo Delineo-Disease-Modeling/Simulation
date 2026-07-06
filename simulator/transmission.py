@@ -56,6 +56,11 @@ class TransmissionMixin:
             (InfectionState.HOSPITALIZED | InfectionState.RECOVERED | InfectionState.REMOVED).value
         )
         placed = person_loc >= 0
+        external_mask = getattr(store, "external_location_mask", None)
+        if external_mask is not None and placed.any():
+            at_external = np.zeros_like(placed)
+            at_external[placed] = external_mask[person_loc[placed]]
+            placed = placed & ~at_external
         infectious = placed & ((pstate & INFECTIOUS) != 0) & ((pstate & INVISIBLE) == 0)
 
         # External force-of-infection: out-of-cluster visitors add a one-way
@@ -172,6 +177,8 @@ class TransmissionMixin:
 
         place = context.simulator.get_location(str(poi_id), is_household)
         if not place:
+            return
+        if not is_household and getattr(place, "is_external_location", False):
             return
 
         if self._soa_engine:
@@ -351,6 +358,8 @@ class TransmissionMixin:
         """
         place = context.simulator.get_location(str(poi_id), is_household)
         if not place:
+            return
+        if not is_household and getattr(place, "is_external_location", False):
             return
 
         if self._soa_engine:

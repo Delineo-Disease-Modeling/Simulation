@@ -434,21 +434,25 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
         facilities with known f_j (0 for households / unknown f_j)."""
         exposure_hours = simulator.timestep / 60.0
         base_q = np.empty(store.num_locations, dtype=np.float64)
+        external_location_mask = np.zeros(store.num_locations, dtype=bool)
         build_ext = self.external_foi
         ext_ratio = (
             np.zeros(store.num_locations, dtype=np.float64) if build_ext else None
         )
         for loc_idx, (loc_id, is_hh) in enumerate(store.idx_to_loc):
             place = simulator.get_location(loc_id, is_hh)
+            if not is_hh and getattr(place, "is_external_location", False):
+                external_location_mask[loc_idx] = True
             base_q[loc_idx] = (20.0 * 0.5 * exposure_hours) / self._ventilation_rate(
                 place, is_hh
             )
-            if build_ext and not is_hh:
+            if build_ext and not is_hh and not external_location_mask[loc_idx]:
                 fj = getattr(place, "catchment_fj", None)
                 if fj is not None and 0.0 < fj <= 1.0:
                     ext_ratio[loc_idx] = (1.0 - fj) / fj * self.external_emit_factor
         store.base_quanta = base_q
         store.ext_ratio = ext_ratio
+        store.external_location_mask = external_location_mask
 
     def run_queue(self, context: SimulationContext) -> None:
         if context.event_queue is None:

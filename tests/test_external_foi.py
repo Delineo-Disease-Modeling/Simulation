@@ -19,12 +19,17 @@ from simulator.config import INFECTION_MODEL
 _N = 24
 
 
-def _loaded(at_facility: bool, fj=0.1):
+def _loaded(at_facility: bool, fj=0.1, external=False):
     homes_data = {"1": {"cbg": "cbg-home"}}
     # facility id must be numeric (engine sorts facilities by int(id)) and
     # distinct from the home id to avoid the home/place id space colliding.
     places_data = (
-        {"1001": {"cbg": "cbg-f1", "label": "Shop", "catchment_fj": fj}}
+        {"1001": {
+            "cbg": "cbg-f1",
+            "label": "Shop",
+            "catchment_fj": fj,
+            **({"external_location_type": "out_of_zone_work"} if external else {}),
+        }}
         if at_facility else {}
     )
     pids = [str(i) for i in range(_N)]
@@ -52,11 +57,11 @@ def _simdata(external_foi, external_prevalence, seeds):
 
 
 def _ever_infected(external_foi=False, external_prevalence=0.0, seeds=0,
-                   at_facility=True, fj=0.1):
+                   at_facility=True, fj=0.1, external=False):
     runner = SimulationRunner(_simdata(external_foi, external_prevalence, seeds),
                               enable_logging=False)
     runner._seed_random()
-    context = runner.build_context(_loaded(at_facility, fj=fj))
+    context = runner.build_context(_loaded(at_facility, fj=fj, external=external))
     assert runner._soa_engine, "single-variant no-intervention run should use the engine"
     runner.run_queue(context)
     return len(context.infection_manager.infected)
@@ -99,6 +104,18 @@ class ExternalFoiKernelTest(unittest.TestCase):
         on = _ever_infected(external_foi=True, external_prevalence=0.2, seeds=2)
         self.assertGreaterEqual(on, off)
 
+    def test_external_placeholder_is_not_a_transmission_room(self):
+        self.assertEqual(_ever_infected(external_foi=False, seeds=2, external=True), 2)
+        self.assertEqual(
+            _ever_infected(
+                external_foi=True,
+                external_prevalence=0.2,
+                seeds=0,
+                external=True,
+            ),
+            0,
+        )
+
 
 class ExternalFoiPlumbingTest(unittest.TestCase):
     def test_parse_facility_catchment_fj(self):
@@ -110,6 +127,14 @@ class ExternalFoiPlumbingTest(unittest.TestCase):
         self.assertIsNone(parse_facility("c", {"cbg": "c", "catchment_fj": 1.5}).catchment_fj)
         self.assertIsNone(parse_facility("d", {"cbg": "c", "catchment_fj": "x"}).catchment_fj)
         self.assertIsNone(parse_facility("e", {"cbg": "c"}).catchment_fj)
+
+    def test_parse_external_location_type(self):
+        facility = parse_facility(
+            "x",
+            {"label": "Out of Zone Work", "external_location_type": "out_of_zone_work"},
+        )
+        self.assertEqual(facility.external_location_type, "out_of_zone_work")
+        self.assertTrue(facility.is_external_location)
 
     def test_normalize_simdata_defaults_and_overrides(self):
         d = normalize_simdata({"czone_id": 1, "length": 1,

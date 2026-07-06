@@ -53,6 +53,7 @@ class Location:
         location_type: str = "unknown",
         area: Optional[float] = None,
         catchment_fj: Optional[float] = None,
+        external_location_type: Optional[str] = None,
     ) -> None:
         self.id: str = str(id)
         self.cbg: Optional[str] = cbg
@@ -64,6 +65,7 @@ class Location:
         # force-of-infection term: external occupancy = internal x (1 - f_j)/f_j.
         # None = unknown (no external term applied). See config.external_foi.
         self.catchment_fj: Optional[float] = catchment_fj
+        self.external_location_type: Optional[str] = external_location_type
         self.population: dict[str, Person] = {}
         # SoA shadow (Step 1): when a MembershipStore is attached, add_member
         # also records the placement into person_loc. Left None in production so
@@ -95,6 +97,10 @@ class Location:
     def is_facility(self) -> bool:
         return self.location_type == "facility"
 
+    @property
+    def is_external_location(self) -> bool:
+        return self.external_location_type is not None
+
     def __repr__(self) -> str:
         return f"Location(id={self.id!r}, type={self.location_type!r}, pop={self.total_count})"
 
@@ -123,9 +129,11 @@ class Facility(Location):
         street_address: Optional[str] = None,
         area: Optional[float] = None,
         catchment_fj: Optional[float] = None,
+        external_location_type: Optional[str] = None,
     ) -> None:
         super().__init__(id=id, cbg=cbg, label=label, capacity=capacity,
-                         location_type="facility", area=area, catchment_fj=catchment_fj)
+                         location_type="facility", area=area, catchment_fj=catchment_fj,
+                         external_location_type=external_location_type)
         self.street_address: Optional[str] = street_address
 
 
