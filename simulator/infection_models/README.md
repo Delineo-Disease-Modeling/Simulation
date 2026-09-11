@@ -1,4 +1,15 @@
-## README V0: Simulator and Algorithms Team Integration 
+# Transmission model
+
+The current model implementation is [v6_wells_riley.py](v6_wells_riley.py).
+[Runtime configuration](../config.py) defines defaults and feature flags;
+[the runner](../runner.py) coordinates the active transmission paths. For current
+installation and architecture, see the [Simulation README](../../README.md).
+
+The integration notes below describe an earlier version of the people/places and
+movement formats. They are retained as historical context and are not the current
+API contract.
+
+## Historical V0: Simulator and Algorithms Team Integration
 
 ## Overview 
 This documentation covers the integration of the simulator and the algorithms team's outputs (people and places data, movement patterns, CBGs)
@@ -37,4 +48,3 @@ Expected format of people and places data:
 `simulate.py` calls load_people() and load_places() to get dictionaries of people and places, adds the information to the simulator, and then runs the simulation. 
 
 ## 2. Integrating Movement Patterns Data
-

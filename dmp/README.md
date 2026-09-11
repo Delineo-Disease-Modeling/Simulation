@@ -17,18 +17,20 @@ The Disease Modeling Platform (DMP) provides a web interface and API for modelin
 
 ## Quick Start
 
+Use the [shared local walkthrough](https://github.com/Delineo-Disease-Modeling/Fullstack/blob/main/docs/getting-started.md)
+for the full application. Simulation normally loads DMP within its own process;
+the API and editor below are optional services. All commands in this section run
+from the **Simulation repository root**, not from `Simulation/dmp/`.
+
 ### 1. Installation
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd dmp
-
-# Install dependencies
-pip install -r requirements.txt
+# From the Simulation root; skip venv creation/install if already completed.
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 
 # Start the web interface
-streamlit run app/graph_visualization.py
+.venv/bin/python -m streamlit run dmp/app/graph_visualization.py
 ```
 
 ### 2. Web Interface
@@ -44,8 +46,12 @@ The web interface provides four main tabs:
 
 ```bash
 # Start the API server
-uvicorn api.dmp_api_v2:app --reload --port 8000
+.venv/bin/python -m uvicorn dmp.api.dmp_api_v2:app --host 127.0.0.1 --port 8000
 ```
+
+Inspect the API at `http://localhost:8000/docs`. Query `/diseases` and
+`/state-machines` for the models actually available in the bundled SQLite database
+at `dmp/app/state_machine/state_machines.db`. The editor modifies that database.
 
 **Example API Request:**
 ```bash
@@ -66,15 +72,18 @@ curl -X POST http://localhost:8000/simulate \
 
 The DMP uses a hierarchical model structure: `category.subcategory.type`
 
-### Available Models
+### Model examples
 
 | Disease | Model Path Example | Demographics | Status |
 |---------|-------------------|--------------|--------|
-| **COVID-19** | `variant.Delta.general` | Age, Sex, Vaccination Status | ✅ Full |
-| **Measles** | `vaccination.Unvaccinated.general` | Age, Sex | ✅ Full |
+| **COVID-19** | `variant.Delta.general` | Age, Sex, Vaccination Status | Bundled entries; inspect the API for supported demographics |
+| **Measles** | `vaccination.Unvaccinated.general` | Age, Sex | Bundled entries; inspect the API for supported demographics |
 | **Influenza** | None | None | ⚠️ Placeholder |
 | **Ebola** | None | None | ⚠️ Placeholder |
 | **Zika** | None | None | ⚠️ Placeholder |
+
+The disease list above describes data availability, not model validation. Query
+`/diseases` and `/state-machines` for the current database contents.
 
 ### Model Path Examples
 
@@ -160,20 +169,20 @@ Influenza, Ebola, and Zika are placeholder only with no models implemented.
 
 ## Local Integration
 
-For direct database access and local integration:
+For direct database access and local integration, from the Simulation root:
 
 ```bash
 # List available diseases
-python3 -m core.dmp_local --action list-diseases
+.venv/bin/python -m dmp.core.dmp_local --action list-diseases
 
 # List variants for a disease
-python3 -m core.dmp_local --action list-variants --disease COVID-19
+.venv/bin/python -m dmp.core.dmp_local --action list-variants --disease COVID-19
 
 # List state machines
-python3 -m core.dmp_local --action list-machines --disease Measles
+.venv/bin/python -m dmp.core.dmp_local --action list-machines --disease Measles
 
 # Run simulation
-python3 -m core.dmp_local --action simulate \
+.venv/bin/python -m dmp.core.dmp_local --action simulate \
     --disease Measles \
     --demographics '{"Age": "3", "Sex": "M", "Vaccination Status": "Unvaccinated"}'
 ```
@@ -214,9 +223,9 @@ dmp/
                    "demographics": ["Age", "Sex"]
                }
            }
-                }
-}
-```
+       }
+   }
+   ```
 
 2. **Add disease templates** with states, transitions, and parameters
 
@@ -265,4 +274,6 @@ The system validates:
 
 ---
 
-**For complete API documentation, see [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md).** 
+For the current API schema and interactive requests, use
+`http://localhost:8000/docs` while the API is running. The
+[API notes](docs/API_DOCUMENTATION.md) provide additional model-matching examples.

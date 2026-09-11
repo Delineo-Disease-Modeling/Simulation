@@ -1,69 +1,85 @@
-# Delineo Infection Simulator
+# Delineo Simulation
 
-This repository contains a simulation framework for modeling infection spread and profiling different scenarios across regions. It includes tools for simulation setup, data interface, profiling, and visualization.
+Simulation runs an airborne-outbreak scenario using synthetic people, homes,
+places, and movement from a Delineo convenience zone. Its Flask API downloads
+inputs from Fullstack, streams progress to the caller, and uploads results for
+the web application's maps and charts. The repository also contains the Disease
+Modeling Platform (DMP).
 
-## Directory Structure
+Start with the shared [project overview](https://github.com/Delineo-Disease-Modeling/Fullstack/blob/main/docs/overview.md)
+and [local walkthrough](https://github.com/Delineo-Disease-Modeling/Fullstack/blob/main/docs/getting-started.md).
+The walkthrough includes a synthetic run and explains which real-data inputs
+must be supplied separately.
 
-### `dmp/`
-Handles Disease Modelling Platform (DMP) functionality, including interfacing with APIs or structured data layers. DMP uses matrices to predict the infection trajectory of an individual. 
+## Install and start this service
 
-### `profiles/`
-Contains profiling data (e.g., `.prof`, `.txt`) to analyze performance of key functions like `run_main` and `initialize_dmp_api` as well as `app.py`
-
-### `profiling_results/`
-Stores simulation profiling outputs for various dataset sizes (`100`, `1000`, `10000`) to benchmark runtime performance.
-
-### `simulator/`
-Main simulation logic and configuration files.
-
-#### Subdirectories:
-- `api_testing/`, `api_testing_copy/`: For testing API functionality, with different configurations.
-- `barnsdall/`, `hagerstown/`: Regional datasets/configurations.
-
-#### Key Files:
-- `config.py`: Contains default simulation configuration settings.
-- `data_interface.py`: Manages loading and formatting of external datasets (CSV, JSON, YAML).
-- `generate_pattern.py`: Generates movement patterns used in simulations.
-- `infection_model.py`: Based on Wells-Reilly model to predict infection probability.
-- `infectionmgr.py`: Manages infection state across simulation steps.
-- `pap_places.json`, `pap_places.py`: Contains predefined place-based datasets and associated logic.
-- `pattern_simple.json`, `patterns_alg.json`: Pattern configuration files.
-- `population_info.yaml`: Metadata about the population used in simulations.
-- `simulate.py`: Main simulation logic
-- `test_loading_data.py`: Unit test or utility to check data loading.
-- `visualize.ipynb`: Jupyter Notebook for visualizing simulation outputs.
-- `cbg_populations.csv`, `clusters.csv`, `facility_data.json`: Input datasets.
-
-## Root-Level Files
-
-- `app_3.py`, `app_profiling.py`, `server.py`: Simulation applications with various configurations (`server.py` is the Flask entrypoint; run it as `server:app`, never `app:app`, so it does not shadow the dmp/app package).
-- `dmp_functions.py`: Functions supporting DMP operations.
-- `simulation_functions.py`: Core functions used across simulation runs.
-- `simulator_results.txt`, `simulator_results_1.txt`: Text-based output logs of simulation runs.
-- `user_input.py`: Likely processes user configurations or interactive inputs.
-- `stream_debug.log`: Debug log for streaming or runtime operations.
-- `README.md`, `README_v0.md`: Documentation for project usage and structure.
-- `.gitignore`, `LICENSE`: Standard project configuration files.
-
----
-
-## Getting Started
-
-Things you will need to install beforehand
-
-Install Python and set up your IDE's Python environment
-
-NO MODULE ERROR: If you receive an error message "ModuleNotFoundError: No module named [module name]"
-What you need to do is, in whatever environment you want to run the simulator, type
-"python -m pip install [module name]" into the terminal to install the module.
-
-Modules you will probably have to install (if you receive any error messages, install what it says is missing)
-flask, flask_cors, numpy, pandas, pyyaml, requests
-
-USE CELL DATA: Hopkins DNS is giving us issues at the moment, so we cannot use Hopkins WiFi to run the simulation.
-For this reason, please use cell data when running the simulation for the time being.
-
-To run a simulation:
+Use Python 3.12 for the native setup. From this repository's root:
 
 ```bash
-python server.py
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pip check
+DELINEO_DB_URL=http://localhost:3000/api/ .venv/bin/python server.py
+```
+
+The server listens on port **1870**. `DELINEO_DB_URL` points to Fullstack's API
+and must end in `/api/`. Its default is `http://localhost:3000/api/`.
+
+```bash
+curl --fail http://localhost:1870/
+```
+
+Expect `{"service":"delineo-simulation","status":"ok"}` (key order may differ).
+`GET /` checks the service; **`POST /simulation/`** runs a scenario and returns
+server-sent events. Its request `length` and intervention `time` values are in
+minutes. The [synthetic example](https://github.com/Delineo-Disease-Modeling/Fullstack/blob/main/docs/examples/smoke.py)
+demonstrates a complete request and output checks.
+
+The entry module is **`server.py`**. For a WSGI process use `server:app`, as the
+Dockerfile does. A top-level `app.py` conflicts with the DMP package's import
+path and is not a valid current startup instruction.
+
+## Disease progression
+
+The root `requirements.txt` includes the DMP dependencies. Simulation normally
+loads the bundled model database in-process (`DMP_INPROCESS=1`). It can fall back
+to the HTTP DMP service at `DMP_API_BASE_URL`, or its alias `DMP_API_URL`, defaulting
+to `http://localhost:8000`.
+
+Run requests support `dmp_mode` values `auto`, `required`, and `off`. `auto` permits
+fallback timelines; `required` surfaces unavailable progression models; `off`
+uses default simulator timelines. A separate DMP server is not necessary for the
+normal in-process path.
+
+To expose the optional API, from the Simulation root:
+
+```bash
+.venv/bin/python -m uvicorn dmp.api.dmp_api_v2:app --host 127.0.0.1 --port 8000
+```
+
+Its interactive reference is at `http://localhost:8000/docs`. See the
+[DMP README](dmp/README.md) for the editor and model database.
+
+## Code map
+
+| Location | Responsibility |
+| --- | --- |
+| `server.py` | Flask routes, simulation request validation, and SSE response |
+| `simulator/jobs.py` | Background jobs, progress messages, and result upload |
+| `simulator/runner.py` | Load inputs, build the world, advance simulation, write output |
+| `simulator/config.py` | Runtime defaults and environment variables |
+| `simulator/data_interface.py` | Fullstack input loading and movement-format decoding |
+| `simulator/infection_models/v6_wells_riley.py` | Transmission model |
+| `simulator/infectionmgr.py` | Disease timelines and infection-state management |
+| `dmp/` | Progression models, FastAPI API, Streamlit editor, SQLite database |
+| `tests/` | Runtime, progression, transmission, format, and entry-point checks |
+| `scripts/` | Performance and equivalence utilities |
+
+Older integration examples under `simulator/api_testing/` and `README_v0.md` files
+are historical material, not the current installation guide. Install the pinned
+root requirements instead of resolving missing imports one package at a time.
+No special network connection is assumed; diagnose access to the specific
+database, service, or data provider if a request fails.
+
+`main` is deployed to production. Use a short-lived branch for changes and link
+companion Algorithms/Fullstack pull requests when their interfaces change.
