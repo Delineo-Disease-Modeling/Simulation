@@ -97,6 +97,12 @@ class MembershipStore:
         # Per-timestep movement, precomputed from patterns (see precompute_movement):
         #   _move[ts] = (person_idx int32[], loc_idx int32[])
         self._move: dict[int, tuple] = {}
+        # Movement interventions (lockdown / self-isolation / capacity). Off until
+        # enable_movement_interventions is called, which the runner does only
+        # when a run schedules one of them or a facility lists a capacity, so
+        # every other run keeps the plain apply_movement scatter and
+        # byte-identical output.
+        self.movement_interventions_enabled: bool = False
 
     @property
     def num_locations(self) -> int:
@@ -290,6 +296,133 @@ class MembershipStore:
         person_idx, loc_idx = entry
         self.person_loc[person_idx] = loc_idx
         return True
+
+    # pstate bit for InfectionState.SYMPTOMATIC (pstate holds the flag value).
+    _SYMPTOMATIC = 4
+
+    def enable_movement_interventions(
+        self,
+        home_loc: np.ndarray,
+        capacity: np.ndarray,
+        rng: np.random.Generator,
+    ) -> None:
+        """Switch movement to ``apply_movement_with_interventions``.
+
+        ``home_loc``: int32[N] household location index per person, where people
+        are sent when an intervention keeps them out of a facility (-1 = no
+        household; such people are never redirected).
+        ``capacity``: float[L] listed occupancy per location. Values <= 0, NaN or
+        inf mean unknown/uncapped; households are always uncapped.
+        ``rng``: dedicated generator for every intervention draw. Keeping it off
+        numpy's global stream means the transmission draws are untouched, and two
+        runs with the same seed see the same trip and compliance draws, so a
+        higher lockdown or selfiso level blocks a superset of the trips blocked
+        at a lower one.
+        """
+        n = len(self.idx_to_pid)
+        self.home_loc = np.asarray(home_loc, dtype=np.int32)
+        cap = np.asarray(capacity, dtype=np.float64).copy()
+        cap[: self.n_homes] = np.inf
+        cap[~(cap > 0.0)] = np.inf  # <= 0 and NaN -> uncapped
+        self.capacity = cap
+        self._capped = np.isfinite(cap)
+        self._iv_rng = rng
+        # Where the patterns put each person, before interventions. Trip starts
+        # are detected against it, since person_loc may hold a redirect.
+        self.sched_loc = self.person_loc.copy()
+        # Lockdown: one uniform per facility trip, redrawn when a trip starts. A
+        # trip is blocked while its draw is below the current lockdown level.
+        self.trip_u = rng.random(n)
+        # Self-isolation: one compliance draw per person. A symptomatic person
+        # stays home while their draw is below the current selfiso level.
+        self.iso_u = rng.random(n)
+        # Cumulative person-timesteps redirected home, by reason.
+        self.redirects = {"lockdown": 0, "selfiso": 0, "capacity": 0}
+        self.movement_interventions_enabled = True
+
+    def apply_movement_with_interventions(self, ts: int, interventions: dict) -> bool:
+        """Scheduled movement for timestep ``ts`` with lockdown, self-isolation
+        and capacity applied. Requires ``enable_movement_interventions``.
+
+        Semantics (applied in this order, each only to people headed to a
+        facility; a redirected person is placed in their household):
+          - lockdown: each facility trip (a run of timesteps scheduled at the
+            same facility) draws once when it starts; the whole trip is spent at
+            home while that draw is below the lockdown level.
+          - selfiso: a SYMPTOMATIC person stays home while their per-person
+            compliance draw is below the selfiso level.
+          - capacity: a facility with a listed capacity admits at most
+            ceil(capacity * multiplier) people, so the listed capacity itself is
+            enforced at the default multiplier of 1.0. People already inside keep
+            their place; excess arrivals, in random order, are sent home and try
+            again at the next timestep if still scheduled there.
+        Levels are read every timestep, so an intervention that starts, ends or
+        changes mid-run takes effect at the next movement step.
+        """
+        entry = self._move.get(ts)
+        if entry is None:
+            return False
+        person_idx, loc_idx = entry
+        H = self.n_homes
+        sched = self.sched_loc
+        starts = person_idx[(loc_idx != sched[person_idx]) & (loc_idx >= H)]
+        sched[person_idx] = loc_idx
+        if starts.size:
+            self.trip_u[starts] = self._iv_rng.random(starts.size)
+
+        lockdown = float(interventions.get("lockdown", 0.0))
+        selfiso = float(interventions.get("selfiso", 0.0))
+        multiplier = float(interventions.get("capacity", 1.0))
+
+        target = sched.copy()
+        home = self.home_loc
+        if lockdown > 0.0:
+            hit = (target >= H) & (home >= 0) & (self.trip_u < lockdown)
+            target[hit] = home[hit]
+            self.redirects["lockdown"] += int(np.count_nonzero(hit))
+        if selfiso > 0.0:
+            hit = (
+                (target >= H)
+                & (home >= 0)
+                & ((self.pstate & self._SYMPTOMATIC) != 0)
+                & (self.iso_u < selfiso)
+            )
+            target[hit] = home[hit]
+            self.redirects["selfiso"] += int(np.count_nonzero(hit))
+        if self._capped.any():
+            self._apply_capacity(target, max(multiplier, 0.0))
+
+        self.person_loc[:] = target
+        return True
+
+    def _apply_capacity(self, target: np.ndarray, multiplier: float) -> None:
+        """Send people over each capped facility's limit home, in place on
+        ``target``. ``self.person_loc`` still holds the previous timestep's
+        placement, which decides who is already inside."""
+        limit = np.full(self.num_locations, np.inf)
+        capped = self._capped
+        # The epsilon keeps float noise (100 * 0.07 = 7.000000000000001) from
+        # rounding a whole-number limit up by one.
+        limit[capped] = np.ceil(self.capacity[capped] * multiplier - 1e-9)
+        at_fac = target >= self.n_homes
+        counts = np.bincount(target[at_fac], minlength=self.num_locations)
+        over = counts > limit
+        if not over.any():
+            return
+        cand = np.nonzero(at_fac)[0]
+        cand = cand[over[target[cand]]]
+        cand_loc = target[cand]
+        home = self.home_loc
+        # People already inside (and anyone with no household to go to) are
+        # admitted first; arrivals are then admitted in random order.
+        keep_first = (self.person_loc[cand] == cand_loc) | (home[cand] < 0)
+        order = np.lexsort((self._iv_rng.random(cand.size), ~keep_first, cand_loc))
+        cand = cand[order]
+        cand_loc = cand_loc[order]
+        rank = np.arange(cand.size) - np.searchsorted(cand_loc, cand_loc, side="left")
+        rejected = cand[(rank >= limit[cand_loc]) & (home[cand] >= 0)]
+        target[rejected] = home[rejected]
+        self.redirects["capacity"] += int(rejected.size)
 
     def movement_snapshot(self, view: "OccupancyView | None" = None) -> dict:
         """Build the pid-string movement snapshot from person_loc (numpy gather).

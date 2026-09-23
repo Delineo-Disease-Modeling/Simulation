@@ -2,8 +2,8 @@
 
 normalize_simdata coerces a raw simdata dict into the canonical shape the runner
 consumes; _trivial_movement_interventions detects intervention sets that do not
-alter movement (so the SoA engine fast-path stays eligible). Extracted from
-runner.py (pure code-motion).
+alter movement (so the SoA engine can keep its plain movement scatter). Extracted
+from runner.py (pure code-motion).
 """
 from __future__ import annotations
 
@@ -15,8 +15,9 @@ from .location_ids import normalize_location_id
 
 
 def _trivial_movement_interventions(interventions: dict) -> bool:
-    """True when no intervention redirects movement (so a pure person_loc
-    scatter equals move_people). Masking/vaccination don't move people."""
+    """True when no intervention redirects movement (so the engine's plain
+    person_loc scatter needs no intervention step). Masking/vaccination don't
+    move people."""
     return (
         float(interventions.get("capacity", 1.0)) >= 1.0
         and float(interventions.get("lockdown", 0.0)) <= 0.0

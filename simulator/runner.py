@@ -41,6 +41,9 @@ logger = logging.getLogger(__name__)
 
 VALID_DMP_MODES = {"auto", "required", "off"}
 DETERMINISTIC_RANDOM_SEED = 0
+# Stream key that separates the engine's movement-intervention RNG from the
+# global numpy stream seeded with the same run seed.
+_MOVEMENT_INTERVENTION_STREAM = 1
 
 
 def _perf_timings_enabled() -> bool:
@@ -263,17 +266,15 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
     def _engine_eligibility(self, variants: list) -> tuple[bool, str]:
         """Decide whether the vectorized engine can run this config *correctly*.
 
-        Engine mode replaces the per-Person ``move_people`` path with a fixed
-        precomputed location scatter, so it cannot apply movement-altering
-        interventions (capacity<1 / lockdown / selfiso reroute people home — see
-        ``move_people``) and is only vectorized for a single variant. Rather than
-        run those configs and silently drop the intervention (or read stale
-        Person/Location dicts for multi-variant), we report them ineligible and
-        fall back to the correct non-engine path. Returns ``(eligible, reason)``;
-        ``reason`` is empty when eligible.
+        The engine is only vectorized for a single variant, needs the aggregate
+        kernel, and does not emit per-contact logs. Rather than run those configs
+        and silently produce wrong output (or read stale Person/Location dicts for
+        multi-variant), we report them ineligible and fall back to the non-engine
+        path. Returns ``(eligible, reason)``; ``reason`` is empty when eligible.
 
-        Interventions are scanned across ALL scheduled time points, not just
-        t=0, since a movement intervention can be scheduled to start mid-run.
+        Movement interventions (capacity<1 / lockdown / selfiso) are applied by
+        the engine itself (``MembershipStore.apply_movement_with_interventions``),
+        so they do not affect eligibility.
         """
         if not self.aggregate_transmission:
             return False, "aggregate_transmission is off"
@@ -281,19 +282,62 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
             return False, "per-contact logging is on"
         if len(variants) != 1:
             return False, f"multi-variant run ({len(variants)} variants)"
-        non_trivial = [
-            iv
-            for iv in (self.simdata.get("interventions") or [])
-            if not _trivial_movement_interventions(iv)
-        ]
-        if non_trivial:
-            times = sorted({int(iv.get("time", 0)) for iv in non_trivial})
-            return (
-                False,
-                f"movement-altering interventions (capacity<1 / lockdown / "
-                f"selfiso) scheduled at t={times}",
-            )
         return True, ""
+
+    def _movement_interventions_scheduled(self) -> bool:
+        """Whether any scheduled time point uses capacity<1, lockdown or selfiso.
+        Scans every time point, since one can start mid-run."""
+        return any(
+            not _trivial_movement_interventions(iv)
+            for iv in (self.simdata.get("interventions") or [])
+        )
+
+    def _movement_intervention_rng(self) -> np.random.Generator:
+        """Dedicated generator for engine movement-intervention draws.
+
+        Seeded like the run (random_seed, else the deterministic seed when
+        randseed is off, else fresh entropy) but on its own stream, so enabling
+        an intervention never shifts numpy's global stream that the
+        transmission kernel draws from."""
+        seed = self.simdata.get("random_seed")
+        if seed is None and not self.simdata["randseed"]:
+            seed = DETERMINISTIC_RANDOM_SEED
+        if seed is None:
+            return np.random.default_rng()
+        return np.random.default_rng([int(seed), _MOVEMENT_INTERVENTION_STREAM])
+
+    def _maybe_enable_engine_movement_interventions(self, simulator, store) -> None:
+        """Switch the store to intervention-aware movement when this run needs it:
+        a scheduled capacity<1 / lockdown / selfiso, or any facility with a listed
+        capacity (enforced at every multiplier, 100% included, as move_people
+        does). Otherwise leave the plain scatter, keeping output byte-identical."""
+        capacity = np.full(store.num_locations, np.inf)
+        for loc_idx, (loc_id, is_hh) in enumerate(store.idx_to_loc):
+            if is_hh:
+                continue
+            raw = getattr(simulator.get_location(loc_id, False), "capacity", -1)
+            try:
+                capacity[loc_idx] = float(raw)
+            except (TypeError, ValueError):
+                pass
+        has_listed_capacity = bool(np.any(np.isfinite(capacity) & (capacity > 0.0)))
+        if not (has_listed_capacity or self._movement_interventions_scheduled()):
+            return
+        home_loc = np.full(len(store.idx_to_pid), -1, dtype=np.int32)
+        loc_to_idx = store.loc_to_idx
+        for i, person in enumerate(store.idx_to_person):
+            if person is not None:
+                home_loc[i] = loc_to_idx.get((str(person.household.id), True), -1)
+        store.enable_movement_interventions(
+            home_loc, capacity, self._movement_intervention_rng()
+        )
+        n_capped = int(np.count_nonzero(store._capped))
+        logger.info(
+            "Engine movement interventions enabled (%d of %d facilities have a "
+            "listed capacity).",
+            n_capped,
+            store.num_locations - store.n_homes,
+        )
 
     def build_context(self, loaded: LoadedSimulationData) -> SimulationContext:
         self._progress(
@@ -372,6 +416,7 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
                             store.snap_state[person._soa_idx] = int(state.value)
             with self._timed("build_context/precompute_movement"):
                 store.precompute_movement(loaded.patterns_data, self.simdata["length"])
+            self._maybe_enable_engine_movement_interventions(simulator, store)
             self._precompute_location_quanta(simulator, store)
 
         return SimulationContext(
@@ -519,7 +564,12 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
                         for person in sim.people.values():
                             apply_person_interventions(sim, person, interventions, ts_str)
                 with self._timed("run_queue/apply_movement"):
-                    store.apply_movement(ts)
+                    if store.movement_interventions_enabled:
+                        # update_people_states ran first, so self-isolation
+                        # sees this timestep's SYMPTOMATIC bits.
+                        store.apply_movement_with_interventions(ts, interventions)
+                    else:
+                        store.apply_movement(ts)
 
             with self._timed("run_queue/process_infections"):
                 self._vectorized_transmission(context, ts)
@@ -534,6 +584,11 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
             context.max_length, context.max_length, "Simulation complete, writing output..."
         )
         logger.info("SIMULATION COMPLETE (%d timesteps processed)", context.processed_count)
+        if store.movement_interventions_enabled:
+            logger.info(
+                "Movement interventions redirected home (person-timesteps): %s",
+                store.redirects,
+            )
         if _perf_timings_enabled():
             for label in sorted(self._perf_accum):
                 print(f"[perf] {label}: {self._perf_accum[label]:.3f}s", flush=True)
@@ -563,17 +618,15 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
                             )
 
                 if self._soa_engine:
-                    # Defensive net: _engine_eligibility already excludes
-                    # movement interventions before the engine is engaged, and an
-                    # eligible (single-variant) engine run never reaches this
-                    # queue path (it uses _run_queue_engine). If this ever fires,
-                    # eligibility has a bug — fail loudly rather than silently drop
-                    # the intervention.
+                    # Defensive net: an eligible engine run is single-variant and
+                    # uses _run_queue_engine, which applies movement interventions.
+                    # This queue-driven engine branch does not, so if it is ever
+                    # reached with one, fail loudly rather than silently drop it.
                     if not _trivial_movement_interventions(interventions):
                         raise RuntimeError(
-                            "SoA engine reached a movement-altering intervention "
-                            "despite eligibility gating (capacity<1 / lockdown / "
-                            "selfiso) — this is a bug in _engine_eligibility"
+                            "Queue-driven SoA engine path reached a movement-altering "
+                            "intervention (capacity<1 / lockdown / selfiso) it cannot "
+                            "apply; only _run_queue_engine supports them"
                         )
                     with self._timed("run_queue/apply_movement"):
                         if context.simulator.membership.apply_movement(ts):
@@ -763,6 +816,11 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
             "disabled_poi_ids": self.simdata["disabled_poi_ids"],
             "interventions": self.simdata["interventions"],
         }
+        store = getattr(context.simulator, "membership", None)
+        if self._soa_engine and store is not None and store.movement_interventions_enabled:
+            # Person-timesteps each movement intervention sent home, so a run can
+            # show whether lockdown / selfiso / capacity actually bit.
+            result["metadata"]["movement_intervention_redirects"] = dict(store.redirects)
         # Validation guard: under dmp_mode='auto' a DMP miss silently substitutes
         # the degraded fallback timeline (no hospitalization/death). Surface it
         # loudly so a degraded run isn't mistaken for validation-grade output;
