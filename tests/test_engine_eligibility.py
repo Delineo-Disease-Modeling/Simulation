@@ -1,9 +1,11 @@
 """Unit tests for SoA-engine eligibility routing + graceful fallback.
 
-The vectorized engine cannot apply movement-altering interventions
-(capacity<1 / lockdown / selfiso) or run multi-variant correctly, so
-`_engine_eligibility` must report those configs ineligible (→ the runner falls
-back to the non-engine path) instead of silently producing wrong results.
+The vectorized engine cannot run multi-variant, pairwise (non-aggregate) or
+per-contact-logging configs correctly, so `_engine_eligibility` must report
+those ineligible (→ the runner falls back to the non-engine path) instead of
+silently producing wrong results. Movement interventions (capacity<1 /
+lockdown / selfiso) are applied by the engine and stay eligible; their
+behavior is covered in test_engine_movement_interventions.py.
 """
 import unittest
 from unittest import mock
@@ -43,25 +45,20 @@ class EngineEligibilityTest(unittest.TestCase):
         ok, _ = self._eligible(_runner([_iv(mask=0.8, vaccine=0.5)]))
         self.assertTrue(ok)
 
-    def test_lockdown_is_ineligible(self):
-        ok, reason = self._eligible(_runner([_iv(lockdown=0.7)]))
-        self.assertFalse(ok)
-        self.assertIn("movement", reason)
+    def test_movement_interventions_are_eligible(self):
+        for iv in (_iv(lockdown=0.7), _iv(capacity=0.5), _iv(selfiso=0.3),
+                   _iv(capacity=0.5, lockdown=0.2, selfiso=0.9)):
+            ok, reason = self._eligible(_runner([iv]))
+            self.assertTrue(ok, iv)
+            self.assertEqual(reason, "")
 
-    def test_capacity_cap_is_ineligible(self):
-        ok, reason = self._eligible(_runner([_iv(capacity=0.5)]))
-        self.assertFalse(ok)
-        self.assertIn("movement", reason)
-
-    def test_selfiso_is_ineligible(self):
-        ok, _ = self._eligible(_runner([_iv(selfiso=0.3)]))
-        self.assertFalse(ok)
-
-    def test_movement_intervention_scheduled_after_t0_is_caught(self):
-        # a clean t=0 plus a lockdown that kicks in later must still be caught
-        ok, reason = self._eligible(_runner([_iv(time=0), _iv(time=5000, lockdown=0.4)]))
-        self.assertFalse(ok)
-        self.assertIn("5000", reason)
+    def test_movement_intervention_scheduled_after_t0_is_detected(self):
+        # The engine enables intervention-aware movement when ANY time point
+        # needs it, so a lockdown that starts later must be detected.
+        runner = _runner([_iv(time=0), _iv(time=5000, lockdown=0.4)])
+        self.assertTrue(runner._movement_interventions_scheduled())
+        self.assertFalse(_runner([_iv(time=0), _iv(time=5, mask=0.9)])
+                         ._movement_interventions_scheduled())
 
     def test_multi_variant_is_ineligible(self):
         ok, reason = self._eligible(_runner([_iv()], variants=("Delta", "Omicron")))
