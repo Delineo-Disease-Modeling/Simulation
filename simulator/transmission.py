@@ -22,6 +22,7 @@ import numpy as np
 
 from .infection_models.v6_wells_riley import get_vaccination_protection
 from .pap import InfectionState
+from .patterns_codec import FULL_HOUR_MINUTES
 
 if TYPE_CHECKING:
     from .runner import SimulationContext
@@ -34,7 +35,8 @@ class TransmissionMixin:
 
     The host class must provide: ``_soa_engine``, ``_timed``,
     ``aggregate_transmission``, ``external_foi``, ``external_prevalence``,
-    ``area_aware_ventilation``, ``area_clamp``, ``ventilation_coeff``.
+    ``area_aware_ventilation``, ``area_clamp``, ``ventilation_coeff``,
+    ``fractional_dwell``.
     """
 
     def _vectorized_transmission(self, context: SimulationContext, ts: int) -> None:
@@ -74,15 +76,46 @@ class TransmissionMixin:
         if not infectious.any() and not ext_on:
             return
 
+        # Fractional dwell: a partial-hour facility visit sheds and inhales only
+        # for its real minutes (frac = minutes / 60) and spends the rest of the
+        # hour at home, where it sheds and inhales for (1 - frac). For a
+        # well-mixed room this makes the expected dose between two people scale
+        # with frac_i * frac_k. With the setting off, or no partial visit this
+        # hour, frac stays None and every person counts a full hour where they
+        # are — the original kernel, byte-identical.
+        frac = None
+        if self.fractional_dwell and store.home_loc is not None and store.has_partial_minutes:
+            minutes = store.person_minutes
+            partial = placed & (minutes < FULL_HOUR_MINUTES) & (store.home_loc >= 0)
+            if partial.any():
+                frac = minutes.astype(np.float64) / FULL_HOUR_MINUTES
+                home_idx = np.where(partial, store.home_loc, 0)
+
         # Emission weight per infector, summed per room (cheap O(N) numpy).
         inf_w = np.where(masked, 0.30, 1.0) * store.vax_trans_factor
         emit = np.where(infectious, inf_w, 0.0)
-        W = np.bincount(
-            person_loc[placed], weights=emit[placed], minlength=store.num_locations
-        )
+        if frac is None:
+            W = np.bincount(
+                person_loc[placed], weights=emit[placed], minlength=store.num_locations
+            )
+        else:
+            W = np.bincount(
+                person_loc[placed], weights=(emit * frac)[placed],
+                minlength=store.num_locations,
+            )
+            W += np.bincount(
+                home_idx[partial], weights=(emit * (1.0 - frac))[partial],
+                minlength=store.num_locations,
+            )
         if ext_on:
-            # n_internal = realized internal occupancy per room (all placed people).
-            n_internal = np.bincount(person_loc[placed], minlength=store.num_locations)
+            # n_internal = realized internal occupancy per room (all placed
+            # people; person-hours when fractional dwell applies).
+            if frac is None:
+                n_internal = np.bincount(person_loc[placed], minlength=store.num_locations)
+            else:
+                n_internal = np.bincount(
+                    person_loc[placed], weights=frac[placed], minlength=store.num_locations
+                )
             W = W + store.ext_ratio * n_internal * self.external_prevalence
 
         # Restrict the expensive trials (exp + RNG + scheduling) to actually
@@ -91,12 +124,17 @@ class TransmissionMixin:
         # and at saturation (numpy), instead of drawing for all N every timestep.
         loc = np.where(placed, person_loc, 0)
         room_W = W[loc]
+        if frac is None:
+            exposed = room_W > 0.0
+        else:
+            home_W = np.where(partial, W[home_idx], 0.0)
+            exposed = (room_W > 0.0) | (home_W > 0.0)
         eligible = (
             placed
             & ~store.infected_mask
             & (pstate == 0)
             & ((pstate & INVISIBLE) == 0)
-            & (room_W > 0.0)
+            & exposed
         )
         elig_idx = np.nonzero(eligible)[0]
         if elig_idx.size == 0:
@@ -105,16 +143,35 @@ class TransmissionMixin:
         intake = np.where(masked[elig_idx], 0.50, 1.0) * (
             1.0 - store.vax_inf_protection[elig_idx]
         )
-        mean_quanta = store.base_quanta[loc[elig_idx]] * room_W[elig_idx] * intake
+        if frac is None:
+            mean_quanta = store.base_quanta[loc[elig_idx]] * room_W[elig_idx] * intake
+        else:
+            f_elig = frac[elig_idx]
+            q_room = store.base_quanta[loc[elig_idx]] * room_W[elig_idx] * f_elig
+            q_home = store.base_quanta[home_idx[elig_idx]] * home_W[elig_idx] * (1.0 - f_elig)
+            mean_quanta = (q_room + q_home) * intake
         prob = 1.0 - np.exp(-mean_quanta)
         draws = np.random.random(elig_idx.size)
-        hits = elig_idx[draws < prob]
+        hit_mask = draws < prob
+        hits = elig_idx[hit_mask]
         if hits.size == 0:
             return
 
         # Attribute each infection to the room it happened in (home vs POI split
         # + true-incidence rankings). loc[hits] is the location index per infectee.
-        store.add_incidence(loc[hits])
+        if frac is None:
+            hit_loc = loc[hits]
+        else:
+            # A partial visitor can be infected at the facility or at home; pick
+            # one in proportion to each place's share of the dose. Given a hit,
+            # draw / prob is uniform on [0, 1), so this needs no extra random draw.
+            q_hit = q_room[hit_mask] + q_home[hit_mask]
+            room_share = np.divide(
+                q_room[hit_mask], q_hit, out=np.ones_like(q_hit), where=q_hit > 0.0
+            )
+            at_room = draws[hit_mask] < prob[hit_mask] * room_share
+            hit_loc = np.where(at_room, loc[hits], home_idx[hits])
+        store.add_incidence(hit_loc)
 
         infection_mgr = context.infection_manager
         infected_set = infection_mgr.infected

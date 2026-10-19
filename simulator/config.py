@@ -86,6 +86,15 @@ INFECTION_MODEL = {
     # Floor-area clamp (m^2) before computing Q: winsorizes bad geometry (region
     # polygons recorded as one 200+ km^2 "POI") and sub-room areas. ~ p01..p99 of
     # the observed footprint distribution.
+    # Fractional dwell: when the patterns carry minutes-present per person per
+    # hour (the MINS section), a partial-hour facility visit sheds and inhales
+    # only for its real minutes, and the rest of that hour counts at home. A
+    # 20-minute stop then exposes for 20 minutes instead of a full hour. Patterns
+    # without minutes are unaffected. DEFAULT OFF until the transmission level
+    # is recalibrated against it; set DELINEO_FRACTIONAL_DWELL=1, or override per
+    # run via the simdata "fractional_dwell" field.
+    "fractional_dwell": os.environ.get("DELINEO_FRACTIONAL_DWELL", "0").lower()
+    in {"1", "true", "yes", "on"},
     "area_clamp_min": float(os.environ.get("DELINEO_AREA_CLAMP_MIN", "65.0")),
     "area_clamp_max": float(os.environ.get("DELINEO_AREA_CLAMP_MAX", "70000.0")),
     # External force-of-infection term (open-system coupling). ~85% of a POI's

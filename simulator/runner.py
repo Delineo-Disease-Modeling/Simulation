@@ -141,6 +141,10 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
         self.external_foi = self.simdata["external_foi"]
         self.external_prevalence = float(self.simdata["external_prevalence"])
         self.external_emit_factor = float(self.simdata["external_emit_factor"])
+        # Fractional dwell (default off → golden preserved). When on and the
+        # patterns carry minutes, a partial-hour visit counts only its minutes at
+        # the facility and the rest of the hour at home (_vectorized_transmission).
+        self.fractional_dwell = self.simdata["fractional_dwell"]
         self._perf_accum: dict[str, float] = {}
         self._soa_engine: bool = False
         self._soa_shadow: bool = False
@@ -306,6 +310,40 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
             return np.random.default_rng()
         return np.random.default_rng([int(seed), _MOVEMENT_INTERVENTION_STREAM])
 
+    @staticmethod
+    def _home_loc_array(store) -> np.ndarray:
+        """Household location index per person (-1 = no household)."""
+        home_loc = np.full(len(store.idx_to_pid), -1, dtype=np.int32)
+        loc_to_idx = store.loc_to_idx
+        for i, person in enumerate(store.idx_to_person):
+            if person is not None:
+                home_loc[i] = loc_to_idx.get((str(person.household.id), True), -1)
+        return home_loc
+
+    def _maybe_enable_fractional_dwell(self, store) -> None:
+        """Give the kernel each person's household when fractional dwell can act:
+        the setting is on and the patterns carry partial-hour visits."""
+        if not self.fractional_dwell:
+            return
+        if not store.has_partial_minutes:
+            logger.info(
+                "fractional_dwell is ON but these patterns carry no partial-hour "
+                "visits (no minutes section); every visit counts as a full hour."
+            )
+            return
+        if store.home_loc is None:
+            store.set_home_loc(self._home_loc_array(store))
+
+    def _fractional_dwell_active(self, context) -> bool:
+        store = getattr(context.simulator, "membership", None)
+        return bool(
+            self.fractional_dwell
+            and self._soa_engine
+            and store is not None
+            and store.has_partial_minutes
+            and store.home_loc is not None
+        )
+
     def _maybe_enable_engine_movement_interventions(self, simulator, store) -> None:
         """Switch the store to intervention-aware movement when this run needs it:
         a scheduled capacity<1 / lockdown / selfiso, or any facility with a listed
@@ -323,13 +361,8 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
         has_listed_capacity = bool(np.any(np.isfinite(capacity) & (capacity > 0.0)))
         if not (has_listed_capacity or self._movement_interventions_scheduled()):
             return
-        home_loc = np.full(len(store.idx_to_pid), -1, dtype=np.int32)
-        loc_to_idx = store.loc_to_idx
-        for i, person in enumerate(store.idx_to_person):
-            if person is not None:
-                home_loc[i] = loc_to_idx.get((str(person.household.id), True), -1)
         store.enable_movement_interventions(
-            home_loc, capacity, self._movement_intervention_rng()
+            self._home_loc_array(store), capacity, self._movement_intervention_rng()
         )
         n_capped = int(np.count_nonzero(store._capped))
         logger.info(
@@ -417,6 +450,7 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
             with self._timed("build_context/precompute_movement"):
                 store.precompute_movement(loaded.patterns_data, self.simdata["length"])
             self._maybe_enable_engine_movement_interventions(simulator, store)
+            self._maybe_enable_fractional_dwell(store)
             self._precompute_location_quanta(simulator, store)
 
         return SimulationContext(
@@ -461,6 +495,12 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
                 "using the SoA engine — the external term will have NO effect. It is "
                 "currently implemented in _vectorized_transmission only.",
                 self.external_prevalence,
+            )
+        if self.fractional_dwell and not self._soa_engine:
+            logger.warning(
+                "fractional_dwell is ON but this run is not using the SoA engine — "
+                "every visit counts as a full hour. Partial-hour exposure is "
+                "currently implemented in _vectorized_transmission only."
             )
         if self.simdata["seed_age_spread_days"] > 0 and not self._soa_engine:
             logger.warning(
@@ -802,6 +842,10 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
             "dmp_mode": self.simdata["dmp_mode"],
             "aggregate_transmission": self.simdata["aggregate_transmission"],
             "area_aware_ventilation": self.simdata["area_aware_ventilation"],
+            "fractional_dwell": self.simdata["fractional_dwell"],
+            # Whether partial-hour exposure actually applied: the setting is on,
+            # the engine ran, and the patterns carried partial-hour visits.
+            "fractional_dwell_applied": self._fractional_dwell_active(context),
             "model_path_by_variant": self.simdata["model_path_by_variant"],
             "initial_infected_count": self.simdata["initial_infected_count"],
             "seed_age_spread_days": self.simdata["seed_age_spread_days"],
