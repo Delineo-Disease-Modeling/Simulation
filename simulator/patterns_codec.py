@@ -25,6 +25,20 @@ On-wire layout (all integers little-endian):
     raw_nbytes   u64       decompressed payload size (= T*N*itemsize), for integrity
     comp_nbytes  u64 ; payload         (the codec frame of the C-order matrix bytes)
 
+Optional tagged sections may follow the payload. Decoders that predate a section
+stop reading after the payload, so adding one never breaks an older consumer,
+and a decoder skips any tag it does not know:
+
+    tag          char[4]
+    codec        u8        same codes as above
+    raw_nbytes   u64
+    comp_nbytes  u64 ; payload
+
+    b"MINS"  uint8 [T, N] ts-major: minutes person n spends at their location
+             during timestep t (1..60). Lets a visit shorter than the hour count
+             only its real time; the rest of the hour is spent at home. Absent =
+             every person spends the full hour where the matrix puts them.
+
 The producer (Algorithms) and consumer (Simulation) agree only on this layout,
 NOT on a shared integer id space: the producer's own string id tables ride in
 the header and the consumer re-maps them through its papdata-built index spaces,
@@ -49,6 +63,13 @@ CODEC_NONE, CODEC_ZSTD, CODEC_GZIP = 0, 1, 2
 
 # Header up to (but not including) the variable-length blocks.
 _FIXED = struct.Struct("<8sBBBBIIII")
+
+# Optional tagged section header: tag, codec, raw_nbytes, comp_nbytes.
+_SECTION = struct.Struct("<4sBQQ")
+SECTION_MINUTES = b"MINS"
+
+# A timestep is one hour; minutes below this mean a partial-hour visit.
+FULL_HOUR_MINUTES = 60
 
 
 def is_binary_patterns(head: bytes) -> bool:
@@ -114,15 +135,18 @@ class BinaryPatterns:
         pids: list[str],
         loc_ids: list[str],
         n_homes: int,
+        minutes: np.ndarray | None = None,
     ) -> None:
         self.loc_matrix = loc_matrix          # [T, N], value = producer location index
         self.ts_minutes = ts_minutes          # length T
         self.pids = pids                      # length N: column -> person id (str)
         self.loc_ids = loc_ids                # length L: location index -> id (str)
         self.n_homes = int(n_homes)
+        self.minutes = minutes                # [T, N] uint8 minutes present, or None
 
     def _timestep_dict(self, row: int) -> dict:
-        """Reconstruct the legacy ``{homes, places}`` shape for one timestep."""
+        """Reconstruct the legacy ``{homes, places}`` shape for one timestep,
+        plus the sparse ``minutes`` map when this timestep has partial hours."""
         locs = self.loc_matrix[row]
         pids = self.pids
         loc_ids = self.loc_ids
@@ -133,7 +157,13 @@ class BinaryPatterns:
             lidx = int(locs[col])
             bucket = homes if lidx < n_homes else places
             bucket.setdefault(loc_ids[lidx], []).append(pids[col])
-        return {"homes": homes, "places": places}
+        out = {"homes": homes, "places": places}
+        if self.minutes is not None:
+            row_minutes = self.minutes[row]
+            partial = np.nonzero(row_minutes < FULL_HOUR_MINUTES)[0]
+            if partial.size:
+                out["minutes"] = {pids[c]: int(row_minutes[c]) for c in partial}
+        return out
 
     def items(self):
         """Yield ``(ts_str, {homes, places})`` per timestep (legacy consumers).
@@ -158,8 +188,11 @@ def encode_patterns_binary(
     loc_ids,
     n_homes: int,
     level: int = 3,
+    minutes: np.ndarray | None = None,
 ) -> bytes:
-    """Serialize a dense [T, N] location-index matrix to the binary format."""
+    """Serialize a dense [T, N] location-index matrix to the binary format.
+
+    ``minutes`` (optional uint8 [T, N], 1..60) adds the MINS section."""
     L = len(loc_ids)
     dtype = np.uint16 if L <= 65536 else np.uint32
     if int(loc_matrix.max(initial=0)) >= L:
@@ -188,6 +221,16 @@ def encode_patterns_binary(
     out += struct.pack("<I", len(pids_blob)) + pids_blob
     out += struct.pack("<I", len(locids_blob)) + locids_blob
     out += struct.pack("<QQ", len(raw), len(payload)) + payload
+    if minutes is not None:
+        mins = np.ascontiguousarray(minutes, dtype=np.uint8)
+        if mins.shape != (T, N):
+            raise ValueError(f"minutes shape {mins.shape} != matrix shape {(T, N)}")
+        if mins.size and (int(mins.min()) < 1 or int(mins.max()) > FULL_HOUR_MINUTES):
+            raise ValueError("minutes must be within 1..60")
+        mins_raw = mins.tobytes()
+        mins_codec, mins_payload = _compress(mins_raw, level)
+        out += _SECTION.pack(SECTION_MINUTES, mins_codec, len(mins_raw), len(mins_payload))
+        out += mins_payload
     return bytes(out)
 
 
@@ -218,10 +261,26 @@ def decode_patterns_binary(data: bytes) -> BinaryPatterns:
     raw = _decompress(codec, payload, raw_nbytes)
     if len(raw) != raw_nbytes:
         raise ValueError(f"patterns payload truncated: {len(raw)} != {raw_nbytes}")
+    off += comp_nbytes
 
     dtype = np.dtype(_CODE_TO_DTYPE[dtype_code]).newbyteorder("<")
     matrix = np.frombuffer(raw, dtype=dtype, count=T * N).reshape(T, N)
-    return BinaryPatterns(matrix, ts_minutes, pids, loc_ids, n_homes)
+
+    minutes = None
+    while off + _SECTION.size <= len(data):
+        tag, sec_codec, sec_raw_nbytes, sec_comp_nbytes = _SECTION.unpack_from(data, off)
+        off += _SECTION.size
+        sec_payload = data[off : off + sec_comp_nbytes]
+        off += sec_comp_nbytes
+        if len(sec_payload) != sec_comp_nbytes:
+            raise ValueError(f"patterns section {tag!r} truncated")
+        if tag != SECTION_MINUTES:
+            continue
+        sec_raw = _decompress(sec_codec, sec_payload, sec_raw_nbytes)
+        if len(sec_raw) != T * N:
+            raise ValueError(f"minutes section holds {len(sec_raw)} bytes, expected {T * N}")
+        minutes = np.frombuffer(sec_raw, dtype=np.uint8).reshape(T, N)
+    return BinaryPatterns(matrix, ts_minutes, pids, loc_ids, n_homes, minutes=minutes)
 
 
 def build_arrays_from_legacy(patterns: dict, papdata: dict):
@@ -274,3 +333,28 @@ def build_arrays_from_legacy(patterns: dict, papdata: dict):
             f"{unset} (timestep, person) cells unset — patterns is not a full snapshot"
         )
     return M, ts_minutes, pids, loc_ids, n_homes
+
+
+def build_minutes_from_legacy(patterns: dict, ts_minutes, pids):
+    """Dense uint8 [T, N] minutes matrix from the legacy per-timestep
+    ``minutes: {pid: m}`` maps (people absent from a map spend the full hour).
+
+    Returns None when no timestep carries a minutes map, so patterns without
+    partial hours encode without the MINS section."""
+    if not any(isinstance(patterns[str(m)], dict) and patterns[str(m)].get("minutes")
+               for m in ts_minutes):
+        return None
+    pid_col = {pid: i for i, pid in enumerate(pids)}
+    out = np.full((len(ts_minutes), len(pids)), FULL_HOUR_MINUTES, dtype=np.uint8)
+    for row, minute in enumerate(ts_minutes):
+        for pid, mins in (patterns[str(minute)].get("minutes") or {}).items():
+            col = pid_col.get(str(pid))
+            if col is None:
+                continue
+            mins = int(mins)
+            if not 1 <= mins <= FULL_HOUR_MINUTES:
+                raise ValueError(
+                    f"person {pid!r} has {mins} minutes at minute {minute}; expected 1..60"
+                )
+            out[row, col] = mins
+    return out

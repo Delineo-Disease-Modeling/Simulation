@@ -23,7 +23,7 @@ from typing import NamedTuple
 
 import numpy as np
 
-from simulator.patterns_codec import BinaryPatterns
+from simulator.patterns_codec import FULL_HOUR_MINUTES, BinaryPatterns
 
 
 class OccupancyView(NamedTuple):
@@ -97,6 +97,16 @@ class MembershipStore:
         # Per-timestep movement, precomputed from patterns (see precompute_movement):
         #   _move[ts] = (person_idx int32[], loc_idx int32[])
         self._move: dict[int, tuple] = {}
+        # Minutes each person spends at person_loc during the current timestep.
+        # 60 except for partial-hour facility visits, whose remaining minutes are
+        # spent at home. Only timesteps that have partial visits get an entry:
+        #   _move_minutes[ts] = (person_idx int32[], minutes uint8[])
+        self.person_minutes: np.ndarray = np.full(n, FULL_HOUR_MINUTES, dtype=np.uint8)
+        self._move_minutes: dict[int, tuple] = {}
+        # Household location index per person (-1 = none). Set by
+        # set_home_loc when a feature needs it (movement interventions, or
+        # fractional dwell's at-home remainder of a partial hour).
+        self.home_loc: np.ndarray | None = None
         # Movement interventions (lockdown / self-isolation / capacity). Off until
         # enable_movement_interventions is called, which the runner does only
         # when a run schedules one of them or a facility lists a capacity, so
@@ -107,6 +117,15 @@ class MembershipStore:
     @property
     def num_locations(self) -> int:
         return len(self.idx_to_loc)
+
+    @property
+    def has_partial_minutes(self) -> bool:
+        """Whether the precomputed movement has any partial-hour visit."""
+        return bool(self._move_minutes)
+
+    def set_home_loc(self, home_loc: np.ndarray) -> None:
+        """Record each person's household location index (-1 = none)."""
+        self.home_loc = np.asarray(home_loc, dtype=np.int32)
 
     def set_person_refs(self, get_person) -> None:
         """Populate idx_to_person and stamp each Person with its store index."""
@@ -146,10 +165,19 @@ class MembershipStore:
                         if pidx is not None:
                             persons.append(pidx)
                             locs.append(loc_idx)
-            self._move[ts] = (
-                np.asarray(persons, dtype=np.int32),
-                np.asarray(locs, dtype=np.int32),
-            )
+            person_arr = np.asarray(persons, dtype=np.int32)
+            loc_arr = np.asarray(locs, dtype=np.int32)
+            self._move[ts] = (person_arr, loc_arr)
+            minutes_map = data.get("minutes")
+            if minutes_map:
+                minutes = np.full(person_arr.size, FULL_HOUR_MINUTES, dtype=np.uint8)
+                row_of = np.full(len(self.idx_to_pid), -1, dtype=np.int64)
+                row_of[person_arr] = np.arange(person_arr.size)
+                for pid, mins in minutes_map.items():
+                    pidx = pid_to_idx.get(str(pid))
+                    if pidx is not None and row_of[pidx] >= 0:
+                        minutes[row_of[pidx]] = int(mins)
+                self._store_partial_minutes(ts, person_arr, loc_arr, minutes)
 
     def _precompute_movement_binary(self, bp: BinaryPatterns, max_length: int) -> None:
         """Vectorized precompute from a dense location matrix.
@@ -190,7 +218,34 @@ class MembershipStore:
                     f"patterns timestep {minute} references locations "
                     f"{[bp.loc_ids[b] for b in bad]} absent from this run's papdata"
                 )
-            self._move[minute] = (person_idx, loc_idx.astype(np.int32))
+            loc_idx = loc_idx.astype(np.int32)
+            self._move[minute] = (person_idx, loc_idx)
+            if bp.minutes is not None:
+                self._store_partial_minutes(
+                    minute, person_idx, loc_idx, bp.minutes[row][valid]
+                )
+
+    def _store_partial_minutes(
+        self, ts: int, person_idx: np.ndarray, loc_idx: np.ndarray, minutes: np.ndarray
+    ) -> None:
+        """Keep only this timestep's partial-hour facility visits (sparse).
+
+        A person at home always spends the full hour there, so minutes listed
+        for a household are ignored."""
+        partial = (minutes < FULL_HOUR_MINUTES) & (loc_idx >= self.n_homes)
+        if partial.any():
+            self._move_minutes[ts] = (
+                person_idx[partial].astype(np.int32),
+                np.asarray(minutes[partial], dtype=np.uint8),
+            )
+
+    def _apply_minutes(self, ts: int) -> None:
+        """Set person_minutes for timestep ts (60 unless a partial visit)."""
+        pm = self.person_minutes
+        pm.fill(FULL_HOUR_MINUTES)
+        entry = self._move_minutes.get(ts)
+        if entry is not None:
+            pm[entry[0]] = entry[1]
 
     def mark_infected(self, pid: str) -> None:
         idx = self.pid_to_idx.get(str(pid))
@@ -295,6 +350,8 @@ class MembershipStore:
             return False
         person_idx, loc_idx = entry
         self.person_loc[person_idx] = loc_idx
+        if self._move_minutes:
+            self._apply_minutes(ts)
         return True
 
     # pstate bit for InfectionState.SYMPTOMATIC (pstate holds the flag value).
@@ -320,7 +377,7 @@ class MembershipStore:
         at a lower one.
         """
         n = len(self.idx_to_pid)
-        self.home_loc = np.asarray(home_loc, dtype=np.int32)
+        self.set_home_loc(home_loc)
         cap = np.asarray(capacity, dtype=np.float64).copy()
         cap[: self.n_homes] = np.inf
         cap[~(cap > 0.0)] = np.inf  # <= 0 and NaN -> uncapped
@@ -393,6 +450,10 @@ class MembershipStore:
             self._apply_capacity(target, max(multiplier, 0.0))
 
         self.person_loc[:] = target
+        if self._move_minutes:
+            self._apply_minutes(ts)
+            # Anyone an intervention sent home spends the whole hour there.
+            self.person_minutes[target < H] = FULL_HOUR_MINUTES
         return True
 
     def _apply_capacity(self, target: np.ndarray, multiplier: float) -> None:

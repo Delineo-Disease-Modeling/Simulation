@@ -113,6 +113,10 @@ def normalize_simdata(simdata: dict) -> dict:
         float(raw_vent_coeff) if raw_vent_coeff is not None else None
     )
 
+    normalized["fractional_dwell"] = bool(
+        normalized.get("fractional_dwell", INFECTION_MODEL.get("fractional_dwell", False))
+    )
+
     normalized["external_foi"] = bool(
         normalized.get("external_foi", INFECTION_MODEL.get("external_foi", False))
     )
