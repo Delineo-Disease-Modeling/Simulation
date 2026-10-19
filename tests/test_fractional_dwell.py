@@ -10,7 +10,8 @@ of the hour at home. These tests pin:
     homes, and resets anyone an intervention sends home to the full hour;
   - the dose matches the hand calculation for partial susceptibles, partial
     infectors, and the at-home remainder of a partial hour;
-  - setting off, or patterns without partial visits, leaves output identical.
+  - setting off, or patterns without partial visits, leaves output identical;
+  - the setting defaults on.
 """
 import struct
 import unittest
@@ -267,6 +268,19 @@ class FractionalDoseTest(unittest.TestCase):
         loaded = _world(households, everyone, {p: 15 for p in quarter})
         _, ctx = _one_step(loaded, infectors, fractional_dwell=False)
         _assert_rate(self, _attack_rate(ctx, quarter), 1 - np.exp(-BASE_Q * 30), self.N)
+
+
+class FractionalDefaultTest(unittest.TestCase):
+    def test_default_is_on_and_overridable(self):
+        from simulator.config import INFECTION_MODEL
+        from simulator.simdata import normalize_simdata
+
+        self.assertTrue(INFECTION_MODEL["fractional_dwell"])
+        base = {"czone_id": 1, "length": 60}
+        self.assertTrue(normalize_simdata(dict(base))["fractional_dwell"])
+        self.assertFalse(
+            normalize_simdata(dict(base, fractional_dwell=False))["fractional_dwell"]
+        )
 
 
 class FractionalGoldenTest(unittest.TestCase):

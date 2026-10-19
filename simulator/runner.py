@@ -141,9 +141,10 @@ class SimulationRunner(TransmissionMixin, ShadowValidationMixin):
         self.external_foi = self.simdata["external_foi"]
         self.external_prevalence = float(self.simdata["external_prevalence"])
         self.external_emit_factor = float(self.simdata["external_emit_factor"])
-        # Fractional dwell (default off → golden preserved). When on and the
-        # patterns carry minutes, a partial-hour visit counts only its minutes at
-        # the facility and the rest of the hour at home (_vectorized_transmission).
+        # Fractional dwell (default on). When the patterns carry minutes, a
+        # partial-hour visit counts only its minutes at the facility and the rest
+        # of the hour at home (_vectorized_transmission). Patterns without
+        # minutes are unaffected, so older zones keep full-hour visits.
         self.fractional_dwell = self.simdata["fractional_dwell"]
         self._perf_accum: dict[str, float] = {}
         self._soa_engine: bool = False
