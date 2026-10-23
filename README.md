@@ -8,9 +8,9 @@ disease states. It's a Flask server on port **1870**. The DMP also runs as a
 separate FastAPI service on port **8000**.
 
 > **New to Delineo?** Read
-> [Start Here](https://github.com/Delineo-Disease-Modeling/Deploy/blob/main/docs/START_HERE.md)
+> [Start Here](https://github.com/Delineo-Disease-Modeling/.github/blob/main/docs/START_HERE.md)
 > first, and keep the
-> [Glossary](https://github.com/Delineo-Disease-Modeling/Deploy/blob/main/docs/GLOSSARY.md)
+> [Glossary](https://github.com/Delineo-Disease-Modeling/.github/blob/main/docs/GLOSSARY.md)
 > handy.
 
 ## How a run works
@@ -29,7 +29,7 @@ separate FastAPI service on port **8000**.
 ## Running it
 
 Do the full setup in
-[Setup](https://github.com/Delineo-Disease-Modeling/Deploy/blob/main/docs/SETUP.md)
+[Setup](https://github.com/Delineo-Disease-Modeling/.github/blob/main/docs/SETUP.md)
 first (Python 3.13 and a `.venv` in this folder). Then, from this folder:
 
 ```bash
@@ -156,7 +156,7 @@ tests/                     # pytest suite
 - [`docs/SIMULATION_ENGINE.md`](docs/SIMULATION_ENGINE.md): **start here.** How
   a run works, step by step: the engine loop, the Wells-Riley transmission
   kernel, interventions, and the DMP
-- [Model assumptions](https://github.com/Delineo-Disease-Modeling/Deploy/blob/main/docs/MODEL_ASSUMPTIONS.md):
+- [Model assumptions](https://github.com/Delineo-Disease-Modeling/.github/blob/main/docs/MODEL_ASSUMPTIONS.md):
   what the model assumes, what's calibrated, and what results can be used to
   claim
 - [`dmp/README.md`](dmp/README.md) and
