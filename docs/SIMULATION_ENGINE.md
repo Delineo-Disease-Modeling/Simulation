@@ -5,7 +5,7 @@ what happens at each timestep, how transmission is computed, and how the DMP
 decides what happens to each infected person. Read the
 [README](../README.md) first for how to run things. The data formats going in
 and out are in
-[Data formats](https://github.com/Delineo-Disease-Modeling/Deploy/blob/main/docs/DATA_FORMATS.md).
+[Data formats](https://github.com/Delineo-Disease-Modeling/.github/blob/main/docs/DATA_FORMATS.md).
 
 Everything here describes the code as of October 2026. If you change the
 behavior, update this page in the same PR.
@@ -268,7 +268,7 @@ incrementally so they never sit fully in memory (`io.py`, `snapshots.py`):
 
 `finalize()` adds the run's `metadata`. `jobs.py` then uploads everything to
 Fullstack. The exact shapes are in
-[Data formats](https://github.com/Delineo-Disease-Modeling/Deploy/blob/main/docs/DATA_FORMATS.md#5-run-output).
+[Data formats](https://github.com/Delineo-Disease-Modeling/.github/blob/main/docs/DATA_FORMATS.md#5-run-output).
 
 One quirk to know about: in the timestep when someone is newly infected, the
 engine records them as `3` (infected + infectious). From the next timestep on,
@@ -285,7 +285,7 @@ only.
 - **The transmission level isn't calibrated.** `ventilation_coeff` (9.0) is a
   physical estimate, as the comment in `config.py` says. Relative comparisons
   between scenarios are more trustworthy than absolute attack rates. See
-  [Model assumptions](https://github.com/Delineo-Disease-Modeling/Deploy/blob/main/docs/MODEL_ASSUMPTIONS.md).
+  [Model assumptions](https://github.com/Delineo-Disease-Modeling/.github/blob/main/docs/MODEL_ASSUMPTIONS.md).
 - **Multi-variant runs use the slower legacy path,** which doesn't support
   fractional dwell or external FOI.
 - **Vaccine waning is never applied** (see section 4).
